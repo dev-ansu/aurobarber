@@ -65,5 +65,9 @@ class AppServiceProvider extends ServiceProvider
                 ->numbers()
                 ->symbols();
         });
+
+        if (class_exists(\BezhanSalleh\FilamentShield\Resources\Roles\RoleResource::class)) {
+            \BezhanSalleh\FilamentShield\Resources\Roles\RoleResource::scopeToTenant(false);
+        }
     }
 }
