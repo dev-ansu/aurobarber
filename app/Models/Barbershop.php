@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -12,6 +14,8 @@ class Barbershop extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'owner_id',
+        'parent_id',
         'name',
         'slug',
         'headline',
@@ -37,6 +41,28 @@ class Barbershop extends Model
         'is_active' => 'boolean',
     ];
 
+    public function owner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(Barbershop::class, 'parent_id');
+    }
+
+    public function branches(): HasMany
+    {
+        return $this->hasMany(Barbershop::class, 'parent_id');
+    }
+
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class)
+            ->withPivot('role', 'is_primary')
+            ->withTimestamps();
+    }
+
     public function professionals(): HasMany
     {
         return $this->hasMany(Professional::class)->orderBy('display_order');
@@ -50,11 +76,6 @@ class Barbershop extends Model
     public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class);
-    }
-
-    public function users(): HasMany
-    {
-        return $this->hasMany(User::class);
     }
 
     public function getFormattedWhatsappAttribute(): ?string

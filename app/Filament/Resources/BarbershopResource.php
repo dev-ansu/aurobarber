@@ -15,15 +15,22 @@ class BarbershopResource extends Resource
 {
     protected static ?string $model = Barbershop::class;
 
+    protected static bool $isScopedToTenant = false;
+
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-building-storefront';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Configurações';
+    protected static string | \UnitEnum | null $navigationGroup = 'SaaS Master';
 
-    protected static ?string $navigationLabel = 'Minha Barbearia';
+    protected static ?string $navigationLabel = 'Todas as Barbearias';
 
     protected static ?string $modelLabel = 'Barbearia';
 
     protected static ?string $pluralModelLabel = 'Barbearias';
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->role === 'master_admin';
+    }
 
     public static function form(Schema $schema): Schema
     {
