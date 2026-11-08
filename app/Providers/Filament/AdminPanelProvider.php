@@ -9,11 +9,13 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\MenuItem;
 use Filament\Navigation\NavigationGroup;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -40,6 +42,17 @@ class AdminPanelProvider extends PanelProvider
             ->tenant(Barbershop::class, slugAttribute: 'slug')
             ->tenantProfile(EditBarbershopProfile::class)
             ->tenantRegistration(RegisterBarbershop::class)
+            ->tenantMenuItems([
+                MenuItem::make()
+                    ->label('Ver Página Pública ↗')
+                    ->icon('heroicon-o-arrow-top-right-on-square')
+                    ->url(fn (): string => filament()->getTenant() ? url(filament()->getTenant()->slug) : url('/'))
+                    ->openUrlInNewTab(),
+            ])
+            ->renderHook(
+                PanelsRenderHook::GLOBAL_SEARCH_AFTER,
+                fn () => view('filament.components.public-page-button')
+            )
             ->navigationGroups([
                 NavigationGroup::make('Atendimento')->collapsible(),
                 NavigationGroup::make('Equipe')->collapsible(),
