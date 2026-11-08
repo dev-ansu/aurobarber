@@ -13,9 +13,9 @@ use Illuminate\Support\Collection;
 
 class DailySchedule extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-view-columns';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-view-columns';
 
-    protected static ?string $navigationGroup = 'Atendimento';
+    protected static string | \UnitEnum | null $navigationGroup = 'Atendimento';
 
     protected static ?string $navigationLabel = 'Agenda Diária';
 
