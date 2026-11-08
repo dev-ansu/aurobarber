@@ -162,8 +162,10 @@ class AppointmentResource extends Resource
                     ->label('Barbeiro')
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('service.name')
-                    ->label('Serviço'),
+                Tables\Columns\TextColumn::make('services_summary')
+                    ->label('Serviço(s)')
+                    ->getStateUsing(fn (Appointment $record) => $record->services_summary)
+                    ->wrap(),
 
                 Tables\Columns\TextColumn::make('service_price')
                     ->label('Valor')
