@@ -287,8 +287,8 @@ class DevFakeDataSeeder extends Seeder
                 $method = $paymentMethods[array_rand($paymentMethods)];
 
                 $hour = rand(9, 18);
-                $minute = array_rand([0 => '00', 30 => '30']);
-                $scheduledAt = Carbon::createFromFormat('Y-m-d H:i', "{$dateStr} {$hour}:{$minute}");
+                $minute = rand(0, 1) === 0 ? 0 : 30;
+                $scheduledAt = Carbon::parse($dateStr)->setTime($hour, $minute, 0);
                 $endsAt = $scheduledAt->copy()->addMinutes($srv->duration_minutes);
 
                 $commissionRate = $pro->commission_rate;
@@ -366,8 +366,8 @@ class DevFakeDataSeeder extends Seeder
             'service_id' => $srvDegrade->id,
             'client_name' => 'Rafael Albuquerque',
             'client_phone' => '85991112233',
-            'scheduled_at' => Carbon::createFromFormat('Y-m-d H:i', "{$todayStr} 09:00"),
-            'ends_at' => Carbon::createFromFormat('Y-m-d H:i', "{$todayStr} 09:35"),
+            'scheduled_at' => Carbon::today()->setTime(9, 0),
+            'ends_at' => Carbon::today()->setTime(9, 35),
             'status' => 'completed',
             'service_price' => 40.00,
             'commission_rate' => 50.00,
@@ -386,8 +386,8 @@ class DevFakeDataSeeder extends Seeder
             'service_id' => $srvCombo->id,
             'client_name' => 'Bruno Oliveira',
             'client_phone' => '85992223344',
-            'scheduled_at' => Carbon::createFromFormat('Y-m-d H:i', "{$todayStr} 10:00"),
-            'ends_at' => Carbon::createFromFormat('Y-m-d H:i', "{$todayStr} 10:55"),
+            'scheduled_at' => Carbon::today()->setTime(10, 0),
+            'ends_at' => Carbon::today()->setTime(10, 55),
             'status' => 'completed',
             'service_price' => 65.00,
             'commission_rate' => 50.00,
@@ -406,8 +406,8 @@ class DevFakeDataSeeder extends Seeder
             'service_id' => $srvBarba->id,
             'client_name' => 'Gustavo Henrique',
             'client_phone' => '85993334455',
-            'scheduled_at' => Carbon::createFromFormat('Y-m-d H:i', "{$todayStr} 14:00"),
-            'ends_at' => Carbon::createFromFormat('Y-m-d H:i', "{$todayStr} 14:30"),
+            'scheduled_at' => Carbon::today()->setTime(14, 0),
+            'ends_at' => Carbon::today()->setTime(14, 30),
             'status' => 'in_progress',
             'service_price' => 35.00,
             'commission_rate' => 50.00,
@@ -425,8 +425,8 @@ class DevFakeDataSeeder extends Seeder
             'service_id' => $srvDegrade->id,
             'client_name' => 'Daniel Santos',
             'client_phone' => '85994445566',
-            'scheduled_at' => Carbon::createFromFormat('Y-m-d H:i', "{$todayStr} 16:00"),
-            'ends_at' => Carbon::createFromFormat('Y-m-d H:i', "{$todayStr} 16:35"),
+            'scheduled_at' => Carbon::today()->setTime(16, 0),
+            'ends_at' => Carbon::today()->setTime(16, 35),
             'status' => 'scheduled',
             'service_price' => 40.00,
             'commission_rate' => 50.00,
@@ -442,8 +442,8 @@ class DevFakeDataSeeder extends Seeder
             'service_id' => $srvCombo->id,
             'client_name' => 'Carlos Eduardo',
             'client_phone' => '85995556677',
-            'scheduled_at' => Carbon::createFromFormat('Y-m-d H:i', "{$todayStr} 17:30"),
-            'ends_at' => Carbon::createFromFormat('Y-m-d H:i', "{$todayStr} 18:25"),
+            'scheduled_at' => Carbon::today()->setTime(17, 30),
+            'ends_at' => Carbon::today()->setTime(18, 25),
             'status' => 'confirmed',
             'service_price' => 65.00,
             'commission_rate' => 45.00,
