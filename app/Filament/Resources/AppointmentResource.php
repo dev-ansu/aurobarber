@@ -6,6 +6,10 @@ use App\Filament\Resources\AppointmentResource\Pages;
 use App\Models\Appointment;
 use App\Models\Professional;
 use App\Models\Service;
+use Filament\Actions\Action;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Forms;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
@@ -180,8 +184,8 @@ class AppointmentResource extends Resource
                     ->relationship('professional', 'name'),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\Action::make('concluir')
+                EditAction::make(),
+                Action::make('concluir')
                     ->label('Concluir')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
@@ -189,8 +193,8 @@ class AppointmentResource extends Resource
                     ->action(fn (Appointment $record) => $record->update(['status' => 'completed', 'payment_status' => 'paid'])),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }

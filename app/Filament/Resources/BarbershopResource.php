@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\BarbershopResource\Pages;
 use App\Models\Barbershop;
+use Filament\Actions\EditAction;
 use Filament\Forms;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
@@ -103,7 +104,7 @@ class BarbershopResource extends Resource
                     ->boolean(),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                EditAction::make(),
             ]);
     }
 

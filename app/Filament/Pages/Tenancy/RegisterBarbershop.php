@@ -3,12 +3,14 @@
 namespace App\Filament\Pages\Tenancy;
 
 use App\Models\Barbershop;
+use Filament\Actions\Action;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Pages\Tenancy\RegisterTenant;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\Width;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -19,15 +21,20 @@ class RegisterBarbershop extends RegisterTenant
         return 'Nova Unidade / Filial';
     }
 
+    public function getMaxWidth(): Width | string | null
+    {
+        return 'xl';
+    }
+
     public function form(Schema $schema): Schema
     {
         return $schema
             ->components([
-                Section::make('Dados da Nova Unidade')
-                    ->description('Cadastre uma nova filial para gerenciar sua equipe, horários e faturamento.')
+                Section::make('Cadastrar Nova Filial')
+                    ->description('Crie uma nova unidade para gerenciar equipe, horários e caixa de forma isolada.')
                     ->schema([
                         TextInput::make('name')
-                            ->label('Nome da Barbearia / Unidade')
+                            ->label('Nome da Unidade')
                             ->placeholder('Ex: Barbearia Marinho - Aldeota')
                             ->required()
                             ->maxLength(255)
@@ -36,17 +43,20 @@ class RegisterBarbershop extends RegisterTenant
                                 if (filled($state)) {
                                     $set('slug', Str::slug($state));
                                 }
-                            }),
+                            })
+                            ->columnSpanFull(),
 
                         TextInput::make('slug')
-                            ->label('Link Exclusivo (Slug)')
-                            ->helperText('Ex: marinho-aldeota -> barber.aurosoft.com.br/marinho-aldeota')
+                            ->label('Link Público de Agendamento')
+                            ->prefix('barber.aurosoft.com.br/')
+                            ->placeholder('marinho-aldeota')
                             ->required()
                             ->unique(Barbershop::class, 'slug')
-                            ->maxLength(255),
+                            ->maxLength(255)
+                            ->columnSpanFull(),
 
                         TextInput::make('whatsapp')
-                            ->label('WhatsApp da Unidade')
+                            ->label('WhatsApp')
                             ->tel()
                             ->placeholder('85999999999'),
 
@@ -55,20 +65,37 @@ class RegisterBarbershop extends RegisterTenant
                             ->placeholder('Fortaleza / CE'),
 
                         TextInput::make('address')
-                            ->label('Endereço da Unidade')
+                            ->label('Endereço Completo')
                             ->placeholder('Av. Santos Dumont, 1200 - Aldeota')
                             ->columnSpanFull(),
 
                         ColorPicker::make('brand_color')
                             ->label('Cor da Marca')
-                            ->default('#d97706'),
+                            ->default('#d97706')
+                            ->columnSpanFull(),
 
                         Textarea::make('description')
-                            ->label('Sobre a Unidade')
-                            ->placeholder('Descreva o ambiente e diferenciais desta filial...')
+                            ->label('Sobre a Unidade (Opcional)')
+                            ->placeholder('Descreva os diferenciais desta filial...')
+                            ->rows(3)
                             ->columnSpanFull(),
                     ])->columns(2),
             ]);
+    }
+
+    protected function getFormActions(): array
+    {
+        return [
+            $this->getRegisterFormAction()
+                ->label('Cadastrar Unidade')
+                ->color('primary'),
+
+            Action::make('cancel')
+                ->label('Cancelar / Voltar')
+                ->color('gray')
+                ->outlined()
+                ->url(fn () => filament()->getUrl() ?? url('/admin')),
+        ];
     }
 
     protected function handleRegistration(array $data): Model
@@ -78,7 +105,7 @@ class RegisterBarbershop extends RegisterTenant
         $data['is_active'] = true;
         $data['subscription_status'] = 'active';
 
-        // Se o usuário já tiver uma matriz/unidade cadastrada, herda como parent_id
+        // Se o usuário já tiver uma matriz/unidade cadastrada, herda como filial (parent_id)
         $primaryBarbershop = $user->barbershops()->first();
         if ($primaryBarbershop) {
             $data['parent_id'] = $primaryBarbershop->id;
