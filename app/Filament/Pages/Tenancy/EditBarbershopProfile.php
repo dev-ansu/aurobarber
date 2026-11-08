@@ -4,9 +4,12 @@ namespace App\Filament\Pages\Tenancy;
 
 use App\Models\Barbershop;
 use Filament\Actions\Action;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\ColorPicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TimePicker;
 use Filament\Pages\Tenancy\EditTenantProfile;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
@@ -87,6 +90,46 @@ class EditBarbershopProfile extends EditTenantProfile
                                 TextInput::make('pix_key')
                                     ->label('Chave PIX da Unidade')
                                     ->placeholder('CNPJ, Telefone ou E-mail')
+                                    ->columnSpanFull(),
+                            ]),
+
+                        Tab::make('Horários & Funcionamento')
+                            ->icon('heroicon-o-clock')
+                            ->schema([
+                                CheckboxList::make('opening_hours.days')
+                                    ->label('Dias de Funcionamento da Barbearia')
+                                    ->options([
+                                        'mon' => 'Segunda-feira',
+                                        'tue' => 'Terça-feira',
+                                        'wed' => 'Quarta-feira',
+                                        'thu' => 'Quinta-feira',
+                                        'fri' => 'Sexta-feira',
+                                        'sat' => 'Sábado',
+                                        'sun' => 'Domingo',
+                                    ])
+                                    ->default(['mon', 'tue', 'wed', 'thu', 'fri', 'sat'])
+                                    ->columns(2)
+                                    ->columnSpanFull(),
+
+                                TimePicker::make('opening_hours.start_time')
+                                    ->label('Horário Geral de Abertura')
+                                    ->default('08:00')
+                                    ->columnSpanFull(),
+
+                                TimePicker::make('opening_hours.end_time')
+                                    ->label('Horário Geral de Fechamento')
+                                    ->default('19:30')
+                                    ->columnSpanFull(),
+
+                                Select::make('opening_hours.slot_interval')
+                                    ->label('Intervalo entre Horários na Agenda')
+                                    ->options([
+                                        15 => 'A cada 15 minutos',
+                                        30 => 'A cada 30 minutos (Padrão recomendável)',
+                                        45 => 'A cada 45 minutos',
+                                        60 => 'A cada 1 hora',
+                                    ])
+                                    ->default(30)
                                     ->columnSpanFull(),
                             ]),
                     ])

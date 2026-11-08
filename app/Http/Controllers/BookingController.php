@@ -57,25 +57,56 @@ class BookingController extends Controller
 
         $totalDuration = $services->sum('duration_minutes') ?: 30;
         $date = $request->date;
+        $carbonDate = Carbon::parse($date);
+        $dayOfWeek = strtolower($carbonDate->format('D')); // 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'
+
+        // 1. Configurações de horários e dias da Unidade
+        $openingHours = $barbershop->opening_hours ?? [];
+        $openDays = $openingHours['days'] ?? ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+
+        if (!in_array($dayOfWeek, $openDays, true)) {
+            return response()->json([
+                'date' => $date,
+                'slots' => [],
+                'message' => 'A barbearia está fechada neste dia da semana.',
+                'total_duration' => $totalDuration,
+                'services_count' => $services->count(),
+            ]);
+        }
+
+        $shopStartTimeStr = $openingHours['start_time'] ?? '08:00';
+        $shopEndTimeStr = $openingHours['end_time'] ?? '19:30';
+        $stepMinutes = (int) ($openingHours['slot_interval'] ?? 30);
+        if ($stepMinutes < 15) {
+            $stepMinutes = 30;
+        }
+
         $professionalId = $request->professional_id && $request->professional_id !== 'any'
             ? (int) $request->professional_id
             : null;
 
-        // Profissionais ativos
+        // 2. Profissionais ativos que atendem neste dia da semana
         $professionals = $barbershop->professionals()->where('is_active', true);
         if ($professionalId) {
             $professionals->where('id', $professionalId);
         }
-        $professionals = $professionals->get();
+        $professionals = $professionals->get()->filter(function ($prof) use ($dayOfWeek) {
+            $workingDays = $prof->working_days ?? ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+            return in_array($dayOfWeek, (array) $workingDays, true);
+        });
 
         if ($professionals->isEmpty()) {
-            return response()->json(['slots' => []]);
+            return response()->json([
+                'date' => $date,
+                'slots' => [],
+                'message' => 'Nenhum profissional disponível para esta data.',
+                'total_duration' => $totalDuration,
+                'services_count' => $services->count(),
+            ]);
         }
 
-        // Horário de funcionamento base (08:00 às 19:30)
-        $startTime = Carbon::createFromFormat('Y-m-d H:i', "{$date} 08:00");
-        $endTime = Carbon::createFromFormat('Y-m-d H:i', "{$date} 19:30");
-        $stepMinutes = 30;
+        $startTime = Carbon::createFromFormat('Y-m-d H:i', "{$date} " . substr($shopStartTimeStr, 0, 5));
+        $endTime = Carbon::createFromFormat('Y-m-d H:i', "{$date} " . substr($shopEndTimeStr, 0, 5));
 
         $slots = [];
         $currentTime = $startTime->copy();
@@ -84,16 +115,32 @@ class BookingController extends Controller
             $slotStart = $currentTime->copy();
             $slotEnd = $slotStart->copy()->addMinutes($totalDuration);
 
+            // Se o término do atendimento ultrapassa o horário de fechamento geral
+            if ($slotEnd->gt($endTime)) {
+                break;
+            }
+
             // Não exibe horários passados para hoje
             if ($slotStart->isPast()) {
                 $currentTime->addMinutes($stepMinutes);
                 continue;
             }
 
-            // Verifica se pelo menos um profissional está livre durante todo o intervalo do corte
+            // Verifica se pelo menos um profissional está dentro do seu turno e livre sem conflito
             $availableProf = null;
 
             foreach ($professionals as $prof) {
+                // Checa turno do profissional
+                $pStartStr = $prof->work_start_time ? substr($prof->work_start_time, 0, 5) : '08:00';
+                $pEndStr = $prof->work_end_time ? substr($prof->work_end_time, 0, 5) : '19:00';
+
+                $profStart = Carbon::createFromFormat('Y-m-d H:i', "{$date} {$pStartStr}");
+                $profEnd = Carbon::createFromFormat('Y-m-d H:i', "{$date} {$pEndStr}");
+
+                if ($slotStart->lt($profStart) || $slotEnd->gt($profEnd)) {
+                    continue; // Fora do expediente do profissional
+                }
+
                 $hasConflict = Appointment::where('professional_id', $prof->id)
                     ->where('status', '!=', 'cancelled')
                     ->whereDate('scheduled_at', $date)
@@ -174,7 +221,18 @@ class BookingController extends Controller
             ], 422);
         }
 
-        return DB::transaction(function () use ($barbershop, $services, $primaryService, $totalPrice, $totalDuration, $validated, $scheduledAt, $endsAt) {
+        $dayOfWeek = strtolower($scheduledAt->format('D'));
+        $openingHours = $barbershop->opening_hours ?? [];
+        $openDays = $openingHours['days'] ?? ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+
+        if (!in_array($dayOfWeek, $openDays, true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'A barbearia está fechada neste dia da semana.',
+            ], 422);
+        }
+
+        return DB::transaction(function () use ($barbershop, $services, $primaryService, $totalPrice, $totalDuration, $validated, $scheduledAt, $endsAt, $dayOfWeek) {
             $professional = null;
 
             // Se escolheu um barbeiro específico
@@ -184,6 +242,29 @@ class BookingController extends Controller
                     ->where('is_active', true)
                     ->lockForUpdate()
                     ->firstOrFail();
+
+                // Verifica se o profissional atende neste dia da semana
+                $workingDays = $profCandidate->working_days ?? ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+                if (!in_array($dayOfWeek, (array) $workingDays, true)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'O profissional selecionado não atende neste dia.',
+                    ], 422);
+                }
+
+                // Verifica se está dentro do horário de expediente do profissional
+                $pStartStr = $profCandidate->work_start_time ? substr($profCandidate->work_start_time, 0, 5) : '08:00';
+                $pEndStr = $profCandidate->work_end_time ? substr($profCandidate->work_end_time, 0, 5) : '19:00';
+                $dateStr = $validated['date'];
+                $profStart = Carbon::createFromFormat('Y-m-d H:i', "{$dateStr} {$pStartStr}");
+                $profEnd = Carbon::createFromFormat('Y-m-d H:i', "{$dateStr} {$pEndStr}");
+
+                if ($scheduledAt->lt($profStart) || $endsAt->gt($profEnd)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Horário fora do expediente deste profissional.',
+                    ], 422);
+                }
 
                 // Verifica conflito para a duração total dos serviços combinados
                 $conflict = Appointment::where('professional_id', $profCandidate->id)
@@ -211,6 +292,21 @@ class BookingController extends Controller
                     ->get();
 
                 foreach ($candidates as $candidate) {
+                    $workingDays = $candidate->working_days ?? ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+                    if (!in_array($dayOfWeek, (array) $workingDays, true)) {
+                        continue;
+                    }
+
+                    $pStartStr = $candidate->work_start_time ? substr($candidate->work_start_time, 0, 5) : '08:00';
+                    $pEndStr = $candidate->work_end_time ? substr($candidate->work_end_time, 0, 5) : '19:00';
+                    $dateStr = $validated['date'];
+                    $profStart = Carbon::createFromFormat('Y-m-d H:i', "{$dateStr} {$pStartStr}");
+                    $profEnd = Carbon::createFromFormat('Y-m-d H:i', "{$dateStr} {$pEndStr}");
+
+                    if ($scheduledAt->lt($profStart) || $endsAt->gt($profEnd)) {
+                        continue;
+                    }
+
                     $conflict = Appointment::where('professional_id', $candidate->id)
                         ->where('status', '!=', 'cancelled')
                         ->where(function ($query) use ($scheduledAt, $endsAt) {

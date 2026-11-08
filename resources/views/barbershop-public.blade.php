@@ -344,7 +344,7 @@
                                 </div>
 
                                 <div x-show="!loadingSlots && availableSlots.length === 0" class="p-5 rounded-xl bg-slate-900 border border-dashed border-slate-800 text-center text-xs text-slate-400">
-                                    😔 Nenhum horário livre para atender <span class="font-bold text-white" x-text="totalDuration() + ' minutos'"></span> nesta data. Escolha outro dia acima.
+                                    <span x-text="slotsMessage || ('😔 Nenhum horário livre para atender ' + totalDuration() + ' minutos nesta data. Escolha outro dia acima.')"></span>
                                 </div>
                             </div>
 
@@ -463,6 +463,7 @@
                 availableDates: [],
                 availableSlots: [],
                 loadingSlots: false,
+                slotsMessage: '',
                 clientName: '',
                 clientPhone: '',
                 isSubmitting: false,
@@ -559,6 +560,7 @@
                         const res = await fetch(url);
                         const data = await res.json();
                         this.availableSlots = data.slots || [];
+                        this.slotsMessage = data.message || '';
                         if (this.availableSlots.length > 0) {
                             this.selectedTime = this.availableSlots[0].time;
                         }

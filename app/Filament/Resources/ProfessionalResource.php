@@ -79,6 +79,21 @@ class ProfessionalResource extends Resource
                                     ->required()
                                     ->columnSpanFull(),
 
+                                Forms\Components\CheckboxList::make('working_days')
+                                    ->label('Dias de Atendimento na Semana')
+                                    ->options([
+                                        'mon' => 'Segunda-feira',
+                                        'tue' => 'Terça-feira',
+                                        'wed' => 'Quarta-feira',
+                                        'thu' => 'Quinta-feira',
+                                        'fri' => 'Sexta-feira',
+                                        'sat' => 'Sábado',
+                                        'sun' => 'Domingo',
+                                    ])
+                                    ->default(['mon', 'tue', 'wed', 'thu', 'fri', 'sat'])
+                                    ->columns(2)
+                                    ->columnSpanFull(),
+
                                 Forms\Components\TimePicker::make('work_start_time')
                                     ->label('Início do Expediente')
                                     ->default('08:00:00')
