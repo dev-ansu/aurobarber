@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Barbershop;
+use App\Http\Controllers\BookingController;
 use Illuminate\Support\Facades\Route;
 
 // 1. Landing Page Principal do AuroBarber (SaaS B2B)
@@ -8,12 +8,7 @@ Route::get('/', function () {
     return view('welcome-aurobarber');
 })->name('home');
 
-// 2. Página Pública / Agendamento Online da Barbearia Específica (ex: barber.aurosoft.com.br/marinho)
-Route::get('/{slug}', function (string $slug) {
-    $barbershop = Barbershop::where('slug', $slug)
-        ->where('is_active', true)
-        ->with(['professionals' => fn ($q) => $q->where('is_active', true), 'services' => fn ($q) => $q->where('is_active', true)])
-        ->firstOrFail();
-
-    return view('barbershop-public', compact('barbershop'));
-})->name('barbershop.show');
+// 2. Rotas Públicas de Agendamento da Barbearia (ex: barber.aurosoft.com.br/marinho)
+Route::get('/{slug}', [BookingController::class, 'show'])->name('barbershop.show');
+Route::get('/{slug}/slots', [BookingController::class, 'getAvailableSlots'])->name('barbershop.slots');
+Route::post('/{slug}/book', [BookingController::class, 'store'])->name('barbershop.book');
