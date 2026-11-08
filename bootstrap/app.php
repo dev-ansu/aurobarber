@@ -50,26 +50,10 @@ return Application::configure(basePath: dirname(__DIR__))
                 Request::HEADER_X_FORWARDED_PROTO
         );
         $middleware->web(prepend: [
-            \App\Http\Middleware\ResolveTenantSchema::class,
             \App\Http\Middleware\EnsureLivewireChildrenMemoExists::class,
-        ]);
-        $middleware->web(append: [
-            \App\Http\Middleware\CheckLicenseStatus::class,
-            \App\Http\Middleware\ValidateTenantSessionBinding::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // Telemetria global autônoma de incidentes (Captura todos os erros do sistema no Master)
-        $exceptions->report(function (\Throwable $e) {
-            if (! app()->runningUnitTests()) {
-                try {
-                    app(\App\Services\SystemIncidentReporter::class)->report($e);
-                } catch (\Throwable) {
-                    // Silencioso se o reporter falhar
-                }
-            }
-        });
-
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->hasHeader('X-Livewire'),
         );
@@ -88,21 +72,6 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             \Illuminate\Support\Facades\Log::error("LIVEWIRE_ERROR: " . $e::class . ": " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine() . "\n" . $e->getTraceAsString());
-
-            // Dispara telemetria de incidentes para o SaaS Master em erros de banco e sistema
-            if (! ($e instanceof \Livewire\Exceptions\PayloadTooLargeException)
-                && ! ($e instanceof \Illuminate\Session\TokenMismatchException)
-                && ! ($e instanceof \Illuminate\Auth\Access\AuthorizationException)
-                && ! ($e instanceof \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException)
-                && ! ($e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException)
-                && ! ($e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException)
-                && ! ($e instanceof \Illuminate\Validation\ValidationException)) {
-                try {
-                    app(\App\Services\SystemIncidentReporter::class)->report($e);
-                } catch (\Throwable) {
-                    // Evita falhas secundárias
-                }
-            }
 
             $title = 'Não foi possível concluir a ação';
             $message = 'Ocorreu um imprevisto ao processar sua solicitação. Tente novamente em instantes.';
