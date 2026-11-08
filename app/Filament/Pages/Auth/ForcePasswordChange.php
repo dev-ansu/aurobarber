@@ -24,6 +24,8 @@ class ForcePasswordChange extends Page implements HasForms
 
     protected static ?string $slug = 'force-password-change';
 
+    protected static bool $isScopedToTenant = false;
+
     protected static bool $shouldRegisterNavigation = false;
 
     protected string $view = 'filament.pages.auth.force-password-change';

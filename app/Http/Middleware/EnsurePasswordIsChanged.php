@@ -20,7 +20,7 @@ class EnsurePasswordIsChanged
             }
 
             // Permite acessar a página de redefinição de senha
-            if ($request->routeIs('filament.admin.pages.force-password-change*')) {
+            if ($request->routeIs('*force-password-change*') || $request->is('*force-password-change*')) {
                 return $next($request);
             }
 
@@ -29,7 +29,7 @@ class EnsurePasswordIsChanged
                 return $next($request);
             }
 
-            return redirect()->route('filament.admin.pages.force-password-change');
+            return redirect()->to(url('/admin/force-password-change'));
         }
 
         return $next($request);
