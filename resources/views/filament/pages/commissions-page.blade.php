@@ -574,6 +574,7 @@
                                 <th>Produção Bruta</th>
                                 <th>Comissão Paga</th>
                                 <th>Método</th>
+                                <th style="text-align: right;">Ação</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -604,6 +605,15 @@
                                         <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; background: #1e293b; padding: 3px 8px; border-radius: 6px; color: #cbd5e1;">
                                             {{ $p->payment_method_label }}
                                         </span>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <button
+                                            type="button"
+                                            wire:click="openPrintPayoutModal({{ $p->id }})"
+                                            style="padding: 6px 12px; border-radius: 8px; background: #1e293b; border: 1px solid #334155; color: #fbbf24; font-size: 11px; font-weight: 800; cursor: pointer;"
+                                        >
+                                            🖨️ Recibo
+                                        </button>
                                     </td>
                                 </tr>
                             @endforeach
@@ -666,6 +676,68 @@
                     </button>
                     <button type="button" wire:click="confirmPayout" class="cp-btn-confirm">
                         Confirmar Pagamento e Liquidar Recibo ✓
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- MODAL / CANHOTO DE IMPRESSÃO DO RECIBO DE COMISSÃO --}}
+    @if ($printPayoutModalOpen && $selectedPayoutToPrint)
+        <div class="cp-modal-mask no-print">
+            <div class="cp-modal-window" style="max-width: 500px;">
+                <div class="cp-modal-head">
+                    <h3>📑 Recibo de Pagamento de Comissão</h3>
+                    <button type="button" wire:click="$set('printPayoutModalOpen', false)" class="cp-modal-x">&times;</button>
+                </div>
+
+                {{-- PRÉ-VISUALIZAÇÃO DO RECIBO COM CANHOTO --}}
+                <div id="payout-receipt" style="background: #ffffff; color: #000000; padding: 22px; border-radius: 12px; font-family: monospace; font-size: 12px; line-height: 1.4;">
+                    <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 12px;">
+                        <h3 style="margin: 0; font-size: 16px; font-weight: 900; text-transform: uppercase;">{{ $selectedPayoutToPrint->barbershop?->name ?? 'AUROBARBER' }}</h3>
+                        <span style="font-size: 11px; font-weight: bold; display: block; margin-top: 2px;">RECIBO DE PAGAMENTO DE COMISSÃO</span>
+                        <span style="font-size: 10px; color: #333; display: block;">Recibo Nº #{{ str_pad($selectedPayoutToPrint->id, 5, '0', STR_PAD_LEFT) }} • Emitido em {{ $selectedPayoutToPrint->paid_at->format('d/m/Y H:i') }}</span>
+                    </div>
+
+                    <div style="margin-bottom: 12px; border-bottom: 1px dashed #000; padding-bottom: 8px;">
+                        <div><strong>PROFISSIONAL:</strong> {{ $selectedPayoutToPrint->professional?->name }} ({{ $selectedPayoutToPrint->professional?->display_name }})</div>
+                        <div><strong>PERÍODO:</strong> {{ $selectedPayoutToPrint->period_start->format('d/m/Y') }} a {{ $selectedPayoutToPrint->period_end->format('d/m/Y') }}</div>
+                        <div><strong>TOTAL DE CORTES:</strong> {{ $selectedPayoutToPrint->appointments_count }} atendimento(s)</div>
+                        <div><strong>MÉTODO DE PAGAMENTO:</strong> {{ $selectedPayoutToPrint->payment_method_label }}</div>
+                    </div>
+
+                    <div style="margin-bottom: 12px; border-bottom: 1px dashed #000; padding-bottom: 8px;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>PRODUÇÃO BRUTA:</span> <span>R$ {{ number_format($selectedPayoutToPrint->total_gross, 2, ',', '.') }}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 900; margin-top: 4px;">
+                            <span>VALOR LÍQUIDO PAGO:</span> <span style="font-size: 16px;">R$ {{ number_format($selectedPayoutToPrint->total_commission, 2, ',', '.') }}</span>
+                        </div>
+                    </div>
+
+                    @if ($selectedPayoutToPrint->notes)
+                        <div style="margin-bottom: 10px; font-size: 11px; color: #444;">
+                            <em>Obs: {{ $selectedPayoutToPrint->notes }}</em>
+                        </div>
+                    @endif
+
+                    {{-- CANHOTO JURÍDICO DE QUITAÇÃO --}}
+                    <div style="margin-top: 20px; border: 1px solid #000; padding: 10px; border-radius: 6px; font-size: 10px; text-align: justify;">
+                        <p style="margin: 0;">
+                            Declaro que recebi da barbearia acima a quantia líquida de <strong>R$ {{ number_format($selectedPayoutToPrint->total_commission, 2, ',', '.') }}</strong>, referente ao repasse de comissões pelos serviços de barbearia prestados no período discriminado, dando plena e rasa quitação.
+                        </p>
+                        <div style="margin-top: 30px; text-align: center; border-top: 1px solid #000; padding-top: 4px;">
+                            Assinatura do Profissional: <strong>{{ $selectedPayoutToPrint->professional?->display_name }}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cp-modal-actions no-print">
+                    <button type="button" wire:click="$set('printPayoutModalOpen', false)" class="cp-btn-cancel">
+                        Fechar
+                    </button>
+                    <button type="button" onclick="window.print()" class="cp-btn-confirm">
+                        Imprimir Recibo 🖨️
                     </button>
                 </div>
             </div>

@@ -3,7 +3,9 @@
 namespace App\Filament\Pages;
 
 use App\Models\Appointment;
+use App\Models\CashMovement;
 use Carbon\Carbon;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
 use Illuminate\Support\Collection;
@@ -28,6 +30,15 @@ class CashRegisterPage extends Page
     }
 
     public string $selectedDate = '';
+
+    // Modal de Movimentação (Sangria / Suprimento / Abertura)
+    public bool $movementModalOpen = false;
+    public string $movementType = 'outflow'; // opening, inflow, outflow
+    public float $movementAmount = 0.00;
+    public string $movementDescription = '';
+
+    // Modal de Impressão do Caixa
+    public bool $printModalOpen = false;
 
     public function mount(): void
     {
@@ -59,26 +70,106 @@ class CashRegisterPage extends Page
             ->get();
     }
 
+    public function getDailyMovementsProperty(): Collection
+    {
+        $tenant = filament()->getTenant();
+        if (!$tenant) {
+            return collect();
+        }
+
+        return CashMovement::where('barbershop_id', $tenant->id)
+            ->whereDate('date', $this->selectedDate)
+            ->with('user')
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
     public function getCashStatsProperty(): array
     {
         $txs = $this->dailyTransactions;
+        $movs = $this->dailyMovements;
 
         $pix = (float) $txs->where('payment_method', 'pix')->sum('service_price');
-        $dinheiro = (float) $txs->where('payment_method', 'dinheiro')->sum('service_price');
+        $dinheiroCortes = (float) $txs->where('payment_method', 'dinheiro')->sum('service_price');
         $debito = (float) $txs->where('payment_method', 'debito')->sum('service_price');
         $credito = (float) $txs->where('payment_method', 'credito')->sum('service_price');
         $outros = (float) $txs->whereNotIn('payment_method', ['pix', 'dinheiro', 'debito', 'credito'])->sum('service_price');
 
-        $total = $pix + $dinheiro + $debito + $credito + $outros;
+        $faturamentoTotal = $pix + $dinheiroCortes + $debito + $credito + $outros;
+
+        $fundoAbertura = (float) $movs->where('type', 'opening')->sum('amount');
+        $suprimentos = (float) $movs->where('type', 'inflow')->sum('amount');
+        $sangrias = (float) $movs->where('type', 'outflow')->sum('amount');
+
+        // Dinheiro Físico Esperado na Gaveta
+        $saldoDinheiroGaveta = ($fundoAbertura + $suprimentos + $dinheiroCortes) - $sangrias;
 
         return [
             'pix' => $pix,
-            'dinheiro' => $dinheiro,
+            'dinheiro' => $dinheiroCortes,
             'debito' => $debito,
             'credito' => $credito,
             'outros' => $outros,
-            'total' => $total,
+            'total' => $faturamentoTotal,
             'count' => $txs->count(),
+            'fundo_abertura' => $fundoAbertura,
+            'suprimentos' => $suprimentos,
+            'sangrias' => $sangrias,
+            'saldo_dinheiro_gaveta' => $saldoDinheiroGaveta,
         ];
+    }
+
+    public function openMovementModal(string $type = 'outflow'): void
+    {
+        $this->movementType = $type;
+        $this->movementAmount = 0.00;
+        $this->movementDescription = match ($type) {
+            'opening' => 'Fundo de troco inicial do caixa',
+            'inflow' => 'Aporte / Troco adicional',
+            'outflow' => 'Retirada / Despesa avulsa',
+            default => '',
+        };
+        $this->movementModalOpen = true;
+    }
+
+    public function saveMovement(): void
+    {
+        $this->validate([
+            'movementType' => 'required|in:opening,inflow,outflow',
+            'movementAmount' => 'required|numeric|min:0.01',
+            'movementDescription' => 'required|string|min:3|max:255',
+        ]);
+
+        $tenant = filament()->getTenant();
+        if (!$tenant) {
+            return;
+        }
+
+        CashMovement::create([
+            'barbershop_id' => $tenant->id,
+            'user_id' => auth()->id(),
+            'type' => $this->movementType,
+            'amount' => $this->movementAmount,
+            'description' => $this->movementDescription,
+            'date' => $this->selectedDate,
+        ]);
+
+        $this->movementModalOpen = false;
+
+        Notification::make()
+            ->title('Movimentação de caixa registrada!')
+            ->success()
+            ->send();
+    }
+
+    public function deleteMovement(int $id): void
+    {
+        $tenant = filament()->getTenant();
+        CashMovement::where('barbershop_id', $tenant->id)->where('id', $id)->delete();
+
+        Notification::make()
+            ->title('Movimentação removida!')
+            ->success()
+            ->send();
     }
 }

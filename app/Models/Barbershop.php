@@ -78,6 +78,11 @@ class Barbershop extends Model
         return $this->hasMany(Appointment::class);
     }
 
+    public function cashMovements(): HasMany
+    {
+        return $this->hasMany(CashMovement::class);
+    }
+
     public function getFormattedWhatsappAttribute(): ?string
     {
         if (!$this->whatsapp) {

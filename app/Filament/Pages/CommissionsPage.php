@@ -44,6 +44,10 @@ class CommissionsPage extends Page
     public string $payoutMethod = 'pix'; // pix, dinheiro, transferencia
     public string $payoutNotes = '';
 
+    // Modal de Impressão do Recibo de Comissão
+    public bool $printPayoutModalOpen = false;
+    public ?CommissionPayout $selectedPayoutToPrint = null;
+
     public function mount(): void
     {
         $this->applyPreset('week');
@@ -230,5 +234,11 @@ class CommissionsPage extends Page
             ->body('Recibo gerado e atendimentos marcados como pagos.')
             ->success()
             ->send();
+    }
+
+    public function openPrintPayoutModal(int $payoutId): void
+    {
+        $this->selectedPayoutToPrint = CommissionPayout::with(['professional', 'barbershop', 'appointments.service'])->findOrFail($payoutId);
+        $this->printPayoutModalOpen = true;
     }
 }

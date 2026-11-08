@@ -36,7 +36,6 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->passwordReset()
-            ->emailVerification()
             ->profile(EditOwnProfile::class)
             ->multiFactorAuthentication([
                 AppAuthentication::make(),
