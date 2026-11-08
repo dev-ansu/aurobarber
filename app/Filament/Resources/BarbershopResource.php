@@ -92,6 +92,59 @@ class BarbershopResource extends Resource
                                     ->columnSpanFull(),
                             ]),
 
+                        Tab::make('Proprietário & Acesso')
+                            ->icon('heroicon-o-user-plus')
+                            ->schema([
+                                Forms\Components\Radio::make('owner_type')
+                                    ->label('Definição do Proprietário')
+                                    ->options([
+                                        'new' => 'Cadastrar Novo Dono de Barbearia (Gera senha temporária e envia por e-mail)',
+                                        'existing' => 'Vincular a Usuário Já Cadastrado no Sistema',
+                                    ])
+                                    ->default('new')
+                                    ->live()
+                                    ->columnSpanFull(),
+
+                                Forms\Components\TextInput::make('owner_name')
+                                    ->label('Nome Completo do Proprietário')
+                                    ->placeholder('Ex: Roberto Carlos da Silva')
+                                    ->required(fn ($get) => $get('owner_type') === 'new')
+                                    ->visible(fn ($get) => $get('owner_type') === 'new')
+                                    ->columnSpanFull(),
+
+                                Forms\Components\TextInput::make('owner_email')
+                                    ->label('E-mail de Acesso do Proprietário')
+                                    ->email()
+                                    ->placeholder('Ex: roberto@minhabarbearia.com.br')
+                                    ->required(fn ($get) => $get('owner_type') === 'new')
+                                    ->visible(fn ($get) => $get('owner_type') === 'new')
+                                    ->unique('users', 'email')
+                                    ->columnSpanFull(),
+
+                                Forms\Components\TextInput::make('owner_phone')
+                                    ->label('Telefone / WhatsApp do Proprietário')
+                                    ->tel()
+                                    ->placeholder('85999998888')
+                                    ->visible(fn ($get) => $get('owner_type') === 'new')
+                                    ->columnSpanFull(),
+
+                                Forms\Components\Toggle::make('send_welcome_email')
+                                    ->label('Enviar E-mail de Boas-Vindas com Senha Temporária e Instruções')
+                                    ->helperText('O dono receberá o link do painel e a senha temporária, sendo obrigado a redefinir no primeiro acesso.')
+                                    ->default(true)
+                                    ->visible(fn ($get) => $get('owner_type') === 'new')
+                                    ->columnSpanFull(),
+
+                                Forms\Components\Select::make('owner_id')
+                                    ->label('Selecione o Usuário Proprietário')
+                                    ->relationship('owner', 'name')
+                                    ->searchable()
+                                    ->preload()
+                                    ->required(fn ($get) => $get('owner_type') === 'existing')
+                                    ->visible(fn ($get) => $get('owner_type') === 'existing')
+                                    ->columnSpanFull(),
+                            ]),
+
                         Tab::make('Horários & Funcionamento')
                             ->icon('heroicon-o-clock')
                             ->schema([

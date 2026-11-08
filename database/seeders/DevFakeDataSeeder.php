@@ -43,6 +43,20 @@ class DevFakeDataSeeder extends Seeder
         );
         $admin->assignRole('super_admin');
 
+        // 2.1 Administrador Master Oficial (Anderson)
+        $masterAnderson = User::updateOrCreate(
+            ['email' => 'dev.andersondesouzafeitosa@gmail.com'],
+            [
+                'name' => 'Anderson Feitosa (SaaS Master)',
+                'password' => Hash::make('AuroDev@2026!#Temp'),
+                'role' => 'master_admin',
+                'must_change_password' => true,
+                'email_verified_at' => now(),
+                'is_active' => true,
+            ]
+        );
+        $masterAnderson->assignRole('super_admin');
+
         // 3. Proprietário Marinho
         $ownerMarinho = User::updateOrCreate(
             ['email' => 'marinho@barber.com.br'],

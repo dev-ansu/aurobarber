@@ -29,18 +29,18 @@ class ProductionSeeder extends Seeder
             Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
         }
 
-        // 2. Administrador Master do SaaS (Aurosoft)
-        $admin = User::firstOrCreate(
-            ['email' => 'admin@aurobarber.com.br'],
+        // 2. Administrador Master Oficial do SaaS (Aurosoft)
+        $masterAdmin = User::updateOrCreate(
+            ['email' => 'dev.andersondesouzafeitosa@gmail.com'],
             [
-                'name' => 'Admin AuroBarber',
-                'password' => Hash::make('AuroBarber@2026!'),
+                'name' => 'Anderson Feitosa (SaaS Master)',
+                'password' => Hash::make('AuroDev@2026!#Temp'),
                 'role' => 'master_admin',
+                'must_change_password' => true,
                 'email_verified_at' => now(),
                 'is_active' => true,
             ]
         );
-
-        $admin->assignRole('super_admin');
+        $masterAdmin->assignRole('super_admin');
     }
 }

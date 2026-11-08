@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Http\Middleware;
 
 use Closure;
@@ -11,29 +9,27 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsurePasswordIsChanged
 {
-    /**
-     * Intercepta usuários que possuem a flag must_change_password ativa,
-     * forçando-os a redefinir a senha antes de acessar qualquer painel.
-     */
     public function handle(Request $request, Closure $next): Response
     {
-        if (Auth::check()) {
-            $user = Auth::user();
+        $user = Auth::user();
 
-            if ($user && $user->must_change_password) {
-                // Rotas permitidas mesmo com troca pendente (tela de troca, envio do form e logout)
-                if (
-                    $request->routeIs('password.force_change') ||
-                    $request->routeIs('password.force_change.update') ||
-                    $request->is('auth/trocar-senha*') ||
-                    $request->is('*/logout') ||
-                    $request->is('logout')
-                ) {
-                    return $next($request);
-                }
-
-                return redirect()->route('password.force_change');
+        if ($user && (bool) $user->must_change_password) {
+            // Permite deslogar
+            if ($request->routeIs('filament.admin.auth.logout')) {
+                return $next($request);
             }
+
+            // Permite acessar a página de redefinição de senha
+            if ($request->routeIs('filament.admin.pages.force-password-change*')) {
+                return $next($request);
+            }
+
+            // Permite requisições Livewire na própria tela de redefinição
+            if ($request->hasHeader('X-Livewire') && str_contains($request->header('Referer', ''), 'force-password-change')) {
+                return $next($request);
+            }
+
+            return redirect()->route('filament.admin.pages.force-password-change');
         }
 
         return $next($request);

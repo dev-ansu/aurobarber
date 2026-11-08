@@ -39,6 +39,8 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasAppAu
         'role', // master_admin, owner, barber, receptionist
         'avatar_url',
         'is_active',
+        'must_change_password',
+        'password_changed_at',
         'app_authentication_secret',
         'app_authentication_recovery_codes',
         'has_email_authentication',
@@ -53,6 +55,8 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasAppAu
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'is_active' => 'boolean',
+        'must_change_password' => 'boolean',
+        'password_changed_at' => 'datetime',
     ];
 
     public function barbershop(): BelongsTo
