@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title') — Aurosoft LMS</title>
+    <title>@yield('title') — AuroBarber</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -54,7 +54,7 @@
         <!-- Rodapé discreto -->
         <div class="mt-8 pt-6 border-t border-slate-800/60 text-xs text-slate-500 flex items-center justify-center gap-1.5">
             <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            Aurosoft LMS &bull; Gestão Escolar Inteligente
+            AuroBarber &bull; Gestão Inteligente para Barbearias e Salões
         </div>
     </div>
 </body>

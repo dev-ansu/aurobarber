@@ -29,6 +29,13 @@ class EnsurePasswordIsChanged
                 return $next($request);
             }
 
+            $panel = filament()->getCurrentPanel();
+            $tenant = filament()->getTenant() ?? ($panel ? $user->getTenants($panel)->first() : null);
+
+            if ($tenant) {
+                return redirect()->to(url('/admin/' . $tenant->slug . '/force-password-change'));
+            }
+
             return redirect()->to(url('/admin/force-password-change'));
         }
 

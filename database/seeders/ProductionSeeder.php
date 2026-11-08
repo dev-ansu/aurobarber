@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Barbershop;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -11,8 +12,8 @@ class ProductionSeeder extends Seeder
 {
     /**
      * Seeder limpo para ambiente de Produção.
-     * Cria APENAS o administrador master e papéis fundamentais.
-     * ZERO dados fictícios, ZERO barbearias de teste.
+     * Cria APENAS o administrador master, papéis fundamentais e a Unidade Matriz do SaaS.
+     * ZERO dados fictícios, ZERO clientes ou agendamentos de teste.
      */
     public function run(): void
     {
@@ -42,5 +43,26 @@ class ProductionSeeder extends Seeder
             ]
         );
         $masterAdmin->assignRole('super_admin');
+
+        // 3. Unidade Matriz Oficial do SaaS (Âncora de Tenancy)
+        $matriz = Barbershop::updateOrCreate(
+            ['slug' => 'matriz'],
+            [
+                'name' => 'AuroBarber - Matriz',
+                'owner_id' => $masterAdmin->id,
+                'headline' => 'Unidade Matriz Oficial • Central SaaS AuroBarber',
+                'city' => 'Fortaleza / CE',
+                'is_active' => true,
+                'brand_color' => '#d97706',
+                'opening_hours' => [
+                    'days' => ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'],
+                    'start_time' => '08:00',
+                    'end_time' => '19:30',
+                    'slot_interval' => 30,
+                ],
+            ]
+        );
+
+        $matriz->users()->syncWithoutDetaching([$masterAdmin->id]);
     }
 }

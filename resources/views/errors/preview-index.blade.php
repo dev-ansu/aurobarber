@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Galeria de Telas de Erro — Aurosoft LMS</title>
+    <title>Galeria de Telas de Erro — AuroBarber</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,7 +24,7 @@
                 Ambiente de Demonstração
             </span>
             <h1 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-                Galeria de Telas de Erro do Aurosoft
+                Galeria de Telas de Erro do AuroBarber
             </h1>
             <p class="mt-2 text-sm text-slate-400">
                 Visualize e teste a experiência do usuário e os botões de retorno de cada código de erro:
