@@ -41,6 +41,14 @@ class DailySchedule extends Page
     public string $quickClientPhone = '';
     public string $activeModalTab = 'atendimento'; // atendimento | cliente
 
+    // Estado do Modal de Conclusão e Recebimento
+    public bool $checkoutModalOpen = false;
+    public ?int $checkoutAppointmentId = null;
+    public string $checkoutPaymentMethod = 'pix'; // pix, dinheiro, debito, credito
+    public float $checkoutAmount = 0.00;
+    public ?string $checkoutClientName = '';
+    public ?string $checkoutServicesSummary = '';
+
     public function mount(): void
     {
         $this->selectedDate = now()->format('Y-m-d');
@@ -144,6 +152,41 @@ class DailySchedule extends Page
 
         Notification::make()
             ->title('Status atualizado para: ' . $appt->status_label)
+            ->success()
+            ->send();
+    }
+
+    public function openCheckoutModal(int $appointmentId): void
+    {
+        $appt = Appointment::findOrFail($appointmentId);
+        $this->checkoutAppointmentId = $appt->id;
+        $this->checkoutAmount = (float) $appt->service_price;
+        $this->checkoutPaymentMethod = $appt->payment_method ?: 'pix';
+        $this->checkoutClientName = $appt->client_name;
+        $this->checkoutServicesSummary = $appt->services_summary;
+        $this->checkoutModalOpen = true;
+    }
+
+    public function confirmCheckout(): void
+    {
+        if (!$this->checkoutAppointmentId) {
+            return;
+        }
+
+        $appt = Appointment::findOrFail($this->checkoutAppointmentId);
+        $appt->status = 'completed';
+        $appt->payment_status = 'paid';
+        $appt->payment_method = $this->checkoutPaymentMethod;
+        $appt->service_price = $this->checkoutAmount;
+        $appt->commission_amount = round(($appt->service_price * $appt->commission_rate) / 100, 2);
+        $appt->paid_at = now();
+        $appt->save();
+
+        $this->checkoutModalOpen = false;
+
+        Notification::make()
+            ->title('Atendimento concluído e pagamento registrado!')
+            ->body("Recebido via {$appt->payment_method} no valor de R$ " . number_format($appt->service_price, 2, ',', '.'))
             ->success()
             ->send();
     }

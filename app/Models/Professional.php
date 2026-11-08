@@ -48,6 +48,11 @@ class Professional extends Model
         return $this->hasMany(Appointment::class);
     }
 
+    public function commissionPayouts(): HasMany
+    {
+        return $this->hasMany(CommissionPayout::class);
+    }
+
     public function getDisplayNameAttribute(): string
     {
         return $this->nickname ?: $this->name;

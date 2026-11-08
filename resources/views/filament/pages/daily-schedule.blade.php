@@ -857,7 +857,7 @@
 
                                             <button
                                                 type="button"
-                                                wire:click="updateStatus({{ $appt->id }}, 'completed')"
+                                                wire:click="openCheckoutModal({{ $appt->id }})"
                                                 class="ab-action-btn ab-btn-finish"
                                             >
                                                 ✅ Concluir
@@ -985,6 +985,79 @@
                         </div>
                     @endif
                 </form>
+            </div>
+        </div>
+    @endif
+
+    {{-- 5. MODAL DE CONCLUSÃO & RECEBIMENTO (CHECKOUT DE PAGAMENTO) --}}
+    @if ($checkoutModalOpen)
+        <div class="ab-modal-mask">
+            <div class="ab-modal-window">
+                <div class="ab-modal-head">
+                    <h3>🧾 Concluir Corte & Registrar Pagamento</h3>
+                    <button type="button" wire:click="$set('checkoutModalOpen', false)" class="ab-modal-x">&times;</button>
+                </div>
+
+                <div style="background: #020617; border: 1px solid #1e293b; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                        <span style="color: #94a3b8;">Cliente:</span>
+                        <strong style="color: #ffffff;">{{ $checkoutClientName }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                        <span style="color: #94a3b8;">Serviço(s):</span>
+                        <span style="color: #cbd5e1;">{{ $checkoutServicesSummary }}</span>
+                    </div>
+                </div>
+
+                <div class="ab-form-stack">
+                    <div class="ab-field">
+                        <label class="ab-field-label">Valor Cobrado (R$)</label>
+                        <input type="number" step="0.01" wire:model="checkoutAmount" class="ab-field-input" style="font-size: 16px; font-weight: 900; color: #fbbf24;" />
+                    </div>
+
+                    <div class="ab-field">
+                        <label class="ab-field-label">Forma de Pagamento</label>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                            <button
+                                type="button"
+                                wire:click="$set('checkoutPaymentMethod', 'pix')"
+                                style="padding: 12px; border-radius: 12px; font-size: 12px; font-weight: 800; border: 1px solid {{ $checkoutPaymentMethod === 'pix' ? '#38bdf8' : '#334155' }}; background: {{ $checkoutPaymentMethod === 'pix' ? 'rgba(56, 189, 248, 0.15)' : '#020617' }}; color: {{ $checkoutPaymentMethod === 'pix' ? '#38bdf8' : '#94a3b8' }}; cursor: pointer;"
+                            >
+                                📱 PIX
+                            </button>
+                            <button
+                                type="button"
+                                wire:click="$set('checkoutPaymentMethod', 'dinheiro')"
+                                style="padding: 12px; border-radius: 12px; font-size: 12px; font-weight: 800; border: 1px solid {{ $checkoutPaymentMethod === 'dinheiro' ? '#34d399' : '#334155' }}; background: {{ $checkoutPaymentMethod === 'dinheiro' ? 'rgba(52, 211, 153, 0.15)' : '#020617' }}; color: {{ $checkoutPaymentMethod === 'dinheiro' ? '#34d399' : '#94a3b8' }}; cursor: pointer;"
+                            >
+                                💵 Dinheiro
+                            </button>
+                            <button
+                                type="button"
+                                wire:click="$set('checkoutPaymentMethod', 'debito')"
+                                style="padding: 12px; border-radius: 12px; font-size: 12px; font-weight: 800; border: 1px solid {{ $checkoutPaymentMethod === 'debito' ? '#c084fc' : '#334155' }}; background: {{ $checkoutPaymentMethod === 'debito' ? 'rgba(192, 132, 252, 0.15)' : '#020617' }}; color: {{ $checkoutPaymentMethod === 'debito' ? '#c084fc' : '#94a3b8' }}; cursor: pointer;"
+                            >
+                                💳 Cartão Débito
+                            </button>
+                            <button
+                                type="button"
+                                wire:click="$set('checkoutPaymentMethod', 'credito')"
+                                style="padding: 12px; border-radius: 12px; font-size: 12px; font-weight: 800; border: 1px solid {{ $checkoutPaymentMethod === 'credito' ? '#fbbf24' : '#334155' }}; background: {{ $checkoutPaymentMethod === 'credito' ? 'rgba(251, 191, 36, 0.15)' : '#020617' }}; color: {{ $checkoutPaymentMethod === 'credito' ? '#fbbf24' : '#94a3b8' }}; cursor: pointer;"
+                            >
+                                💳 Cartão Crédito
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="ab-modal-foot">
+                        <button type="button" wire:click="$set('checkoutModalOpen', false)" class="ab-foot-btn-sec">
+                            Cancelar
+                        </button>
+                        <button type="button" wire:click="confirmCheckout" class="ab-foot-btn-success">
+                            Confirmar Recebimento & Concluir ✓
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     @endif

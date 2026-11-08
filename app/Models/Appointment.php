@@ -26,12 +26,18 @@ class Appointment extends Model
         'commission_amount',
         'payment_method',
         'payment_status',
+        'paid_at',
+        'commission_status',
+        'commission_payout_id',
+        'commission_paid_at',
         'notes',
     ];
 
     protected $casts = [
         'scheduled_at' => 'datetime',
         'ends_at' => 'datetime',
+        'paid_at' => 'datetime',
+        'commission_paid_at' => 'datetime',
         'service_price' => 'decimal:2',
         'commission_rate' => 'decimal:2',
         'commission_amount' => 'decimal:2',
@@ -57,6 +63,11 @@ class Appointment extends Model
         return $this->belongsToMany(Service::class, 'appointment_services')
             ->withPivot('price', 'duration_minutes')
             ->withTimestamps();
+    }
+
+    public function commissionPayout(): BelongsTo
+    {
+        return $this->belongsTo(CommissionPayout::class);
     }
 
     public function getServicesSummaryAttribute(): string
