@@ -2,9 +2,16 @@
 
 namespace App\Models;
 
+use Filament\Auth\MultiFactor\App\Concerns\InteractsWithAppAuthentication;
+use Filament\Auth\MultiFactor\App\Concerns\InteractsWithAppAuthenticationRecovery;
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthentication;
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthenticationRecovery;
+use Filament\Auth\MultiFactor\Email\Concerns\InteractsWithEmailAuthentication;
+use Filament\Auth\MultiFactor\Email\Contracts\HasEmailAuthentication;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasTenants;
 use Filament\Panel;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,9 +23,12 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements FilamentUser, HasTenants
+class User extends Authenticatable implements FilamentUser, HasTenants, MustVerifyEmail, HasAppAuthentication, HasAppAuthenticationRecovery, HasEmailAuthentication
 {
     use HasFactory, HasRoles, Notifiable;
+    use InteractsWithAppAuthentication;
+    use InteractsWithAppAuthenticationRecovery;
+    use InteractsWithEmailAuthentication;
 
     protected $fillable = [
         'barbershop_id',
@@ -29,6 +39,9 @@ class User extends Authenticatable implements FilamentUser, HasTenants
         'role', // master_admin, owner, barber, receptionist
         'avatar_url',
         'is_active',
+        'app_authentication_secret',
+        'app_authentication_recovery_codes',
+        'has_email_authentication',
     ];
 
     protected $hidden = [

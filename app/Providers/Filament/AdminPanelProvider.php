@@ -2,9 +2,12 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Auth\EditOwnProfile;
 use App\Filament\Pages\Tenancy\EditBarbershopProfile;
 use App\Filament\Pages\Tenancy\RegisterBarbershop;
 use App\Models\Barbershop;
+use Filament\Auth\MultiFactor\App\AppAuthentication;
+use Filament\Auth\MultiFactor\Email\EmailAuthentication;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -32,6 +35,13 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->passwordReset()
+            ->emailVerification()
+            ->profile(EditOwnProfile::class)
+            ->multiFactorAuthentication([
+                AppAuthentication::make(),
+                EmailAuthentication::make(),
+            ])
             ->brandName('AuroBarber')
             ->colors([
                 'primary' => Color::Amber,
