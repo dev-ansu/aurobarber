@@ -1,0 +1,18 @@
+<?php
+
+namespace App\Filament\Resources\Schools\Pages;
+
+use App\Filament\Resources\Schools\SchoolResource;
+use Filament\Resources\Pages\EditRecord;
+
+class EditSchool extends EditRecord
+{
+    protected static string $resource = SchoolResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('edit', [
+            'record' => $this->record,
+        ]);
+    }
+}

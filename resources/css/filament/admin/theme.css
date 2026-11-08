@@ -1,0 +1,242 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
+@source '../../../../resources/views/livewire/**/*';
+@source '../../../../resources/views/components/**/*';
+
+/* ==========================================================================
+   AUROSOFT DESIGN SYSTEM & DARK MODE CONTRAST ENGINE
+   Mantém a paleta oficial Amber/Gold + Slate com contraste garantido
+   ========================================================================== */
+
+:root {
+    color-scheme: light;
+}
+
+:root.dark,
+html.dark,
+.dark {
+    color-scheme: dark;
+}
+
+/* 1. Correção Definitiva de Inputs, Selects, Options e Textareas (Modo Claro & Escuro) */
+html:not(.dark) .fi-main input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='color']):not(.fi-input),
+html:not(.dark) .fi-main select:not(.fi-select-input),
+html:not(.dark) .fi-main textarea:not(.fi-fo-textarea),
+html:not(.dark) .fi-modal input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='color']):not(.fi-input),
+html:not(.dark) .fi-modal select:not(.fi-select-input),
+html:not(.dark) .fi-modal textarea:not(.fi-fo-textarea) {
+    background-color: #ffffff;
+    color: #0f172a;
+    border: 1px solid #cbd5e1;
+}
+
+html:not(.dark) select option,
+html:not(.dark) select optgroup {
+    background-color: #ffffff;
+    color: #0f172a;
+}
+
+html.dark input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='color']):not(.fi-input),
+html.dark select:not(.fi-select-input),
+html.dark textarea:not(.fi-fo-textarea),
+.dark input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='color']):not(.fi-input),
+.dark select:not(.fi-select-input),
+.dark textarea:not(.fi-fo-textarea) {
+    background-color: #111827 !important;
+    color: #f8fafc !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color-scheme: dark;
+}
+
+html.dark input:not(.fi-input)::placeholder,
+html.dark textarea:not(.fi-fo-textarea)::placeholder,
+.dark input:not(.fi-input)::placeholder,
+.dark textarea:not(.fi-fo-textarea)::placeholder {
+    color: #94a3b8 !important;
+    opacity: 1;
+}
+
+html.dark select option,
+html.dark select optgroup,
+.dark select option,
+.dark select optgroup,
+select.bg-slate-900 option,
+select.bg-slate-950 option,
+select.bg-gray-800 option,
+select.bg-gray-900 option {
+    background-color: #111827 !important;
+    color: #f8fafc !important;
+}
+
+/* Foco com assinatura Amber do Aurosoft */
+html .fi-main input:not([type='checkbox']):not([type='radio']):not(.fi-input):focus,
+html .fi-main select:not(.fi-select-input):focus,
+html .fi-main textarea:not(.fi-fo-textarea):focus,
+html.dark input:not([type='checkbox']):not([type='radio']):not(.fi-input):focus,
+html.dark select:not(.fi-select-input):focus,
+html.dark textarea:not(.fi-fo-textarea):focus {
+    outline: none !important;
+    border-color: #f59e0b !important;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2) !important;
+}
+
+/* Inputs nativos do Filament (.fi-input-wrp) no modo escuro */
+html.dark .fi-input-wrp {
+    background-color: rgba(17, 24, 39, 0.85) !important;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14) !important;
+}
+
+html.dark .fi-input-wrp:focus-within {
+    box-shadow: 0 0 0 2px #f59e0b !important;
+}
+
+html.dark .fi-input,
+html.dark .fi-select-input {
+    color: #f8fafc !important;
+}
+
+/* Autofill do navegador sem fundo branco no modo escuro */
+html.dark input:-webkit-autofill,
+html.dark input:-webkit-autofill:hover,
+html.dark input:-webkit-autofill:focus,
+html.dark textarea:-webkit-autofill,
+html.dark select:-webkit-autofill {
+    -webkit-text-fill-color: #f8fafc !important;
+    -webkit-box-shadow: 0 0 0px 1000px #111827 inset !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+/* 2. Refinamento Estético Global: Sidebar, Cards, Tabelas e Modais */
+/* Nota: Não aplicar backdrop-filter ou transform diretamente em .fi-topbar para não criar containing block que prende modais fixed (ex: Quadro de Horários) */
+
+html:not(.dark) .fi-body {
+    background-color: #f8fafc;
+}
+
+html.dark .fi-body {
+    background-color: #090d16;
+}
+
+html.dark .fi-sidebar {
+    background-color: #0d1320;
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+html:not(.dark) .fi-sidebar {
+    background-color: #ffffff;
+    border-right: 1px solid rgba(15, 23, 42, 0.07);
+}
+
+/* Item ativo do menu lateral com destaque Amber elegante */
+.fi-sidebar-item-active > a,
+.fi-sidebar-item-active > button {
+    position: relative;
+}
+
+.fi-sidebar-item-active > a::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 20%;
+    bottom: 20%;
+    width: 3.5px;
+    border-radius: 0 4px 4px 0;
+    background: linear-gradient(180deg, #f59e0b, #d97706);
+}
+
+/* Seções, Cards de Estatística e Tabelas com acabamento refinado */
+.fi-section,
+.fi-ta-ctn,
+.fi-wi-stats-overview-stat {
+    border-radius: 1rem !important;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+html:not(.dark) .fi-section,
+html:not(.dark) .fi-ta-ctn,
+html:not(.dark) .fi-wi-stats-overview-stat {
+    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+}
+
+html.dark .fi-section,
+html.dark .fi-ta-ctn,
+html.dark .fi-wi-stats-overview-stat {
+    background-color: #111827;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 10px 20px -10px rgba(0, 0, 0, 0.4);
+}
+
+.fi-wi-stats-overview-stat:hover {
+    transform: translateY(-1px);
+}
+
+/* Linhas de tabela com hover suave */
+html:not(.dark) .fi-ta-row:hover {
+    background-color: rgba(245, 158, 11, 0.04) !important;
+}
+
+html.dark .fi-ta-row:hover {
+    background-color: rgba(245, 158, 11, 0.06) !important;
+}
+
+/* Scrollbars elegantes */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.35);
+    border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(245, 158, 11, 0.6);
+}
+
+/* 3. Proteção responsiva de cabeçalhos de página (evita esmagamento de títulos e estouro de ações) */
+.fi-header {
+    flex-wrap: wrap !important;
+    gap: 1rem !important;
+}
+
+.fi-header > div:first-child {
+    min-width: min(100%, 280px);
+    flex: 1 1 auto;
+}
+
+.fi-header-heading {
+    word-break: normal;
+    overflow-wrap: break-word;
+}
+
+.fi-header-actions-ctn {
+    flex-wrap: wrap !important;
+    max-width: 100%;
+}
+
+.fi-header-actions-ctn .fi-ac {
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+}
+
+/* 4. Logotipo da Escola no Seletor de Unidades (Tenant Switcher) - Sem cortes */
+.fi-tenant-avatar,
+.fi-tenant-menu-trigger img.fi-avatar,
+.fi-dropdown-list-item img.fi-tenant-avatar {
+    width: auto !important;
+    max-width: 4.5rem !important;
+    height: 1.85rem !important;
+    object-fit: contain !important;
+    background-color: #ffffff !important;
+    padding: 0.15rem 0.35rem !important;
+    border-radius: 0.5rem !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.08) !important;
+}
+
+

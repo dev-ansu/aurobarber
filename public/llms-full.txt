@@ -1,0 +1,20 @@
+# Aurosoft • Documentação Técnica Expandida para Agentes e Modelos de Linguagem
+
+> Visão arquitetural, fluxos de negócio e especificação do ecossistema Aurosoft.
+
+## 1. Visão Geral
+Aurosoft é um software como serviço (SaaS) multi-tenant voltado para redes de escolas de cursos profissionalizantes e livres. O sistema centraliza captação de leads (CRM), matrículas e contratos jurídicos amparados pela LDB 9.394/96, controle de contas a receber com geração dinâmica de QRCodes Pix (Banco Central do Brasil), controle de presença em totens físicos e sala de aula virtual (LMS) com trilhas de aprendizagem.
+
+## 2. Arquitetura Multi-Tenant
+- **Banco de Dados:** PostgreSQL com isolamento por schemas (`tenant_{slug}` ou `demo`).
+- **Segurança:** Isolamento total de sessões com cookies específicos por host e políticas estritas de tenant.
+- **Painel Central (Master):** Gerenciamento de assinaturas, saúde da infraestrutura (AuroDoctor) e licenciamento sob `master.aurosoft.com.br`.
+- **Painéis de Unidade (Tenant):** Operação administrativa da escola em subdomínios dedicados (`{escola}.aurosoft.com.br/admin`).
+
+## 3. Principais Endpoints e Acessos
+
+- [Início do Portal Corporativo](https://aurosoft.com.br): Apresentação dos módulos, calculadora de retorno sobre investimento e contato comercial.
+- [Demonstração Pública](https://demo.aurosoft.com.br): Acesso livre para avaliação.
+- [Portal do Aluno](https://demo.aurosoft.com.br/aluno/login): LMS e acompanhamento pedagógico.
+- [Totem de Presença](https://demo.aurosoft.com.br/presenca): Terminal de check-in para alunos em sala de aula.
+- [Arquivo de Instruções Principais](https://aurosoft.com.br/llms.txt): Índice resumido de navegação agêntica.

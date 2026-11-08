@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /saas/
+Disallow: /app/
+
+Sitemap: https://aurosoft.com.br/sitemap.xml

@@ -1,0 +1,2963 @@
+{
+    "application": "Aurosoft LMS",
+    "version": 1,
+    "exported_at": "2026-10-18T14:16:30-03:00",
+    "counts": {
+        "courses": 315,
+        "modules": 2,
+        "lessons": 2,
+        "steps": 11,
+        "typing_exercises": 24
+    },
+    "courses": [
+        {
+            "name": "3DS Max 2020",
+            "description": null,
+            "workload": 30,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "3D Studio Max 2008/2009",
+            "description": null,
+            "workload": 48,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Access 2010",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Administrativo",
+            "description": null,
+            "workload": 11,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Administrativo Informatizado V4",
+            "description": null,
+            "workload": 38,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Administrativo Informatizado V4 Fast",
+            "description": null,
+            "workload": 18,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Administrativo Informatizado V4 Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Administrativo Informatizado - Versão 1",
+            "description": null,
+            "workload": 30,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Administrativo Informatizado - Versão 2",
+            "description": null,
+            "workload": 30,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Administrativo Informatizado - Versão 3",
+            "description": null,
+            "workload": 38,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Adobe After Effects CC",
+            "description": null,
+            "workload": 21,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Adobe Illustrator",
+            "description": null,
+            "workload": 24,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Adobe Illustrator CC",
+            "description": null,
+            "workload": 24,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Adobe Illustrator CS6",
+            "description": null,
+            "workload": 30,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Adobe Illustrator en Español",
+            "description": null,
+            "workload": 24,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Adobe Illustrator Fast",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Adobe Illustrator Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Adobe Photoshop CC",
+            "description": null,
+            "workload": 30,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Adobe Photoshop CC V2",
+            "description": null,
+            "workload": 30,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Adobe Photoshop CC V2 Fast",
+            "description": null,
+            "workload": 15,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Adobe Photoshop CC V2 Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Adobe Premiere Pro CC",
+            "description": null,
+            "workload": 27,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "After Effects",
+            "description": null,
+            "workload": 20,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Agente de Portaria",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Almacenamiento en la Nube en Español",
+            "description": null,
+            "workload": 6,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Ambientes Digitais",
+            "description": null,
+            "workload": 24,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Ambientes Digitais Fast",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Ambientes Digitais Kids",
+            "description": null,
+            "workload": 18,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Ambientes Digitais Kids Fast",
+            "description": null,
+            "workload": 9,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Ambientes Digitais Kids Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Ambientes Digitais Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Ambientes Digitales",
+            "description": null,
+            "workload": 24,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Aplicaciones para Hacer Llamadas en Español",
+            "description": null,
+            "workload": 6,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Aplicativos de Acesso Remoto",
+            "description": null,
+            "workload": 3,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Aplicativos de chamada",
+            "description": null,
+            "workload": 6,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Armazenamento em Nuvem",
+            "description": null,
+            "workload": 6,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Assistente Contábil - Versão 1",
+            "description": null,
+            "workload": 22,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Assistente Contábil - Versão 2",
+            "description": null,
+            "workload": 33,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Atendente de Farmácia - Versão 1",
+            "description": null,
+            "workload": 10,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Atendente de Farmácia - Versão 2",
+            "description": null,
+            "workload": 15,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Atendente de Posto de Gasolina",
+            "description": null,
+            "workload": 6,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "AutoCAD 2020 2D",
+            "description": null,
+            "workload": 33,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "AutoCAD 2022 3D",
+            "description": null,
+            "workload": 27,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "AutoCAD 2D",
+            "description": null,
+            "workload": 25,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "AutoCAD 2D 2015",
+            "description": null,
+            "workload": 30,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "AutoCAD 2D em Espanhol",
+            "description": null,
+            "workload": 30,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "AutoCAD 3D",
+            "description": null,
+            "workload": 20,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "AutoCAD 3D 2015",
+            "description": null,
+            "workload": 18,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "AutoCAD 3D em Espanhol",
+            "description": null,
+            "workload": 18,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Banco de dados com MySql",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Banco de dados com MySql Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Biossegurança",
+            "description": null,
+            "workload": 15,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "BrOffice Calc",
+            "description": null,
+            "workload": 18,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "BrOffice Impress",
+            "description": null,
+            "workload": 18,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "BrOffice Writer",
+            "description": null,
+            "workload": 22,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Canva",
+            "description": null,
+            "workload": 18,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Canva en Español",
+            "description": null,
+            "workload": 18,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "CapCut",
+            "description": null,
+            "workload": 15,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "CapCut Español",
+            "description": null,
+            "workload": 15,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "CapCut Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "ChatGPT",
+            "description": null,
+            "workload": 8,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Comunicação Profissional",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Comunicação Profissional Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "CorelDRAW",
+            "description": null,
+            "workload": 24,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "CorelDRAW Fast",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "CorelDRAW Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "CorelDraw X3",
+            "description": null,
+            "workload": 24,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "CorelDraw X5",
+            "description": null,
+            "workload": 30,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "CorelDraw X8",
+            "description": null,
+            "workload": 30,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "CorelDraw X8 em Espanhol",
+            "description": null,
+            "workload": 18,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Crédito, Cobrança e Atendimento",
+            "description": null,
+            "workload": 9,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Criador de Conteúdo Kids",
+            "description": null,
+            "workload": 24,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Criador de Conteúdo Kids Fast",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Criador de Conteúdo Kids Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Cuidador de Ancianos en Español",
+            "description": null,
+            "workload": 15,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Cuidador de Idosos",
+            "description": null,
+            "workload": 15,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Departamento Pessoal - V4",
+            "description": null,
+            "workload": 14,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Departamento Pessoal - V4 Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Departamento Pessoal - Versão 1",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Departamento Pessoal - Versão 2",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Departamento Pessoal - Versão 3",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Desenvolvedor de Aplicativos Android - Versão 1",
+            "description": null,
+            "workload": 18,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Desenvolvedor de Aplicativos Android - Versão 2",
+            "description": null,
+            "workload": 24,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Desenvolvedor de App Android Studio V3",
+            "description": null,
+            "workload": 24,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Desenvolvedor de Games 3D - Módulo III - Versão 1",
+            "description": null,
+            "workload": 15,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Desenvolvedor de Games 3D - Módulo III - Versão 2",
+            "description": null,
+            "workload": 14,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Desenvolvedor de Games 3D - Módulo II - Versão 1",
+            "description": null,
+            "workload": 22,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Desenvolvedor de Games 3D - Módulo II - Versão 2",
+            "description": null,
+            "workload": 22,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Desenvolvedor de Games 3D - Módulo I - Versão 1",
+            "description": null,
+            "workload": 22,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Desenvolvedor de Games 3D - Módulo I - Versão 2",
+            "description": null,
+            "workload": 21,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Desenvolvedor de Games Kids",
+            "description": null,
+            "workload": 24,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Desenvolvedor de Games Online - Versão 1",
+            "description": null,
+            "workload": 30,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Desenvolvedor de Games Online - Versão 2",
+            "description": null,
+            "workload": 30,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Design Gráfico",
+            "description": "Fundamentos de design, composição e comunicação visual.",
+            "workload": 96,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Digitação",
+            "description": null,
+            "workload": 9,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Digitação Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Documentos Google",
+            "description": null,
+            "workload": 3,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Domínio",
+            "description": null,
+            "workload": 3,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Domínio e E-mails",
+            "description": null,
+            "workload": 1,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Dreamweaver CS3",
+            "description": null,
+            "workload": 14,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Dreamweaver CS5",
+            "description": null,
+            "workload": 30,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Dreamweaver CS6",
+            "description": null,
+            "workload": 30,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Educação Financeira",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Educação Financeira Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Elaboração de Currículo",
+            "description": null,
+            "workload": 1,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Empreendedorismo",
+            "description": null,
+            "workload": 6,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Empreendendo com Inteligência: AI nos Negócios",
+            "description": null,
+            "workload": 8,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Excel 2003",
+            "description": null,
+            "workload": 21,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Excel 2010",
+            "description": null,
+            "workload": 22,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Excel 2010 Fast",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Excel 2013",
+            "description": null,
+            "workload": 22,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Excel 2013 Fast",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Excel 2016",
+            "description": null,
+            "workload": 21,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Excel 2016 Avançado",
+            "description": null,
+            "workload": 21,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Excel 2016 em Espanhol",
+            "description": null,
+            "workload": 21,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Excel 2019",
+            "description": null,
+            "workload": 21,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Excel 2019 Avançado",
+            "description": null,
+            "workload": 20,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Excel 2019 Avanzado en Español",
+            "description": null,
+            "workload": 20,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Excel 2019 Dashboard",
+            "description": null,
+            "workload": 8,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Excel Avançado 2011",
+            "description": null,
+            "workload": 19,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Excel Fundamental",
+            "description": null,
+            "workload": 27,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Excel Fundamental en Español",
+            "description": null,
+            "workload": 27,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Excel Fundamental Fast",
+            "description": null,
+            "workload": 14,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Excel Fundamental V2",
+            "description": null,
+            "workload": 27,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Excel Fundamental V2 Fast",
+            "description": null,
+            "workload": 14,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Excel Fundamental V2 Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Facebook Business",
+            "description": null,
+            "workload": 24,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Fireworks CS3",
+            "description": null,
+            "workload": 10,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Fireworks CS5",
+            "description": null,
+            "workload": 22,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Fireworks CS6",
+            "description": null,
+            "workload": 22,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Flash CS3",
+            "description": null,
+            "workload": 20,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Flash CS5",
+            "description": null,
+            "workload": 30,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Flash CS6",
+            "description": null,
+            "workload": 30,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "FTP",
+            "description": null,
+            "workload": 1,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Fundamentos do N8N",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Fundamentos do N8N Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Gestão Administrativa - Versão 1",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Gestão Administrativa - Versão 2",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Gestão de RH - Versão 1",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Gestão de RH - Versão 2",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Gestão Empresarial",
+            "description": "Princípios de gestão e organização de negócios.",
+            "workload": 80,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": [
+                {
+                    "title": "Teste1",
+                    "description": "sadf",
+                    "sort_order": 1,
+                    "is_active": true,
+                    "lessons": [
+                        {
+                            "title": "Aula 1",
+                            "description": "Aula completa de 90 minutos gerada com base na metodologia jesuítica sobre Aula 1.",
+                            "sort_order": 1,
+                            "passing_score": "80.00",
+                            "estimated_minutes": null,
+                            "is_active": true,
+                            "steps": [
+                                {
+                                    "phase": "praelectio",
+                                    "step_type": "theory",
+                                    "title": "1. Conceituação e Importância Prática",
+                                    "sort_order": 1,
+                                    "content": {
+                                        "body": "Bem-vindo ao estudo de Aula 1. Nesta etapa, compreenda o propósito central: por que esta ferramenta existe no mercado de trabalho e qual problema real ela resolve para a empresa."
+                                    }
+                                },
+                                {
+                                    "phase": "practice",
+                                    "step_type": "hotspot_simulation",
+                                    "title": "2. Prática Guiada: Execução dos Comandos",
+                                    "sort_order": 2,
+                                    "content": {
+                                        "instructions": "Identifique os elementos na tela e acione a ferramenta principal para aplicar **Aula 1** com precisão.",
+                                        "body": "Identifique os elementos na tela e acione a ferramenta principal para aplicar **Aula 1** com precisão.",
+                                        "explanation_on_error": "Atenção aos detalhes da interface. Clique exatamente na ferramenta indicada pelo roteiro da aula."
+                                    }
+                                },
+                                {
+                                    "phase": "repetitio",
+                                    "step_type": "quiz",
+                                    "title": "3. Fixação: Por que funciona desta maneira?",
+                                    "sort_order": 3,
+                                    "content": {
+                                        "question": "Ao aplicar Aula 1, qual é o resultado imediato esperado no sistema?",
+                                        "options": [
+                                            {
+                                                "id": "A",
+                                                "text": "Gera o cálculo automatizado e padroniza os dados corretamente.",
+                                                "is_correct": true
+                                            },
+                                            {
+                                                "id": "B",
+                                                "text": "Apenas altera a cor visual sem impacto nas fórmulas.",
+                                                "is_correct": false
+                                            },
+                                            {
+                                                "id": "C",
+                                                "text": "Apaga os registros anteriores permanentemente.",
+                                                "is_correct": false
+                                            }
+                                        ],
+                                        "explanation_on_error": "Lembre-se: o objetivo central é automatizar e garantir a consistência das informações."
+                                    }
+                                },
+                                {
+                                    "phase": "concertatio",
+                                    "step_type": "challenge",
+                                    "title": "4. Desafio Prático Autônomo (Sem Auxílio)",
+                                    "sort_order": 4,
+                                    "content": {
+                                        "scenario": "Você foi contratado por uma empresa e precisa resolver uma planilha com urgência.",
+                                        "instructions": "Aplique agora tudo o que foi praticado em Aula 1 do zero, demonstrando autonomia completa.",
+                                        "explanation_on_error": "Se você hesitou, revise a Prática Guiada antes de submeter a resolução final."
+                                    }
+                                },
+                                {
+                                    "phase": "examen",
+                                    "step_type": "quiz",
+                                    "title": "5. Avaliação Final de Maestria (80% Mínimo)",
+                                    "sort_order": 5,
+                                    "content": {
+                                        "question": "Para consolidar sua aprovação nesta aula, confirme o critério de boas práticas aplicável:",
+                                        "options": [
+                                            {
+                                                "id": "A",
+                                                "text": "Validar os parâmetros, conferir os intervalos e documentar as alterações.",
+                                                "is_correct": true
+                                            },
+                                            {
+                                                "id": "B",
+                                                "text": "Ignorar a formatação e salvar sem revisar.",
+                                                "is_correct": false
+                                            },
+                                            {
+                                                "id": "C",
+                                                "text": "Compartilhar arquivos sem testar previamente.",
+                                                "is_correct": false
+                                            }
+                                        ],
+                                        "explanation_on_error": "A excelência profissional exige conferência prévia e rigor metodológico."
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Gestión Administrativa en Español",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Gestión de Recursos Humanos en Español",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Google Ads",
+            "description": null,
+            "workload": 15,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Google Ads Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Google Adwords",
+            "description": null,
+            "workload": 1,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Google Documentos en Español",
+            "description": null,
+            "workload": 3,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Google Education Avançado",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Google Education Básico",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Guia de Prevenção - COVID 19",
+            "description": null,
+            "workload": 3,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Hotelaria e Turismo",
+            "description": null,
+            "workload": 18,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "HTML",
+            "description": null,
+            "workload": 2,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "HTML5 e CSS3",
+            "description": null,
+            "workload": 23,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "HTML5 e CSS3 Fast",
+            "description": null,
+            "workload": 11,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "HTML5 e CSS3 Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "HTML e CSS",
+            "description": null,
+            "workload": 18,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "HTML e CSS em Espanhol",
+            "description": null,
+            "workload": 18,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "InDesign CS4",
+            "description": null,
+            "workload": 20,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "InDesign CS6",
+            "description": null,
+            "workload": 18,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Inteligência Artificial",
+            "description": null,
+            "workload": 24,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Inteligencia Artificial en Español",
+            "description": null,
+            "workload": 24,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Inteligência Artificial Fast",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Inteligência Artificial Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Inteligência Emocional",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Inteligência Emocional Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Internet Kids",
+            "description": null,
+            "workload": 8,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Internet - Versão 1",
+            "description": null,
+            "workload": 13,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Internet - Versão 2",
+            "description": null,
+            "workload": 14,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Internet - Versão 3",
+            "description": null,
+            "workload": 13,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Internet - Versão 4",
+            "description": null,
+            "workload": 17,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Introdução à Informática Aurosoft",
+            "description": null,
+            "workload": 16,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": [
+                {
+                    "title": "Módulo 1 - A máquina de pensar",
+                    "description": "",
+                    "sort_order": 1,
+                    "is_active": true,
+                    "lessons": [
+                        {
+                            "title": "O Computador não é Mágico, é Lógico",
+                            "description": "Aula completa de 90 minutos gerada com base na metodologia jesuítica sobre O Computador não é Mágico, é Lógico.",
+                            "sort_order": 1,
+                            "passing_score": "80.00",
+                            "estimated_minutes": null,
+                            "is_active": true,
+                            "steps": [
+                                {
+                                    "phase": "praelectio",
+                                    "step_type": "theory",
+                                    "title": "1. Conceituação e Importância Prática",
+                                    "sort_order": 1,
+                                    "content": {
+                                        "body": "Bem-vindo ao estudo de O Computador não é Mágico, é Lógico. Nesta etapa, compreenda o propósito central: por que esta ferramenta existe no mercado de trabalho e qual problema real ela resolve para a empresa."
+                                    }
+                                },
+                                {
+                                    "phase": "practice",
+                                    "step_type": "hotspot_simulation",
+                                    "title": "2. Prática Guiada: Execução dos Comandos",
+                                    "sort_order": 2,
+                                    "content": {
+                                        "media_type": "image",
+                                        "media_url": "/storage/lms-media/rhCRgVJEcAsjfMhyaYhR6FzjHLUz73ehvUq6dpQc.png",
+                                        "instructions": "Identifique os elementos na tela e acione a ferramenta principal para aplicar O Computador não é Mágico, é Lógico com precisão.",
+                                        "explanation_on_error": "Atenção aos detalhes da interface. Clique exatamente na ferramenta indicada pelo roteiro da aula."
+                                    }
+                                },
+                                {
+                                    "phase": "practice",
+                                    "step_type": "hotspot_simulation",
+                                    "title": "Abrindo o explorador de arquivos",
+                                    "sort_order": 3,
+                                    "content": {
+                                        "media_type": "image",
+                                        "media_url": "/storage/lms-media/iAthbhrXfws0Ab2VQRe0KB00x8MG1VkcJeP1h2Oo.png",
+                                        "instructions": "Clique com o botão esquerdo do mouse em Arquivo",
+                                        "explanation_on_error": "Clique com o botão esquerdo do mouse em Arquivo",
+                                        "hotspot": {
+                                            "interaction_type": "click",
+                                            "x": 7.76,
+                                            "y": 9.79,
+                                            "end_x": null,
+                                            "end_y": null,
+                                            "direction": "left_to_right",
+                                            "radius": 6,
+                                            "label": "Clique aqui",
+                                            "expected_text": "",
+                                            "case_sensitive": false,
+                                            "trim_whitespace": true,
+                                            "input_width": 35
+                                        }
+                                    }
+                                },
+                                {
+                                    "phase": "repetitio",
+                                    "step_type": "quiz",
+                                    "title": "3. Fixação: Por que funciona desta maneira?",
+                                    "sort_order": 4,
+                                    "content": {
+                                        "question": "Ao aplicar O Computador não é Mágico, é Lógico, qual é o resultado imediato esperado no sistema?",
+                                        "options": [
+                                            {
+                                                "id": "A",
+                                                "text": "Gera o cálculo automatizado e padroniza os dados corretamente.",
+                                                "is_correct": true
+                                            },
+                                            {
+                                                "id": "B",
+                                                "text": "Apenas altera a cor visual sem impacto nas fórmulas.",
+                                                "is_correct": false
+                                            },
+                                            {
+                                                "id": "C",
+                                                "text": "Apaga os registros anteriores permanentemente.",
+                                                "is_correct": false
+                                            }
+                                        ],
+                                        "explanation_on_error": "Lembre-se: o objetivo central é automatizar e garantir a consistência das informações."
+                                    }
+                                },
+                                {
+                                    "phase": "concertatio",
+                                    "step_type": "challenge",
+                                    "title": "4. Desafio Prático Autônomo (Sem Auxílio)",
+                                    "sort_order": 5,
+                                    "content": {
+                                        "scenario": "Você foi contratado por uma empresa e precisa resolver uma planilha com urgência.",
+                                        "instructions": "Aplique agora tudo o que foi praticado em O Computador não é Mágico, é Lógico do zero, demonstrando autonomia completa.",
+                                        "explanation_on_error": "Se você hesitou, revise a Prática Guiada antes de submeter a resolução final."
+                                    }
+                                },
+                                {
+                                    "phase": "examen",
+                                    "step_type": "quiz",
+                                    "title": "5. Avaliação Final de Maestria (80% Mínimo)",
+                                    "sort_order": 6,
+                                    "content": {
+                                        "question": "Para consolidar sua aprovação nesta aula, confirme o critério de boas práticas aplicável:",
+                                        "options": [
+                                            {
+                                                "id": "A",
+                                                "text": "Validar os parâmetros, conferir os intervalos e documentar as alterações.",
+                                                "is_correct": true
+                                            },
+                                            {
+                                                "id": "B",
+                                                "text": "Ignorar a formatação e salvar sem revisar.",
+                                                "is_correct": false
+                                            },
+                                            {
+                                                "id": "C",
+                                                "text": "Compartilhar arquivos sem testar previamente.",
+                                                "is_correct": false
+                                            }
+                                        ],
+                                        "explanation_on_error": "A excelência profissional exige conferência prévia e rigor metodológico."
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Introdução à Informática Kids",
+            "description": null,
+            "workload": 15,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Introdução à Informática Kids Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Introdução à Informática V3",
+            "description": null,
+            "workload": 8,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Introdução à Informática V4",
+            "description": null,
+            "workload": 8,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Introdução à Informática - Versão 1",
+            "description": null,
+            "workload": 2,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Introdução à Informática - Versão 2",
+            "description": null,
+            "workload": 8,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Introducción a la informática en Español",
+            "description": null,
+            "workload": 8,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Introducción a la Informática Español",
+            "description": null,
+            "workload": 8,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "JAVA Básico",
+            "description": null,
+            "workload": 24,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Kids",
+            "description": null,
+            "workload": 20,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Liderança Eficaz",
+            "description": null,
+            "workload": 8,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Liderança Estratégica",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Liderança Estratégica Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Linux Educacional",
+            "description": null,
+            "workload": 16,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Lógica de Programação - Versão 1",
+            "description": null,
+            "workload": 15,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Lógica de Programação - Versão 2",
+            "description": null,
+            "workload": 21,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Logística",
+            "description": null,
+            "workload": 24,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Lovable AI",
+            "description": null,
+            "workload": 11,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Lovable AI Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Lovable AI V2",
+            "description": null,
+            "workload": 11,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Lovable AI V2 Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Mantenimiento de Computadoras - Versión 2 Español",
+            "description": null,
+            "workload": 21,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Manutenção de Computadores",
+            "description": null,
+            "workload": 25,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Manutenção de Computadores - Versão 2",
+            "description": null,
+            "workload": 21,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Marketing Digital",
+            "description": null,
+            "workload": 18,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Marketing Digital",
+            "description": "Estratégias e ferramentas de marketing digital.",
+            "workload": 72,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Marketing Digital en Español",
+            "description": null,
+            "workload": 18,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Marketing Digital V2",
+            "description": null,
+            "workload": 18,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Marketing Digital V2 Fast",
+            "description": null,
+            "workload": 9,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Marketing Digital V2 Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Marketing Personal en Español",
+            "description": null,
+            "workload": 3,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Marketing Pessoal",
+            "description": null,
+            "workload": 3,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Matemática Financeira",
+            "description": null,
+            "workload": 20,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Matemática Financeira com HP12C",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Melhor Idade - Versão 1",
+            "description": null,
+            "workload": 40,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Melhor Idade - Versão 2",
+            "description": null,
+            "workload": 23,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Meta Business",
+            "description": null,
+            "workload": 20,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Meta Business Español",
+            "description": null,
+            "workload": 20,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Meta Business Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Meu Novo emprego",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Microsoft Power Point",
+            "description": null,
+            "workload": 27,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Microsoft Power Point Español",
+            "description": null,
+            "workload": 27,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Microsoft Power Point Fast",
+            "description": null,
+            "workload": 14,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Microsoft Power Point Kids",
+            "description": null,
+            "workload": 24,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Microsoft PowerPoint Kids Español",
+            "description": null,
+            "workload": 24,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Microsoft Word",
+            "description": null,
+            "workload": 27,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Microsoft Word Espanhol",
+            "description": null,
+            "workload": 27,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Microsoft Word Fast",
+            "description": null,
+            "workload": 18,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Microsoft Word Kids",
+            "description": null,
+            "workload": 24,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Microsoft Word Kids Español",
+            "description": null,
+            "workload": 24,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Microsoft Word V2",
+            "description": null,
+            "workload": 27,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Microsoft Word V2 Fast",
+            "description": null,
+            "workload": 14,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Microsoft Word V2 Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Mídias Sociais em Espanhol",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Mídias Sociais - Versão 1",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Mídias Sociais - Versão 2",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Mídias Sociais - Versão 3",
+            "description": null,
+            "workload": 15,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Multimídia - Versão 1",
+            "description": null,
+            "workload": 8,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Multimídia - Versão 2",
+            "description": null,
+            "workload": 8,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Multimídia - Versão 3",
+            "description": null,
+            "workload": 8,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Norma Regulamentadora 20 (NR20)",
+            "description": null,
+            "workload": 9,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Normas da ABNT para trabalhos acadêmicos",
+            "description": null,
+            "workload": 2,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Normas da ABNT para Trabalhos Acadêmicos - Versão 2",
+            "description": null,
+            "workload": 3,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Novo Emprego: Rota para o Futuro",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Novo Emprego: Rota para o Futuro Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "NR 10 Básico",
+            "description": null,
+            "workload": 41,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "NR 1 - Disposições Gerais e Gerenciamento de Riscos Ocupacionais",
+            "description": null,
+            "workload": 8,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "NR 33 - Espaço Confinado",
+            "description": null,
+            "workload": 11,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "NR 35 - Trabalho em altura",
+            "description": null,
+            "workload": 9,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Operador de Caixa",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Operador de Drone",
+            "description": null,
+            "workload": 18,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Photoshop CS2",
+            "description": null,
+            "workload": 26,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Photoshop CS5",
+            "description": null,
+            "workload": 30,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Photoshop CS6",
+            "description": null,
+            "workload": 30,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Photoshop CS6 em Espanhol",
+            "description": null,
+            "workload": 18,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Power BI Desktop",
+            "description": null,
+            "workload": 15,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Power BI Desktop V2",
+            "description": null,
+            "workload": 17,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Power BI Desktop V2 Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Power BI Desktop V3",
+            "description": null,
+            "workload": 17,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Power BI Desktop V3 Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Power BI en Español",
+            "description": null,
+            "workload": 15,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Power Point 2003",
+            "description": null,
+            "workload": 22,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Power Point 2010",
+            "description": null,
+            "workload": 22,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "PowerPoint 2010 Fast",
+            "description": null,
+            "workload": 9,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "PowerPoint 2013",
+            "description": null,
+            "workload": 22,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "PowerPoint 2013 Fast",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Power Point 2016",
+            "description": null,
+            "workload": 18,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Power Point 2016 em Espanhol",
+            "description": null,
+            "workload": 18,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Power Point 2019",
+            "description": null,
+            "workload": 18,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Processo de Produção de Açúcar e Álcool",
+            "description": null,
+            "workload": 24,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Processo de Produção de Açúcar e Álcool Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Programação Kids",
+            "description": null,
+            "workload": 24,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Programação PHP - Versão 1",
+            "description": null,
+            "workload": 20,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Programação PHP - Versão 2",
+            "description": null,
+            "workload": 30,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Programação Web",
+            "description": "Fundamentos de desenvolvimento de aplicações para a web.",
+            "workload": 120,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Python",
+            "description": null,
+            "workload": 24,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Recursos Humanos e Dpt. Pessoal",
+            "description": null,
+            "workload": 14,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Redes de Computadores",
+            "description": null,
+            "workload": 29,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Redes de Computadores Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Revit",
+            "description": null,
+            "workload": 24,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Robótica",
+            "description": null,
+            "workload": 30,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Segurança Digital",
+            "description": null,
+            "workload": 9,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Síndico de Condomínio",
+            "description": null,
+            "workload": 3,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Sketchup",
+            "description": null,
+            "workload": 15,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "SketchUp en Español",
+            "description": null,
+            "workload": 15,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Técnicas de Memorização",
+            "description": null,
+            "workload": 3,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Técnicas de Memorización en Español",
+            "description": null,
+            "workload": 3,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Técnicas de Vendas - Versão 1",
+            "description": null,
+            "workload": 15,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Técnicas de Vendas - Versão 2",
+            "description": null,
+            "workload": 15,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Técnicas de ventas en Español",
+            "description": null,
+            "workload": 15,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Telemarketing en Español",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Telemarketing - Versão 1",
+            "description": null,
+            "workload": 8,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Telemarketing - Versão 2",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Vídeo Designer",
+            "description": null,
+            "workload": 32,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Vitrinismo",
+            "description": null,
+            "workload": 6,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Whatsapp Business",
+            "description": null,
+            "workload": 6,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Whatsapp Business Español",
+            "description": null,
+            "workload": 6,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Windows 10 em Espanhol",
+            "description": null,
+            "workload": 15,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Windows 10 Kids",
+            "description": null,
+            "workload": 15,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Windows 10 Kids Espanhol",
+            "description": null,
+            "workload": 15,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Windows 10 - Versão 1",
+            "description": null,
+            "workload": 15,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Windows 10 - Versão 2",
+            "description": null,
+            "workload": 15,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Windows 11",
+            "description": null,
+            "workload": 18,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Windows 11 Fast",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Windows 11 Kids",
+            "description": null,
+            "workload": 24,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Windows 11 Kids Español",
+            "description": null,
+            "workload": 24,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Windows 11 V2",
+            "description": null,
+            "workload": 18,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Windows 11 V2 Lite",
+            "description": null,
+            "workload": 5,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Windows 8",
+            "description": null,
+            "workload": 15,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Windows 8 Fast",
+            "description": null,
+            "workload": 10,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Windows Seven",
+            "description": null,
+            "workload": 15,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Windows Seven Fast",
+            "description": null,
+            "workload": 9,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Windows XP",
+            "description": null,
+            "workload": 8,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Word 2003",
+            "description": null,
+            "workload": 22,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Word 2010",
+            "description": null,
+            "workload": 22,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Word 2010 Fast",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Word 2013",
+            "description": null,
+            "workload": 22,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Word 2013 Fast",
+            "description": null,
+            "workload": 12,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Word 2016",
+            "description": null,
+            "workload": 21,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Word 2016 em Espanhol",
+            "description": null,
+            "workload": 21,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Word 2016 Kids",
+            "description": null,
+            "workload": 15,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Word 2019",
+            "description": null,
+            "workload": 21,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "WordPress",
+            "description": null,
+            "workload": 26,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        },
+        {
+            "name": "Youtuber",
+            "description": null,
+            "workload": 15,
+            "active": true,
+            "ouro_moderno_course_id": null,
+            "modules": []
+        }
+    ],
+    "typing_exercises": [
+        {
+            "title": "Exercício 01: Linha Guia - Indicadores (F e J)",
+            "text_content": null,
+            "target_wpm": null,
+            "difficulty": null,
+            "sort_order": 1,
+            "is_active": true
+        },
+        {
+            "title": "Exercício 02: Linha Guia - Dedos Médios (D e K)",
+            "text_content": null,
+            "target_wpm": null,
+            "difficulty": null,
+            "sort_order": 2,
+            "is_active": true
+        },
+        {
+            "title": "Exercício 03: Linha Guia - Anelares e Mínimos (S, L, A e Ç)",
+            "text_content": null,
+            "target_wpm": null,
+            "difficulty": null,
+            "sort_order": 3,
+            "is_active": true
+        },
+        {
+            "title": "Exercício 04: Linha Guia Completa e Palavras Simples",
+            "text_content": null,
+            "target_wpm": null,
+            "difficulty": null,
+            "sort_order": 4,
+            "is_active": true
+        },
+        {
+            "title": "Exercício 05: Alfabeto A-Z - Sequência Alfabética Completa",
+            "text_content": null,
+            "target_wpm": null,
+            "difficulty": null,
+            "sort_order": 5,
+            "is_active": true
+        },
+        {
+            "title": "Exercício 06: Alfabeto A-Z - Pangrama do Jabuti Xereta",
+            "text_content": null,
+            "target_wpm": null,
+            "difficulty": null,
+            "sort_order": 6,
+            "is_active": true
+        },
+        {
+            "title": "Exercício 07: Alfabeto A-Z - Pangrama da Gazeta e Quermesse",
+            "text_content": null,
+            "target_wpm": null,
+            "difficulty": null,
+            "sort_order": 7,
+            "is_active": true
+        },
+        {
+            "title": "Exercício 08: Alfabeto A-Z - Pangrama das Zebras Caolhas",
+            "text_content": null,
+            "target_wpm": null,
+            "difficulty": null,
+            "sort_order": 8,
+            "is_active": true
+        },
+        {
+            "title": "Exercício 09: Palavras Completas - Informática e Hardware",
+            "text_content": null,
+            "target_wpm": null,
+            "difficulty": null,
+            "sort_order": 9,
+            "is_active": true
+        },
+        {
+            "title": "Exercício 10: Palavras Completas - Rotina de Escritório e Gestão",
+            "text_content": null,
+            "target_wpm": null,
+            "difficulty": null,
+            "sort_order": 10,
+            "is_active": true
+        },
+        {
+            "title": "Exercício 11: Palavras Completas - Ações e Operações Digitais",
+            "text_content": null,
+            "target_wpm": null,
+            "difficulty": null,
+            "sort_order": 11,
+            "is_active": true
+        },
+        {
+            "title": "Exercício 12: Acentuação ABNT2 - Acento Agudo e Til (´ e ~)",
+            "text_content": null,
+            "target_wpm": null,
+            "difficulty": null,
+            "sort_order": 12,
+            "is_active": true
+        },
+        {
+            "title": "Exercício 13: Acentuação ABNT2 - Circunflexo, Crase e Cedilha (^, `, ç)",
+            "text_content": null,
+            "target_wpm": null,
+            "difficulty": null,
+            "sort_order": 13,
+            "is_active": true
+        },
+        {
+            "title": "Exercício 14: Acentuação ABNT2 - Nomes Próprios e Cidades do Brasil",
+            "text_content": null,
+            "target_wpm": null,
+            "difficulty": null,
+            "sort_order": 14,
+            "is_active": true
+        },
+        {
+            "title": "Exercício 15: Pontuação Completa - Vírgula, Ponto, Dois Pontos e Ponto e Vírgula",
+            "text_content": null,
+            "target_wpm": null,
+            "difficulty": null,
+            "sort_order": 15,
+            "is_active": true
+        },
+        {
+            "title": "Exercício 16: Aspas, Parênteses e Hífen (\" ', ( ), -)",
+            "text_content": null,
+            "target_wpm": null,
+            "difficulty": null,
+            "sort_order": 16,
+            "is_active": true
+        },
+        {
+            "title": "Exercício 17: Símbolos Comerciais e Especiais (@ # $ % & * = + /)",
+            "text_content": null,
+            "target_wpm": null,
+            "difficulty": null,
+            "sort_order": 17,
+            "is_active": true
+        },
+        {
+            "title": "Exercício 18: Texto Curto - Postura e Ergonomia ao Digitar",
+            "text_content": null,
+            "target_wpm": null,
+            "difficulty": null,
+            "sort_order": 18,
+            "is_active": true
+        },
+        {
+            "title": "Exercício 19: Texto Curto - O Teclado e a Memória Muscular",
+            "text_content": null,
+            "target_wpm": null,
+            "difficulty": null,
+            "sort_order": 19,
+            "is_active": true
+        },
+        {
+            "title": "Exercício 20: Texto Médio - Organização de Arquivos e Pastas no Windows",
+            "text_content": null,
+            "target_wpm": null,
+            "difficulty": null,
+            "sort_order": 20,
+            "is_active": true
+        },
+        {
+            "title": "Exercício 21: Texto Médio - Comunicação Profissional por E-mail",
+            "text_content": null,
+            "target_wpm": null,
+            "difficulty": null,
+            "sort_order": 21,
+            "is_active": true
+        },
+        {
+            "title": "Exercício 22: Texto Médio - Fórmulas e Planilhas no Microsoft Excel",
+            "text_content": null,
+            "target_wpm": null,
+            "difficulty": null,
+            "sort_order": 22,
+            "is_active": true
+        },
+        {
+            "title": "Exercício 23: Texto Longo - Redação Empresarial e Atendimento de Excelência",
+            "text_content": null,
+            "target_wpm": null,
+            "difficulty": null,
+            "sort_order": 23,
+            "is_active": true
+        },
+        {
+            "title": "Exercício 24: Texto Longo - A Evolução da Informática e o Futuro do Trabalho",
+            "text_content": null,
+            "target_wpm": null,
+            "difficulty": null,
+            "sort_order": 24,
+            "is_active": true
+        }
+    ]
+}
