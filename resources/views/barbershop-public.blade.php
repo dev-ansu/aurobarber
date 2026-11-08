@@ -20,7 +20,7 @@
         [x-cloak] { display: none !important; }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans antialiased selection:bg-amber-500 selection:text-slate-950 min-h-screen flex flex-col justify-between"
+<body class="bg-slate-950 text-slate-100 font-sans antialiased selection:bg-amber-500 selection:text-slate-950 min-h-screen flex flex-col justify-between pb-24"
       x-data="bookingApp('{{ $barbershop->slug }}')">
 
     {{-- CABEÇALHO DA BARBEARIA --}}
@@ -57,7 +57,7 @@
             <div class="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 h-48 w-96 rounded-full bg-brand/20 blur-3xl opacity-50"></div>
             
             <h2 class="text-2xl sm:text-3xl font-black text-white mb-2 relative z-10">{{ $barbershop->headline ?: 'Agende seu horário online em segundos' }}</h2>
-            <p class="text-sm text-slate-400 max-w-xl mx-auto relative z-10">{{ $barbershop->description ?: 'Escolha o serviço desejado, selecione seu barbeiro de preferência e garanta seu atendimento sem filas.' }}</p>
+            <p class="text-sm text-slate-400 max-w-xl mx-auto relative z-10">{{ $barbershop->description ?: 'Escolha um ou mais serviços, selecione seu barbeiro de preferência e garanta seu horário sem filas.' }}</p>
             
             @if ($barbershop->address)
                 <div class="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/80 text-xs text-slate-300">
@@ -92,18 +92,36 @@
             </div>
         @endif
 
-        {{-- LISTA DE SERVIÇOS --}}
+        {{-- LISTA DE SERVIÇOS (COM SELEÇÃO MÚLTIPLA) --}}
         <div>
-            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
-                <span>✂️</span>
-                <span>Escolha um Serviço para Agendar</span>
-            </h3>
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                    <span>✂️</span>
+                    <span>Serviços Disponíveis (Pode escolher mais de um)</span>
+                </h3>
+                <span class="text-xs text-brand font-semibold" x-show="selectedServices.length > 0" x-text="selectedServices.length + ' selecionado(s)'"></span>
+            </div>
 
             <div class="space-y-3">
                 @forelse ($barbershop->services as $service)
-                    <div class="rounded-2xl border border-slate-800/90 bg-slate-900/80 p-4 sm:p-5 flex items-center justify-between gap-4 hover:border-slate-700 transition">
+                    @php
+                        $srvData = [
+                            'id' => $service->id,
+                            'name' => $service->name,
+                            'price' => (float) $service->price,
+                            'duration' => (int) $service->duration_minutes,
+                        ];
+                    @endphp
+                    <div 
+                        @click="toggleService({{ json_encode($srvData) }})"
+                        :class="isServiceSelected({{ $service->id }}) ? 'border-brand bg-slate-900/90 ring-1 ring-brand' : 'border-slate-800/90 bg-slate-900/60 hover:border-slate-700'"
+                        class="rounded-2xl border p-4 sm:p-5 flex items-center justify-between gap-4 transition cursor-pointer select-none"
+                    >
                         <div>
-                            <h4 class="text-base font-bold text-white">{{ $service->name }}</h4>
+                            <div class="flex items-center gap-2">
+                                <span x-show="isServiceSelected({{ $service->id }})" class="text-brand font-black text-sm">✓</span>
+                                <h4 class="text-base font-bold text-white">{{ $service->name }}</h4>
+                            </div>
                             @if ($service->description)
                                 <p class="text-xs text-slate-400 mt-0.5">{{ $service->description }}</p>
                             @endif
@@ -116,15 +134,10 @@
 
                         <button
                             type="button"
-                            @click="openBookingModal({
-                                id: {{ $service->id }},
-                                name: '{{ addslashes($service->name) }}',
-                                price: '{{ number_format($service->price, 2, ',', '.') }}',
-                                duration: {{ $service->duration_minutes }}
-                            })"
-                            class="rounded-xl bg-brand hover:brightness-110 text-slate-950 font-black text-xs px-4 py-2.5 transition shrink-0 cursor-pointer shadow-lg hover:scale-105 active:scale-95"
+                            class="rounded-xl font-bold text-xs px-3.5 py-2 transition shrink-0"
+                            :class="isServiceSelected({{ $service->id }}) ? 'bg-brand text-slate-950 font-black' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'"
+                            x-text="isServiceSelected({{ $service->id }}) ? 'Adicionado ✓' : '+ Adicionar'"
                         >
-                            Agendar
                         </button>
                     </div>
                 @empty
@@ -136,7 +149,43 @@
         </div>
     </main>
 
-    {{-- MODAL INTERATIVO DE AGENDAMENTO COM SLOTS REAIS --}}
+    {{-- BARRA FLUTUANTE INFERIOR (QUANDO HOUVER SERVIÇOS SELECIONADOS) --}}
+    <div 
+        x-show="selectedServices.length > 0 && !bookingOpen"
+        x-transition:enter="transition ease-out duration-300 transform"
+        x-transition:enter-start="translate-y-full opacity-0"
+        x-transition:enter-end="translate-y-0 opacity-100"
+        x-transition:leave="transition ease-in duration-200 transform"
+        x-transition:leave-start="translate-y-0 opacity-100"
+        x-transition:leave-end="translate-y-full opacity-0"
+        class="fixed bottom-0 inset-x-0 z-40 bg-slate-900/95 border-t border-slate-800 backdrop-blur-lg p-4 shadow-2xl"
+    >
+        <div class="max-w-4xl mx-auto flex items-center justify-between gap-4">
+            <div>
+                <div class="text-xs text-slate-400 flex items-center gap-2">
+                    <span x-text="selectedServices.length + (selectedServices.length === 1 ? ' serviço' : ' serviços')"></span>
+                    <span>&middot;</span>
+                    <span x-text="'⏱️ ' + totalDuration() + ' min'"></span>
+                </div>
+                <div class="text-lg font-black text-white">
+                    <span class="text-brand" x-text="totalPriceFormatted()"></span>
+                </div>
+            </div>
+
+            <button
+                type="button"
+                @click="openModal()"
+                class="rounded-2xl bg-brand hover:brightness-110 text-slate-950 font-black text-xs uppercase tracking-wider px-6 py-3.5 transition shadow-xl shadow-amber-500/20 cursor-pointer flex items-center gap-2"
+            >
+                <span>Avançar para Horários</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    {{-- MODAL INTERATIVO DE AGENDAMENTO (SLOTS E CONFIRMAÇÃO) --}}
     <div x-show="bookingOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md"
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0"
@@ -148,15 +197,29 @@
         <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto"
              @click.outside="if (!confirmedData) bookingOpen = false">
             
-            {{-- TELA 1: FORMULÁRIO DE ESCOLHA DE HORÁRIO & DADOS --}}
+            {{-- TELA 1: ESCOLHA DE BARBEIRO, DATA E HORÁRIO --}}
             <template x-if="!confirmedData">
                 <div>
                     <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
                         <div>
-                            <h3 class="text-lg font-black text-white">Agendar Horário</h3>
-                            <p class="text-xs text-slate-400" x-text="selectedService?.name + ' • R$ ' + selectedService?.price"></p>
+                            <h3 class="text-lg font-black text-white">Confirmar Agendamento</h3>
+                            <p class="text-xs text-slate-400" x-text="selectedServices.length + ' serviço(s) • ' + totalDuration() + ' min • ' + totalPriceFormatted()"></p>
                         </div>
                         <button type="button" @click="bookingOpen = false" class="text-slate-400 hover:text-white text-xl p-1 leading-none">&times;</button>
+                    </div>
+
+                    {{-- LISTA RESUMIDA DOS SERVIÇOS SELECIONADOS --}}
+                    <div class="mb-4 p-3 rounded-2xl bg-slate-950 border border-slate-800 space-y-1.5">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Serviços Inclusos:</span>
+                        <template x-for="s in selectedServices" :key="s.id">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="text-slate-200 font-semibold" x-text="'• ' + s.name"></span>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-slate-400" x-text="s.duration + ' min'"></span>
+                                    <span class="text-brand font-bold" x-text="'R$ ' + s.price.toFixed(2).replace('.', ',')"></span>
+                                </div>
+                            </div>
+                        </template>
                     </div>
 
                     {{-- ALERTA DE ERRO --}}
@@ -215,23 +278,21 @@
                         </div>
                     </div>
 
-                    {{-- PASSO 3: GRADE DE HORÁRIOS LIVRES (SLOTS) --}}
+                    {{-- PASSO 3: HORÁRIOS LIVRES --}}
                     <div class="mb-5">
                         <div class="flex items-center justify-between mb-2">
                             <label class="text-xs font-bold text-slate-300">3. Horários Disponíveis</label>
                             <span class="text-[11px] text-slate-400" x-show="loadingSlots">Buscando horários...</span>
                         </div>
 
-                        {{-- LOADING SPINNER --}}
                         <div x-show="loadingSlots" class="p-6 text-center text-slate-400 text-xs">
                             <svg class="animate-spin h-5 w-5 mx-auto mb-2 text-brand" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                             </svg>
-                            <span>Consultando agenda em tempo real...</span>
+                            <span>Calculando agenda para <span x-text="totalDuration() + ' minutos'"></span>...</span>
                         </div>
 
-                        {{-- GRID DE SLOTS LIVRES --}}
                         <div x-show="!loadingSlots && availableSlots.length > 0" class="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-40 overflow-y-auto pr-1">
                             <template x-for="slot in availableSlots" :key="slot.time">
                                 <button
@@ -245,13 +306,12 @@
                             </template>
                         </div>
 
-                        {{-- NENHUM HORÁRIO LIVRE --}}
                         <div x-show="!loadingSlots && availableSlots.length === 0" class="p-4 rounded-xl bg-slate-950 border border-dashed border-slate-800 text-center text-xs text-slate-400">
-                            😔 Nenhum horário livre para este dia. Escolha outra data acima.
+                            😔 Nenhum horário livre para atender <span x-text="totalDuration() + ' minutos'"></span> nesta data. Escolha outro dia.
                         </div>
                     </div>
 
-                    {{-- PASSO 4: SEUS DADOS --}}
+                    {{-- PASSO 4: DADOS DO CLIENTE --}}
                     <div class="space-y-3 mb-5 border-t border-slate-800 pt-4">
                         <label class="block text-xs font-bold text-slate-300">4. Seus Dados de Atendimento</label>
                         <div>
@@ -272,7 +332,7 @@
                         </div>
                     </div>
 
-                    {{-- BOTÃO FINAL DE CONFIRMAÇÃO --}}
+                    {{-- BOTÃO FINAL --}}
                     <button
                         type="button"
                         @click="submitBooking()"
@@ -286,7 +346,7 @@
                 </div>
             </template>
 
-            {{-- TELA 2: COMPROVANTE DE SUCESSO & REDIRECIONAMENTO WHATSAPP --}}
+            {{-- TELA 2: COMPROVANTE DE SUCESSO --}}
             <template x-if="confirmedData">
                 <div class="text-center py-4">
                     <div class="h-16 w-16 mx-auto rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-3xl mb-4">
@@ -294,7 +354,7 @@
                     </div>
 
                     <h3 class="text-xl font-black text-white mb-1">Agendamento Garantido!</h3>
-                    <p class="text-xs text-slate-400 mb-6">Seu horário foi salvo e reservado no sistema.</p>
+                    <p class="text-xs text-slate-400 mb-6">Seus serviços foram reservados com sucesso na agenda.</p>
 
                     <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 text-left text-xs space-y-2 mb-6">
                         <div class="flex justify-between border-b border-slate-800/80 pb-2">
@@ -302,8 +362,8 @@
                             <span class="font-bold text-brand" x-text="'#' + confirmedData.appointment.id"></span>
                         </div>
                         <div class="flex justify-between border-b border-slate-800/80 pb-2">
-                            <span class="text-slate-400">Serviço:</span>
-                            <span class="font-bold text-white" x-text="confirmedData.appointment.service_name"></span>
+                            <span class="text-slate-400">Serviço(s):</span>
+                            <span class="font-bold text-white text-right max-w-[240px]" x-text="confirmedData.appointment.services_summary"></span>
                         </div>
                         <div class="flex justify-between border-b border-slate-800/80 pb-2">
                             <span class="text-slate-400">Barbeiro:</span>
@@ -314,8 +374,8 @@
                             <span class="font-black text-emerald-400" x-text="confirmedData.appointment.date + ' às ' + confirmedData.appointment.time"></span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-slate-400">Valor Estimado:</span>
-                            <span class="font-bold text-white" x-text="confirmedData.appointment.price"></span>
+                            <span class="text-slate-400">Total a Pagar:</span>
+                            <span class="font-bold text-brand" x-text="confirmedData.appointment.price"></span>
                         </div>
                     </div>
 
@@ -326,7 +386,7 @@
                                 target="_blank"
                                 class="w-full rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3.5 text-xs uppercase tracking-wider transition shadow-lg flex items-center justify-center gap-2"
                             >
-                                <span>Abrir no WhatsApp da Barbearia</span>
+                                <span>Enviar no WhatsApp da Barbearia</span>
                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
                                 </svg>
@@ -336,9 +396,9 @@
                         <button
                             type="button"
                             @click="closeAndReset()"
-                            class="w-full rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 text-xs transition"
+                            class="w-full rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 text-xs transition cursor-pointer"
                         >
-                            Concluir
+                            Novo Agendamento
                         </button>
                     </div>
                 </div>
@@ -351,13 +411,13 @@
         <p>Desenvolvido com tecnologia <a href="https://barber.aurosoft.com.br" class="text-slate-400 hover:text-white font-bold">AuroBarber</a> &middot; Gestão de Barbearias</p>
     </footer>
 
-    {{-- SCRIPT ALPINE JS PARA CARREGAMENTO E ENVIO REAL --}}
+    {{-- SCRIPT ALPINE JS COM SUPORTE A MÚLTIPLOS SERVIÇOS --}}
     <script>
         function bookingApp(barbershopSlug) {
             return {
                 slug: barbershopSlug,
                 bookingOpen: false,
-                selectedService: null,
+                selectedServices: [],
                 selectedBarber: 'any',
                 selectedDate: '',
                 selectedTime: '',
@@ -400,8 +460,33 @@
                     this.availableDates = list;
                 },
 
-                openBookingModal(service) {
-                    this.selectedService = service;
+                isServiceSelected(id) {
+                    return this.selectedServices.some(s => s.id === id);
+                },
+
+                toggleService(service) {
+                    const index = this.selectedServices.findIndex(s => s.id === service.id);
+                    if (index > -1) {
+                        this.selectedServices.splice(index, 1);
+                    } else {
+                        this.selectedServices.push(service);
+                    }
+                    if (this.bookingOpen) {
+                        this.fetchAvailableSlots();
+                    }
+                },
+
+                totalDuration() {
+                    return this.selectedServices.reduce((acc, s) => acc + s.duration, 0);
+                },
+
+                totalPriceFormatted() {
+                    const total = this.selectedServices.reduce((acc, s) => acc + s.price, 0);
+                    return 'R$ ' + total.toFixed(2).replace('.', ',');
+                },
+
+                openModal() {
+                    if (this.selectedServices.length === 0) return;
                     this.confirmedData = null;
                     this.errorMessage = '';
                     this.selectedTime = '';
@@ -422,13 +507,14 @@
                 },
 
                 async fetchAvailableSlots() {
-                    if (!this.selectedService || !this.selectedDate) return;
+                    if (this.selectedServices.length === 0 || !this.selectedDate) return;
                     this.loadingSlots = true;
                     this.availableSlots = [];
                     this.errorMessage = '';
 
                     const barberParam = this.selectedBarber === 'any' ? 'any' : this.selectedBarber.id;
-                    const url = `/${this.slug}/slots?service_id=${this.selectedService.id}&date=${this.selectedDate}&professional_id=${barberParam}`;
+                    const serviceIdsQuery = this.selectedServices.map(s => `service_ids[]=${s.id}`).join('&');
+                    const url = `/${this.slug}/slots?${serviceIdsQuery}&date=${this.selectedDate}&professional_id=${barberParam}`;
 
                     try {
                         const res = await fetch(url);
@@ -447,7 +533,7 @@
                 async submitBooking() {
                     this.errorMessage = '';
                     if (!this.clientName || !this.clientPhone || !this.selectedTime) {
-                        this.errorMessage = 'Por favor, preencha todos os campos obrigatórios.';
+                        this.errorMessage = 'Por favor, informe seu nome e WhatsApp para confirmar.';
                         return;
                     }
 
@@ -455,7 +541,7 @@
                     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
                     const payload = {
-                        service_id: this.selectedService.id,
+                        service_ids: this.selectedServices.map(s => s.id),
                         professional_id: this.selectedBarber === 'any' ? null : this.selectedBarber.id,
                         date: this.selectedDate,
                         time: this.selectedTime,
@@ -482,7 +568,6 @@
                             return;
                         }
 
-                        // Agendamento realizado com sucesso
                         this.confirmedData = data;
                     } catch (e) {
                         this.errorMessage = 'Falha na conexão com o servidor. Tente novamente.';
@@ -494,6 +579,7 @@
                 closeAndReset() {
                     this.bookingOpen = false;
                     this.confirmedData = null;
+                    this.selectedServices = [];
                     this.selectedTime = '';
                 }
             };

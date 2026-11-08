@@ -6,8 +6,9 @@ use App\Filament\Resources\BarbershopResource\Pages;
 use App\Models\Barbershop;
 use Filament\Actions\EditAction;
 use Filament\Forms;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Section;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -37,46 +38,61 @@ class BarbershopResource extends Resource
     {
         return $schema
             ->components([
-                Section::make('Identidade & Marca')
-                    ->schema([
-                        Forms\Components\TextInput::make('name')
-                            ->label('Nome da Barbearia')
-                            ->required()
-                            ->maxLength(255),
+                Tabs::make('Barbearia')
+                    ->tabs([
+                        Tab::make('Identidade & Marca')
+                            ->icon('heroicon-o-building-storefront')
+                            ->schema([
+                                Forms\Components\TextInput::make('name')
+                                    ->label('Nome da Barbearia')
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->columnSpanFull(),
 
-                        Forms\Components\TextInput::make('slug')
-                            ->label('Link Exclusivo (Slug)')
-                            ->helperText('Ex: marinho -> barber.aurosoft.com.br/marinho')
-                            ->required()
-                            ->unique(ignoreRecord: true)
-                            ->maxLength(255),
+                                Forms\Components\TextInput::make('slug')
+                                    ->label('Link Exclusivo (Slug)')
+                                    ->prefix('barber.aurosoft.com.br/')
+                                    ->required()
+                                    ->unique(ignoreRecord: true)
+                                    ->maxLength(255)
+                                    ->columnSpanFull(),
 
-                        Forms\Components\TextInput::make('headline')
-                            ->label('Frase de Destaque / Slogan')
-                            ->placeholder('Ex: Tradição, Estilo e Barboterapia')
-                            ->columnSpanFull(),
+                                Forms\Components\TextInput::make('headline')
+                                    ->label('Frase de Destaque / Slogan')
+                                    ->placeholder('Ex: Tradição, Estilo e Barboterapia')
+                                    ->columnSpanFull(),
 
-                        Forms\Components\ColorPicker::make('brand_color')
-                            ->label('Cor da Marca')
-                            ->default('#d97706'),
+                                Forms\Components\ColorPicker::make('brand_color')
+                                    ->label('Cor da Marca')
+                                    ->default('#d97706')
+                                    ->columnSpanFull(),
 
-                        Forms\Components\TextInput::make('whatsapp')
-                            ->label('WhatsApp de Atendimento')
-                            ->tel()
-                            ->placeholder('85999999999'),
+                                Forms\Components\Textarea::make('description')
+                                    ->label('Sobre a Barbearia')
+                                    ->rows(4)
+                                    ->columnSpanFull(),
+                            ]),
 
-                        Forms\Components\TextInput::make('city')
-                            ->label('Cidade / UF')
-                            ->placeholder('Fortaleza / CE'),
+                        Tab::make('Contato & Localização')
+                            ->icon('heroicon-o-map-pin')
+                            ->schema([
+                                Forms\Components\TextInput::make('whatsapp')
+                                    ->label('WhatsApp de Atendimento')
+                                    ->tel()
+                                    ->placeholder('85999999999')
+                                    ->columnSpanFull(),
 
-                        Forms\Components\TextInput::make('address')
-                            ->label('Endereço Completo')
-                            ->columnSpanFull(),
+                                Forms\Components\TextInput::make('city')
+                                    ->label('Cidade / UF')
+                                    ->placeholder('Fortaleza / CE')
+                                    ->columnSpanFull(),
 
-                        Forms\Components\Textarea::make('description')
-                            ->label('Sobre a Barbearia')
-                            ->columnSpanFull(),
-                    ])->columns(2),
+                                Forms\Components\TextInput::make('address')
+                                    ->label('Endereço Completo')
+                                    ->columnSpanFull(),
+                            ]),
+                    ])
+                    ->columnSpanFull(),
             ]);
     }
 

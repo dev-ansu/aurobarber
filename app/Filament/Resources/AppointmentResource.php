@@ -11,8 +11,9 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Section;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -35,87 +36,107 @@ class AppointmentResource extends Resource
     {
         return $schema
             ->components([
-                Section::make('Dados do Atendimento')
-                    ->schema([
-                        Forms\Components\Select::make('professional_id')
-                            ->label('Barbeiro / Profissional')
-                            ->relationship('professional', 'name')
-                            ->required()
-                            ->searchable()
-                            ->preload(),
+                Tabs::make('Agendamento')
+                    ->tabs([
+                        Tab::make('Atendimento')
+                            ->icon('heroicon-o-calendar-days')
+                            ->schema([
+                                Forms\Components\Select::make('professional_id')
+                                    ->label('Barbeiro / Profissional')
+                                    ->relationship('professional', 'name')
+                                    ->required()
+                                    ->searchable()
+                                    ->preload()
+                                    ->columnSpanFull(),
 
-                        Forms\Components\Select::make('service_id')
-                            ->label('Serviço')
-                            ->relationship('service', 'name')
-                            ->required()
-                            ->searchable()
-                            ->preload()
-                            ->reactive()
-                            ->afterStateUpdated(function ($state, callable $set) {
-                                if ($service = Service::find($state)) {
-                                    $set('service_price', $service->price);
-                                }
-                            }),
+                                Forms\Components\Select::make('service_id')
+                                    ->label('Serviço')
+                                    ->relationship('service', 'name')
+                                    ->required()
+                                    ->searchable()
+                                    ->preload()
+                                    ->reactive()
+                                    ->afterStateUpdated(function ($state, callable $set) {
+                                        if ($service = Service::find($state)) {
+                                            $set('service_price', $service->price);
+                                        }
+                                    })
+                                    ->columnSpanFull(),
 
-                        Forms\Components\DateTimePicker::make('scheduled_at')
-                            ->label('Data e Horário')
-                            ->required()
-                            ->default(now()),
+                                Forms\Components\DateTimePicker::make('scheduled_at')
+                                    ->label('Data e Horário')
+                                    ->required()
+                                    ->default(now())
+                                    ->columnSpanFull(),
 
-                        Forms\Components\Select::make('status')
-                            ->label('Status')
-                            ->options([
-                                'scheduled' => 'Agendado',
-                                'confirmed' => 'Confirmado',
-                                'in_progress' => 'Em Atendimento',
-                                'completed' => 'Concluído',
-                                'cancelled' => 'Cancelado',
-                                'no_show' => 'Não Compareceu',
-                            ])
-                            ->default('scheduled')
-                            ->required(),
-                    ])->columns(2),
-
-                Section::make('Dados do Cliente & Pagamento')
-                    ->schema([
-                        Forms\Components\TextInput::make('client_name')
-                            ->label('Nome do Cliente')
-                            ->required()
-                            ->maxLength(255),
-
-                        Forms\Components\TextInput::make('client_phone')
-                            ->label('WhatsApp do Cliente')
-                            ->tel()
-                            ->required()
-                            ->placeholder('(85) 99999-9999'),
-
-                        Forms\Components\TextInput::make('service_price')
-                            ->label('Valor do Serviço (R$)')
-                            ->numeric()
-                            ->prefix('R$')
-                            ->required(),
-
-                        Forms\Components\Select::make('payment_method')
-                            ->label('Forma de Pagamento')
-                            ->options([
-                                'pix' => 'Pix',
-                                'dinheiro' => 'Dinheiro',
-                                'cartao_credito' => 'Cartão de Crédito',
-                                'cartao_debito' => 'Cartão de Débito',
+                                Forms\Components\Select::make('status')
+                                    ->label('Status do Agendamento')
+                                    ->options([
+                                        'scheduled' => 'Agendado',
+                                        'confirmed' => 'Confirmado',
+                                        'in_progress' => 'Em Atendimento',
+                                        'completed' => 'Concluído',
+                                        'cancelled' => 'Cancelado',
+                                        'no_show' => 'Não Compareceu',
+                                    ])
+                                    ->default('scheduled')
+                                    ->required()
+                                    ->columnSpanFull(),
                             ]),
 
-                        Forms\Components\Select::make('payment_status')
-                            ->label('Status do Pagamento')
-                            ->options([
-                                'pending' => 'Pendente',
-                                'paid' => 'Pago',
-                            ])
-                            ->default('pending'),
+                        Tab::make('Cliente')
+                            ->icon('heroicon-o-user')
+                            ->schema([
+                                Forms\Components\TextInput::make('client_name')
+                                    ->label('Nome do Cliente')
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->columnSpanFull(),
 
-                        Forms\Components\Textarea::make('notes')
-                            ->label('Observações')
-                            ->columnSpanFull(),
-                    ])->columns(2),
+                                Forms\Components\TextInput::make('client_phone')
+                                    ->label('WhatsApp do Cliente')
+                                    ->tel()
+                                    ->required()
+                                    ->placeholder('(85) 99999-9999')
+                                    ->columnSpanFull(),
+
+                                Forms\Components\Textarea::make('notes')
+                                    ->label('Observações do Corte / Preferências')
+                                    ->rows(3)
+                                    ->columnSpanFull(),
+                            ]),
+
+                        Tab::make('Financeiro')
+                            ->icon('heroicon-o-banknotes')
+                            ->schema([
+                                Forms\Components\TextInput::make('service_price')
+                                    ->label('Valor do Serviço (R$)')
+                                    ->numeric()
+                                    ->prefix('R$')
+                                    ->required()
+                                    ->columnSpanFull(),
+
+                                Forms\Components\Select::make('payment_method')
+                                    ->label('Forma de Pagamento')
+                                    ->options([
+                                        'pix' => 'Pix',
+                                        'dinheiro' => 'Dinheiro',
+                                        'cartao_credito' => 'Cartão de Crédito',
+                                        'cartao_debito' => 'Cartão de Débito',
+                                    ])
+                                    ->columnSpanFull(),
+
+                                Forms\Components\Select::make('payment_status')
+                                    ->label('Status do Pagamento')
+                                    ->options([
+                                        'pending' => 'Pendente',
+                                        'paid' => 'Pago',
+                                    ])
+                                    ->default('pending')
+                                    ->columnSpanFull(),
+                            ]),
+                    ])
+                    ->columnSpanFull(),
             ]);
     }
 

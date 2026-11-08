@@ -8,8 +8,9 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Section;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -22,7 +23,7 @@ class ProfessionalResource extends Resource
 
     protected static string | \UnitEnum | null $navigationGroup = 'Equipe';
 
-    protected static ?string $navigationLabel = 'Barbeiros / Profissionais';
+    protected static ?string $navigationLabel = 'Barbeiros / Equipe';
 
     protected static ?string $modelLabel = 'Barbeiro';
 
@@ -32,45 +33,64 @@ class ProfessionalResource extends Resource
     {
         return $schema
             ->components([
-                Section::make('Informações do Barbeiro')
-                    ->schema([
-                        Forms\Components\TextInput::make('name')
-                            ->label('Nome Completo')
-                            ->required()
-                            ->maxLength(255),
+                Tabs::make('Profissional')
+                    ->tabs([
+                        Tab::make('Perfil do Barbeiro')
+                            ->icon('heroicon-o-user')
+                            ->schema([
+                                Forms\Components\TextInput::make('name')
+                                    ->label('Nome Completo')
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->columnSpanFull(),
 
-                        Forms\Components\TextInput::make('nickname')
-                            ->label('Apelido / Nome de Atendimento')
-                            ->placeholder('Ex: Zé do Corte, Marinho')
-                            ->maxLength(255),
+                                Forms\Components\TextInput::make('nickname')
+                                    ->label('Apelido / Nome de Atendimento')
+                                    ->placeholder('Ex: Zé do Corte, Marinho')
+                                    ->maxLength(255)
+                                    ->columnSpanFull(),
 
-                        Forms\Components\TextInput::make('phone')
-                            ->label('WhatsApp / Telefone')
-                            ->tel(),
+                                Forms\Components\TextInput::make('phone')
+                                    ->label('WhatsApp / Telefone')
+                                    ->tel()
+                                    ->placeholder('85999999999')
+                                    ->columnSpanFull(),
 
-                        Forms\Components\TextInput::make('commission_rate')
-                            ->label('Comissão Padrão (%)')
-                            ->numeric()
-                            ->default(50.00)
-                            ->suffix('%')
-                            ->required(),
+                                Forms\Components\Textarea::make('bio')
+                                    ->label('Biografia / Especialidades')
+                                    ->placeholder('Especialista em degradê navalhado, barboterapia...')
+                                    ->rows(3)
+                                    ->columnSpanFull(),
 
-                        Forms\Components\TimePicker::make('work_start_time')
-                            ->label('Início do Expediente')
-                            ->default('08:00:00'),
+                                Forms\Components\Toggle::make('is_active')
+                                    ->label('Ativo para Atendimentos')
+                                    ->default(true)
+                                    ->columnSpanFull(),
+                            ]),
 
-                        Forms\Components\TimePicker::make('work_end_time')
-                            ->label('Fim do Expediente')
-                            ->default('19:00:00'),
+                        Tab::make('Comissão & Horários')
+                            ->icon('heroicon-o-clock')
+                            ->schema([
+                                Forms\Components\TextInput::make('commission_rate')
+                                    ->label('Comissão do Profissional (%)')
+                                    ->numeric()
+                                    ->default(50.00)
+                                    ->suffix('%')
+                                    ->required()
+                                    ->columnSpanFull(),
 
-                        Forms\Components\Toggle::make('is_active')
-                            ->label('Ativo na Agenda')
-                            ->default(true),
+                                Forms\Components\TimePicker::make('work_start_time')
+                                    ->label('Início do Expediente')
+                                    ->default('08:00:00')
+                                    ->columnSpanFull(),
 
-                        Forms\Components\Textarea::make('bio')
-                            ->label('Biografia / Especialidades')
-                            ->columnSpanFull(),
-                    ])->columns(2),
+                                Forms\Components\TimePicker::make('work_end_time')
+                                    ->label('Fim do Expediente')
+                                    ->default('19:00:00')
+                                    ->columnSpanFull(),
+                            ]),
+                    ])
+                    ->columnSpanFull(),
             ]);
     }
 

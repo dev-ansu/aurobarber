@@ -8,8 +8,9 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Section;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -32,46 +33,62 @@ class ServiceResource extends Resource
     {
         return $schema
             ->components([
-                Section::make('Informações do Serviço')
-                    ->schema([
-                        Forms\Components\TextInput::make('name')
-                            ->label('Nome do Serviço')
-                            ->required()
-                            ->placeholder('Ex: Corte Degradê, Barboterapia')
-                            ->maxLength(255),
+                Tabs::make('Serviço')
+                    ->tabs([
+                        Tab::make('Dados do Serviço')
+                            ->icon('heroicon-o-scissors')
+                            ->schema([
+                                Forms\Components\TextInput::make('name')
+                                    ->label('Nome do Serviço')
+                                    ->required()
+                                    ->placeholder('Ex: Corte Degradê, Barboterapia')
+                                    ->maxLength(255)
+                                    ->columnSpanFull(),
 
-                        Forms\Components\TextInput::make('price')
-                            ->label('Preço (R$)')
-                            ->numeric()
-                            ->prefix('R$')
-                            ->required(),
+                                Forms\Components\Select::make('category')
+                                    ->label('Categoria do Serviço')
+                                    ->options([
+                                        'cabelo' => 'Cabelo',
+                                        'barba' => 'Barba',
+                                        'combo' => 'Combo / Pacote',
+                                        'tratamentos' => 'Tratamentos & Química',
+                                    ])
+                                    ->default('cabelo')
+                                    ->columnSpanFull(),
 
-                        Forms\Components\TextInput::make('duration_minutes')
-                            ->label('Duração Média (minutos)')
-                            ->numeric()
-                            ->default(30)
-                            ->suffix('min')
-                            ->required(),
+                                Forms\Components\Textarea::make('description')
+                                    ->label('Descrição do Serviço')
+                                    ->placeholder('Descreva os detalhes e o que está incluso no atendimento')
+                                    ->rows(3)
+                                    ->columnSpanFull(),
 
-                        Forms\Components\Select::make('category')
-                            ->label('Categoria')
-                            ->options([
-                                'cabelo' => 'Cabelo',
-                                'barba' => 'Barba',
-                                'combo' => 'Combo / Pacote',
-                                'tratamentos' => 'Tratamentos & Química',
-                            ])
-                            ->default('cabelo'),
+                                Forms\Components\Toggle::make('is_active')
+                                    ->label('Disponível para Agendamento Online')
+                                    ->default(true)
+                                    ->columnSpanFull(),
+                            ]),
 
-                        Forms\Components\Toggle::make('is_active')
-                            ->label('Disponível para Agendamento')
-                            ->default(true),
+                        Tab::make('Preço & Tempo')
+                            ->icon('heroicon-o-clock')
+                            ->schema([
+                                Forms\Components\TextInput::make('price')
+                                    ->label('Preço do Serviço (R$)')
+                                    ->numeric()
+                                    ->prefix('R$')
+                                    ->required()
+                                    ->columnSpanFull(),
 
-                        Forms\Components\Textarea::make('description')
-                            ->label('Descrição do Serviço')
-                            ->placeholder('Descreva o que está incluso no serviço')
-                            ->columnSpanFull(),
-                    ])->columns(2),
+                                Forms\Components\TextInput::make('duration_minutes')
+                                    ->label('Duração Estimada (minutos)')
+                                    ->numeric()
+                                    ->default(30)
+                                    ->suffix('minutos')
+                                    ->helperText('Usado para calcular a grade de horários disponíveis sem sobreposição.')
+                                    ->required()
+                                    ->columnSpanFull(),
+                            ]),
+                    ])
+                    ->columnSpanFull(),
             ]);
     }
 

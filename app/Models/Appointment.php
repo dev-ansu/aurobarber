@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Appointment extends Model
 {
@@ -51,6 +52,22 @@ class Appointment extends Model
         return $this->belongsTo(Service::class);
     }
 
+    public function services(): BelongsToMany
+    {
+        return $this->belongsToMany(Service::class, 'appointment_services')
+            ->withPivot('price', 'duration_minutes')
+            ->withTimestamps();
+    }
+
+    public function getServicesSummaryAttribute(): string
+    {
+        if ($this->relationLoaded('services') && $this->services->isNotEmpty()) {
+            return $this->services->pluck('name')->join(' + ');
+        }
+
+        return $this->service?->name ?? 'Serviço';
+    }
+
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {
@@ -73,7 +90,7 @@ class Appointment extends Model
             'completed' => 'success',
             'cancelled' => 'danger',
             'no_show' => 'gray',
-            default => 'secondary',
+            default => 'gray',
         };
     }
 }

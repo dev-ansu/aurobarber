@@ -31,25 +31,37 @@ class BookingController extends Controller
     }
 
     /**
-     * Retorna os horários disponíveis (slots) para uma data, serviço e profissional.
+     * Retorna os horários disponíveis (slots) para uma data, serviço(s) e profissional.
      */
     public function getAvailableSlots(Request $request, string $slug): JsonResponse
     {
         $request->validate([
-            'service_id' => 'required|integer',
+            'service_id' => 'nullable|integer',
+            'service_ids' => 'nullable|array',
             'date' => 'required|date_format:Y-m-d|after_or_equal:today',
             'professional_id' => 'nullable|string',
         ]);
 
         $barbershop = Barbershop::where('slug', $slug)->where('is_active', true)->firstOrFail();
-        $service = Service::where('id', $request->service_id)->where('barbershop_id', $barbershop->id)->firstOrFail();
 
+        // Extrai a lista de serviços solicitados
+        $serviceIds = (array) ($request->service_ids ?: ($request->service_id ? [$request->service_id] : []));
+        if (empty($serviceIds)) {
+            return response()->json(['slots' => [], 'message' => 'Nenhum serviço selecionado.'], 422);
+        }
+
+        $services = Service::whereIn('id', $serviceIds)->where('barbershop_id', $barbershop->id)->get();
+        if ($services->isEmpty()) {
+            return response()->json(['slots' => []]);
+        }
+
+        $totalDuration = $services->sum('duration_minutes') ?: 30;
         $date = $request->date;
         $professionalId = $request->professional_id && $request->professional_id !== 'any'
             ? (int) $request->professional_id
             : null;
 
-        // Profissionais aptos
+        // Profissionais ativos
         $professionals = $barbershop->professionals()->where('is_active', true);
         if ($professionalId) {
             $professionals->where('id', $professionalId);
@@ -63,24 +75,22 @@ class BookingController extends Controller
         // Horário de funcionamento base (08:00 às 19:30)
         $startTime = Carbon::createFromFormat('Y-m-d H:i', "{$date} 08:00");
         $endTime = Carbon::createFromFormat('Y-m-d H:i', "{$date} 19:30");
-        $stepMinutes = 30; // Intervalos de 30 minutos
+        $stepMinutes = 30;
 
-        $now = Carbon::now();
         $slots = [];
-
         $currentTime = $startTime->copy();
 
         while ($currentTime->lt($endTime)) {
             $slotStart = $currentTime->copy();
-            $slotEnd = $slotStart->copy()->addMinutes($service->duration_minutes);
+            $slotEnd = $slotStart->copy()->addMinutes($totalDuration);
 
-            // Não exibe horários que já passaram para o dia de hoje
+            // Não exibe horários passados para hoje
             if ($slotStart->isPast()) {
                 $currentTime->addMinutes($stepMinutes);
                 continue;
             }
 
-            // Verifica se pelo menos um profissional está livre neste slot
+            // Verifica se pelo menos um profissional está livre durante todo o intervalo do corte
             $availableProf = null;
 
             foreach ($professionals as $prof) {
@@ -115,7 +125,8 @@ class BookingController extends Controller
         return response()->json([
             'date' => $date,
             'slots' => $slots,
-            'service_duration' => $service->duration_minutes,
+            'total_duration' => $totalDuration,
+            'services_count' => $services->count(),
         ]);
     }
 
@@ -125,7 +136,8 @@ class BookingController extends Controller
     public function store(Request $request, string $slug): JsonResponse
     {
         $validated = $request->validate([
-            'service_id' => 'required|integer',
+            'service_id' => 'nullable|integer',
+            'service_ids' => 'nullable|array',
             'professional_id' => 'nullable|string',
             'date' => 'required|date_format:Y-m-d|after_or_equal:today',
             'time' => 'required|date_format:H:i',
@@ -135,10 +147,24 @@ class BookingController extends Controller
         ]);
 
         $barbershop = Barbershop::where('slug', $slug)->where('is_active', true)->firstOrFail();
-        $service = Service::where('id', $validated['service_id'])->where('barbershop_id', $barbershop->id)->firstOrFail();
+
+        // Extrai serviços
+        $serviceIds = (array) ($validated['service_ids'] ?? ($validated['service_id'] ? [$validated['service_id']] : []));
+        if (empty($serviceIds)) {
+            return response()->json(['success' => false, 'message' => 'Selecione pelo menos um serviço.'], 422);
+        }
+
+        $services = Service::whereIn('id', $serviceIds)->where('barbershop_id', $barbershop->id)->get();
+        if ($services->isEmpty()) {
+            return response()->json(['success' => false, 'message' => 'Serviços não encontrados.'], 422);
+        }
+
+        $totalDuration = $services->sum('duration_minutes') ?: 30;
+        $totalPrice = $services->sum('price');
+        $primaryService = $services->first();
 
         $scheduledAt = Carbon::createFromFormat('Y-m-d H:i', "{$validated['date']} {$validated['time']}");
-        $endsAt = $scheduledAt->copy()->addMinutes($service->duration_minutes);
+        $endsAt = $scheduledAt->copy()->addMinutes($totalDuration);
 
         // Bloqueio de horários passados
         if ($scheduledAt->isPast()) {
@@ -148,7 +174,7 @@ class BookingController extends Controller
             ], 422);
         }
 
-        return DB::transaction(function () use ($barbershop, $service, $validated, $scheduledAt, $endsAt) {
+        return DB::transaction(function () use ($barbershop, $services, $primaryService, $totalPrice, $totalDuration, $validated, $scheduledAt, $endsAt) {
             $professional = null;
 
             // Se escolheu um barbeiro específico
@@ -159,7 +185,7 @@ class BookingController extends Controller
                     ->lockForUpdate()
                     ->firstOrFail();
 
-                // Verifica conflito
+                // Verifica conflito para a duração total dos serviços combinados
                 $conflict = Appointment::where('professional_id', $profCandidate->id)
                     ->where('status', '!=', 'cancelled')
                     ->where(function ($query) use ($scheduledAt, $endsAt) {
@@ -177,7 +203,7 @@ class BookingController extends Controller
 
                 $professional = $profCandidate;
             } else {
-                // Se escolheu "Qualquer Barbeiro", seleciona o primeiro livre
+                // Se escolheu "Primeiro Disponível", seleciona o primeiro barbeiro livre
                 $candidates = Professional::where('barbershop_id', $barbershop->id)
                     ->where('is_active', true)
                     ->orderBy('display_order')
@@ -202,43 +228,60 @@ class BookingController extends Controller
                 if (!$professional) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Todos os barbeiros estão ocupados neste horário. Por favor, escolha outro horário.',
+                        'message' => 'Todos os barbeiros estão ocupados neste horário para a duração dos serviços escolhidos. Por favor, escolha outro horário.',
                     ], 422);
                 }
             }
 
-            // Cálculo das comissões
+            // Cálculo das comissões com base no valor total
             $commissionRate = $professional->commission_rate ?: 50.00;
-            $commissionAmount = round(($service->price * $commissionRate) / 100, 2);
+            $commissionAmount = round(($totalPrice * $commissionRate) / 100, 2);
 
-            // Grava o agendamento real no banco
+            // Grava o agendamento
             $appointment = Appointment::create([
                 'barbershop_id' => $barbershop->id,
                 'professional_id' => $professional->id,
-                'service_id' => $service->id,
+                'service_id' => $primaryService->id,
                 'client_name' => trim($validated['client_name']),
                 'client_phone' => trim($validated['client_phone']),
                 'scheduled_at' => $scheduledAt,
                 'ends_at' => $endsAt,
                 'status' => 'confirmed',
-                'service_price' => $service->price,
+                'service_price' => $totalPrice,
                 'commission_rate' => $commissionRate,
                 'commission_amount' => $commissionAmount,
                 'payment_status' => 'pending',
                 'notes' => $validated['notes'] ?? null,
             ]);
 
-            // Formatação do link para WhatsApp
+            // Vincula todos os serviços na tabela pivô appointment_services
+            $syncData = [];
+            foreach ($services as $srv) {
+                $syncData[$srv->id] = [
+                    'price' => $srv->price,
+                    'duration_minutes' => $srv->duration_minutes,
+                ];
+            }
+            $appointment->services()->sync($syncData);
+
+            // Formatação da mensagem para o WhatsApp
             $dateFormatted = $scheduledAt->format('d/m/Y');
             $timeFormatted = $scheduledAt->format('H:i');
-            $priceFormatted = 'R$ ' . number_format($service->price, 2, ',', '.');
+            $priceFormatted = 'R$ ' . number_format($totalPrice, 2, ',', '.');
+
+            $servicesLines = [];
+            foreach ($services as $s) {
+                $servicesLines[] = "• {$s->name} (R$ " . number_format($s->price, 2, ',', '.') . " - {$s->duration_minutes} min)";
+            }
+            $servicesText = implode("\n", $servicesLines);
 
             $msg = "Olá! Acabei de agendar um horário na *{$barbershop->name}*!\n\n"
                  . "🔖 *Protocolo:* #{$appointment->id}\n"
-                 . "✂️ *Serviço:* {$service->name} ({$priceFormatted})\n"
+                 . "✂️ *Serviço(s):*\n{$servicesText}\n"
                  . "💈 *Barbeiro:* {$professional->display_name}\n"
                  . "📅 *Data:* {$dateFormatted}\n"
-                 . "⏰ *Horário:* {$timeFormatted}\n"
+                 . "⏰ *Horário:* {$timeFormatted} (Duração: {$totalDuration} min)\n"
+                 . "💰 *Total:* {$priceFormatted}\n"
                  . "👤 *Cliente:* {$appointment->client_name} ({$appointment->client_phone})";
 
             $whatsappUrl = null;
@@ -253,7 +296,9 @@ class BookingController extends Controller
                     'id' => $appointment->id,
                     'client_name' => $appointment->client_name,
                     'professional_name' => $professional->display_name,
-                    'service_name' => $service->name,
+                    'services_summary' => $services->pluck('name')->join(' + '),
+                    'services_count' => $services->count(),
+                    'total_duration' => $totalDuration,
                     'date' => $dateFormatted,
                     'time' => $timeFormatted,
                     'price' => $priceFormatted,

@@ -8,7 +8,8 @@ use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Pages\Tenancy\EditTenantProfile;
-use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 
@@ -21,63 +22,75 @@ class EditBarbershopProfile extends EditTenantProfile
 
     public function getMaxWidth(): Width | string | null
     {
-        return '3xl';
+        return '4xl';
     }
 
     public function form(Schema $schema): Schema
     {
         return $schema
             ->components([
-                Section::make('Identidade & Atendimento da Unidade')
-                    ->description('Personalize o nome, link público, cores e contatos desta filial.')
-                    ->schema([
-                        TextInput::make('name')
-                            ->label('Nome da Barbearia / Unidade')
-                            ->required()
-                            ->maxLength(255)
-                            ->columnSpanFull(),
+                Tabs::make('Unidade')
+                    ->tabs([
+                        Tab::make('Identidade & Marca')
+                            ->icon('heroicon-o-building-storefront')
+                            ->schema([
+                                TextInput::make('name')
+                                    ->label('Nome da Barbearia / Unidade')
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->columnSpanFull(),
 
-                        TextInput::make('slug')
-                            ->label('Link Exclusivo (Slug)')
-                            ->prefix('barber.aurosoft.com.br/')
-                            ->required()
-                            ->unique(Barbershop::class, 'slug', ignoreRecord: true)
-                            ->maxLength(255)
-                            ->columnSpanFull(),
+                                TextInput::make('slug')
+                                    ->label('Link Exclusivo (Slug)')
+                                    ->prefix('barber.aurosoft.com.br/')
+                                    ->required()
+                                    ->unique(Barbershop::class, 'slug', ignoreRecord: true)
+                                    ->maxLength(255)
+                                    ->columnSpanFull(),
 
-                        TextInput::make('headline')
-                            ->label('Slogan / Frase de Destaque')
-                            ->placeholder('Ex: Tradição, Estilo e Barboterapia')
-                            ->columnSpanFull(),
+                                TextInput::make('headline')
+                                    ->label('Slogan / Frase de Destaque')
+                                    ->placeholder('Ex: Tradição, Estilo e Barboterapia')
+                                    ->columnSpanFull(),
 
-                        TextInput::make('whatsapp')
-                            ->label('WhatsApp de Atendimento')
-                            ->tel()
-                            ->placeholder('85999999999'),
+                                ColorPicker::make('brand_color')
+                                    ->label('Cor da Marca')
+                                    ->default('#d97706')
+                                    ->columnSpanFull(),
 
-                        TextInput::make('city')
-                            ->label('Cidade / UF')
-                            ->placeholder('Fortaleza / CE'),
+                                Textarea::make('description')
+                                    ->label('Sobre a Unidade')
+                                    ->placeholder('Descreva o espaço e diferenciais desta unidade...')
+                                    ->rows(4)
+                                    ->columnSpanFull(),
+                            ]),
 
-                        TextInput::make('address')
-                            ->label('Endereço Completo')
-                            ->placeholder('Rua / Avenida, Número, Bairro')
-                            ->columnSpanFull(),
+                        Tab::make('Contato & Localização')
+                            ->icon('heroicon-o-map-pin')
+                            ->schema([
+                                TextInput::make('whatsapp')
+                                    ->label('WhatsApp de Atendimento')
+                                    ->tel()
+                                    ->placeholder('85999999999')
+                                    ->columnSpanFull(),
 
-                        ColorPicker::make('brand_color')
-                            ->label('Cor da Marca')
-                            ->default('#d97706'),
+                                TextInput::make('city')
+                                    ->label('Cidade / UF')
+                                    ->placeholder('Fortaleza / CE')
+                                    ->columnSpanFull(),
 
-                        TextInput::make('pix_key')
-                            ->label('Chave PIX da Unidade')
-                            ->placeholder('CNPJ, Telefone ou E-mail'),
+                                TextInput::make('address')
+                                    ->label('Endereço Completo')
+                                    ->placeholder('Rua / Avenida, Número, Bairro')
+                                    ->columnSpanFull(),
 
-                        Textarea::make('description')
-                            ->label('Sobre a Unidade')
-                            ->placeholder('Descreva o espaço e diferenciais desta unidade...')
-                            ->rows(3)
-                            ->columnSpanFull(),
-                    ])->columns(2),
+                                TextInput::make('pix_key')
+                                    ->label('Chave PIX da Unidade')
+                                    ->placeholder('CNPJ, Telefone ou E-mail')
+                                    ->columnSpanFull(),
+                            ]),
+                    ])
+                    ->columnSpanFull(),
             ]);
     }
 

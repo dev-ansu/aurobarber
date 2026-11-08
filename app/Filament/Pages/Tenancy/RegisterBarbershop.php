@@ -8,7 +8,8 @@ use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Pages\Tenancy\RegisterTenant;
-use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use Illuminate\Database\Eloquent\Model;
@@ -23,63 +24,73 @@ class RegisterBarbershop extends RegisterTenant
 
     public function getMaxWidth(): Width | string | null
     {
-        return 'xl';
+        return '3xl';
     }
 
     public function form(Schema $schema): Schema
     {
         return $schema
             ->components([
-                Section::make('Cadastrar Nova Filial')
-                    ->description('Crie uma nova unidade para gerenciar equipe, horários e caixa de forma isolada.')
-                    ->schema([
-                        TextInput::make('name')
-                            ->label('Nome da Unidade')
-                            ->placeholder('Ex: Barbearia Marinho - Aldeota')
-                            ->required()
-                            ->maxLength(255)
-                            ->live(onBlur: true)
-                            ->afterStateUpdated(function ($state, callable $set) {
-                                if (filled($state)) {
-                                    $set('slug', Str::slug($state));
-                                }
-                            })
-                            ->columnSpanFull(),
+                Tabs::make('NovaFilial')
+                    ->tabs([
+                        Tab::make('Dados da Filial')
+                            ->icon('heroicon-o-building-storefront')
+                            ->schema([
+                                TextInput::make('name')
+                                    ->label('Nome da Barbearia / Unidade')
+                                    ->placeholder('Ex: Barbearia Marinho - Aldeota')
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->live(onBlur: true)
+                                    ->afterStateUpdated(function ($state, callable $set) {
+                                        if (filled($state)) {
+                                            $set('slug', Str::slug($state));
+                                        }
+                                    })
+                                    ->columnSpanFull(),
 
-                        TextInput::make('slug')
-                            ->label('Link Público de Agendamento')
-                            ->prefix('barber.aurosoft.com.br/')
-                            ->placeholder('marinho-aldeota')
-                            ->required()
-                            ->unique(Barbershop::class, 'slug')
-                            ->maxLength(255)
-                            ->columnSpanFull(),
+                                TextInput::make('slug')
+                                    ->label('Link Exclusivo (Slug)')
+                                    ->prefix('barber.aurosoft.com.br/')
+                                    ->placeholder('marinho-aldeota')
+                                    ->required()
+                                    ->unique(Barbershop::class, 'slug')
+                                    ->maxLength(255)
+                                    ->columnSpanFull(),
 
-                        TextInput::make('whatsapp')
-                            ->label('WhatsApp')
-                            ->tel()
-                            ->placeholder('85999999999'),
+                                ColorPicker::make('brand_color')
+                                    ->label('Cor da Marca')
+                                    ->default('#d97706')
+                                    ->columnSpanFull(),
 
-                        TextInput::make('city')
-                            ->label('Cidade / UF')
-                            ->placeholder('Fortaleza / CE'),
+                                Textarea::make('description')
+                                    ->label('Sobre a Unidade (Opcional)')
+                                    ->placeholder('Descreva os diferenciais desta filial...')
+                                    ->rows(3)
+                                    ->columnSpanFull(),
+                            ]),
 
-                        TextInput::make('address')
-                            ->label('Endereço Completo')
-                            ->placeholder('Av. Santos Dumont, 1200 - Aldeota')
-                            ->columnSpanFull(),
+                        Tab::make('Contato & Endereço')
+                            ->icon('heroicon-o-map-pin')
+                            ->schema([
+                                TextInput::make('whatsapp')
+                                    ->label('WhatsApp da Unidade')
+                                    ->tel()
+                                    ->placeholder('85999999999')
+                                    ->columnSpanFull(),
 
-                        ColorPicker::make('brand_color')
-                            ->label('Cor da Marca')
-                            ->default('#d97706')
-                            ->columnSpanFull(),
+                                TextInput::make('city')
+                                    ->label('Cidade / UF')
+                                    ->placeholder('Fortaleza / CE')
+                                    ->columnSpanFull(),
 
-                        Textarea::make('description')
-                            ->label('Sobre a Unidade (Opcional)')
-                            ->placeholder('Descreva os diferenciais desta filial...')
-                            ->rows(3)
-                            ->columnSpanFull(),
-                    ])->columns(2),
+                                TextInput::make('address')
+                                    ->label('Endereço Completo')
+                                    ->placeholder('Av. Santos Dumont, 1200 - Aldeota')
+                                    ->columnSpanFull(),
+                            ]),
+                    ])
+                    ->columnSpanFull(),
             ]);
     }
 
