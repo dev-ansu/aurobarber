@@ -18,6 +18,14 @@
         .border-brand { border-color: var(--brand-color) !important; }
         .ring-brand { --tw-ring-color: var(--brand-color) !important; }
         [x-cloak] { display: none !important; }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #020617; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans antialiased selection:bg-amber-500 selection:text-slate-950 min-h-screen flex flex-col justify-between pb-24"
@@ -25,7 +33,7 @@
 
     {{-- CABEÇALHO DA BARBEARIA --}}
     <header class="bg-slate-900/90 border-b border-slate-800/80 backdrop-blur sticky top-0 z-40">
-        <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
             <div class="flex items-center gap-3">
                 @if ($barbershop->logo_url)
                     <img src="{{ $barbershop->logo_url }}" alt="{{ $barbershop->name }}" class="h-11 w-11 rounded-2xl object-cover border border-slate-700" />
@@ -51,9 +59,9 @@
     </header>
 
     {{-- CONTEÚDO PRINCIPAL --}}
-    <main class="max-w-4xl mx-auto px-4 py-8 w-full">
+    <main class="max-w-5xl mx-auto px-4 py-8 w-full">
         {{-- BANNER HERO --}}
-        <div class="rounded-3xl border border-slate-800 bg-slate-900/60 p-6 sm:p-8 mb-8 text-center relative overflow-hidden shadow-xl">
+        <div class="rounded-3xl border border-slate-800 bg-slate-900/60 p-6 sm:p-10 mb-8 text-center relative overflow-hidden shadow-xl">
             <div class="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 h-48 w-96 rounded-full bg-brand/20 blur-3xl opacity-50"></div>
             
             <h2 class="text-2xl sm:text-3xl font-black text-white mb-2 relative z-10">{{ $barbershop->headline ?: 'Agende seu horário online em segundos' }}</h2>
@@ -114,7 +122,7 @@
                     @endphp
                     <div 
                         @click="toggleService({{ json_encode($srvData) }})"
-                        :class="isServiceSelected({{ $service->id }}) ? 'border-brand bg-slate-900/90 ring-1 ring-brand' : 'border-slate-800/90 bg-slate-900/60 hover:border-slate-700'"
+                        :class="isServiceSelected({{ $service->id }}) ? 'border-brand bg-slate-900/95 ring-1 ring-brand' : 'border-slate-800/90 bg-slate-900/60 hover:border-slate-700'"
                         class="rounded-2xl border p-4 sm:p-5 flex items-center justify-between gap-4 transition cursor-pointer select-none"
                     >
                         <div>
@@ -149,7 +157,7 @@
         </div>
     </main>
 
-    {{-- BARRA FLUTUANTE INFERIOR (QUANDO HOUVER SERVIÇOS SELECIONADOS) --}}
+    {{-- BARRA FLUTUANTE INFERIOR --}}
     <div 
         x-show="selectedServices.length > 0 && !bookingOpen"
         x-transition:enter="transition ease-out duration-300 transform"
@@ -160,7 +168,7 @@
         x-transition:leave-end="translate-y-full opacity-0"
         class="fixed bottom-0 inset-x-0 z-40 bg-slate-900/95 border-t border-slate-800 backdrop-blur-lg p-4 shadow-2xl"
     >
-        <div class="max-w-4xl mx-auto flex items-center justify-between gap-4">
+        <div class="max-w-5xl mx-auto flex items-center justify-between gap-4">
             <div>
                 <div class="text-xs text-slate-400 flex items-center gap-2">
                     <span x-text="selectedServices.length + (selectedServices.length === 1 ? ' serviço' : ' serviços')"></span>
@@ -185,8 +193,8 @@
         </div>
     </div>
 
-    {{-- MODAL INTERATIVO DE AGENDAMENTO (SLOTS E CONFIRMAÇÃO) --}}
-    <div x-show="bookingOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md"
+    {{-- MODAL AMPLO E ESPAÇOSO (DESIGN EM 2 COLUNAS — SEM SOBREPOSIÇÃO) --}}
+    <div x-show="bookingOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md"
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
@@ -194,176 +202,207 @@
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0">
         
-        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto"
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-4xl w-full p-6 sm:p-8 shadow-2xl relative max-h-[92vh] overflow-y-auto"
              @click.outside="if (!confirmedData) bookingOpen = false">
             
-            {{-- TELA 1: ESCOLHA DE BARBEIRO, DATA E HORÁRIO --}}
+            {{-- TELA 1: FORMULÁRIO AMPLO --}}
             <template x-if="!confirmedData">
                 <div>
-                    <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+                    {{-- CABEÇALHO DO MODAL --}}
+                    <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-800">
                         <div>
-                            <h3 class="text-lg font-black text-white">Confirmar Agendamento</h3>
-                            <p class="text-xs text-slate-400" x-text="selectedServices.length + ' serviço(s) • ' + totalDuration() + ' min • ' + totalPriceFormatted()"></p>
+                            <h3 class="text-xl sm:text-2xl font-black text-white">Confirmar Agendamento</h3>
+                            <p class="text-xs text-slate-400 mt-1">Selecione o profissional, data e horário desejados para garantir seu atendimento.</p>
                         </div>
-                        <button type="button" @click="bookingOpen = false" class="text-slate-400 hover:text-white text-xl p-1 leading-none">&times;</button>
-                    </div>
-
-                    {{-- LISTA RESUMIDA DOS SERVIÇOS SELECIONADOS --}}
-                    <div class="mb-4 p-3 rounded-2xl bg-slate-950 border border-slate-800 space-y-1.5">
-                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Serviços Inclusos:</span>
-                        <template x-for="s in selectedServices" :key="s.id">
-                            <div class="flex items-center justify-between text-xs">
-                                <span class="text-slate-200 font-semibold" x-text="'• ' + s.name"></span>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-slate-400" x-text="s.duration + ' min'"></span>
-                                    <span class="text-brand font-bold" x-text="'R$ ' + s.price.toFixed(2).replace('.', ',')"></span>
-                                </div>
-                            </div>
-                        </template>
+                        <button type="button" @click="bookingOpen = false" class="text-slate-400 hover:text-white text-2xl p-2 leading-none cursor-pointer">&times;</button>
                     </div>
 
                     {{-- ALERTA DE ERRO --}}
-                    <div x-show="errorMessage" x-cloak class="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold" x-text="errorMessage"></div>
+                    <div x-show="errorMessage" x-cloak class="mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold" x-text="errorMessage"></div>
 
-                    {{-- PASSO 1: ESCOLHA DO BARBEIRO --}}
-                    <div class="mb-5">
-                        <label class="block text-xs font-bold text-slate-300 mb-2">1. Escolha o Profissional</label>
-                        <div class="grid grid-cols-2 gap-2">
+                    {{-- GRID EM 2 COLUNAS (DESKTOP) / 1 COLUNA (MOBILE) --}}
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                        
+                        {{-- COLUNA ESQUERDA: SERVIÇOS, PROFISSIONAL & DATA (5 COLUNAS) --}}
+                        <div class="lg:col-span-5 space-y-5">
+                            {{-- CARD DE RESUMO DOS SERVIÇOS --}}
+                            <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2.5">
+                                <div class="flex items-center justify-between text-xs border-b border-slate-800 pb-2">
+                                    <span class="font-bold uppercase tracking-wider text-slate-400">Serviços Selecionados</span>
+                                    <span class="text-brand font-black" x-text="totalPriceFormatted()"></span>
+                                </div>
+                                
+                                <div class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                                    <template x-for="s in selectedServices" :key="s.id">
+                                        <div class="flex items-center justify-between text-xs text-slate-300">
+                                            <span class="font-medium truncate max-w-[180px]" x-text="'• ' + s.name"></span>
+                                            <span class="text-slate-400" x-text="'R$ ' + s.price.toFixed(2).replace('.', ',')"></span>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <div class="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-900">
+                                    <span>Tempo Total Estimado:</span>
+                                    <span class="font-bold text-white" x-text="totalDuration() + ' minutos'"></span>
+                                </div>
+                            </div>
+
+                            {{-- PASSO 1: ESCOLHA DO PROFISSIONAL --}}
+                            <div>
+                                <label class="block text-xs font-bold text-slate-300 mb-2">1. Escolha o Profissional</label>
+                                <div class="space-y-2">
+                                    <button
+                                        type="button"
+                                        @click="setBarber('any')"
+                                        :class="selectedBarber === 'any' ? 'border-brand bg-brand/10 text-white font-bold ring-1 ring-brand' : 'border-slate-800 bg-slate-950 text-slate-300 hover:border-slate-700'"
+                                        class="w-full p-3 rounded-xl border text-left text-xs transition flex items-center justify-between cursor-pointer"
+                                    >
+                                        <div class="flex items-center gap-2.5">
+                                            <span class="text-lg">⚡</span>
+                                            <div>
+                                                <span class="block font-bold">Primeiro Disponível</span>
+                                                <span class="text-[10px] text-slate-400">Mais opções livres</span>
+                                            </div>
+                                        </div>
+                                        <span x-show="selectedBarber === 'any'" class="text-brand font-black text-sm">✓</span>
+                                    </button>
+
+                                    @foreach ($barbershop->professionals as $pro)
+                                        <button
+                                            type="button"
+                                            @click="setBarber({ id: {{ $pro->id }}, name: '{{ addslashes($pro->display_name) }}' })"
+                                            :class="selectedBarber && selectedBarber.id === {{ $pro->id }} ? 'border-brand bg-brand/10 text-white font-bold ring-1 ring-brand' : 'border-slate-800 bg-slate-950 text-slate-300 hover:border-slate-700'"
+                                            class="w-full p-3 rounded-xl border text-left text-xs transition flex items-center justify-between cursor-pointer"
+                                        >
+                                            <div class="flex items-center gap-2.5">
+                                                <div class="h-7 w-7 rounded-full bg-slate-800 border border-brand/50 flex items-center justify-center font-bold text-xs text-white overflow-hidden">
+                                                    @if ($pro->photo_url)
+                                                        <img src="{{ $pro->photo_url }}" alt="{{ $pro->name }}" class="h-full w-full object-cover" />
+                                                    @else
+                                                        {{ strtoupper(mb_substr($pro->name, 0, 1)) }}
+                                                    @endif
+                                                </div>
+                                                <div>
+                                                    <span class="block font-bold truncate">{{ $pro->display_name }}</span>
+                                                    <span class="text-[10px] text-slate-400">Especialista</span>
+                                                </div>
+                                            </div>
+                                            <span x-show="selectedBarber && selectedBarber.id === {{ $pro->id }}" class="text-brand font-black text-sm">✓</span>
+                                        </button>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- COLUNA DIREITA: DATA, HORÁRIOS, DADOS & CONFIRMAÇÃO (7 COLUNAS) --}}
+                        <div class="lg:col-span-7 space-y-5 bg-slate-950/70 p-5 sm:p-6 rounded-2xl border border-slate-800/80">
+                            {{-- PASSO 2: ESCOLHA DA DATA --}}
+                            <div>
+                                <label class="block text-xs font-bold text-slate-300 mb-2">2. Escolha o Dia</label>
+                                <div class="flex items-center gap-2 overflow-x-auto pb-2 hide-scrollbar">
+                                    <template x-for="d in availableDates" :key="d.date">
+                                        <button
+                                            type="button"
+                                            @click="setDate(d.date)"
+                                            :class="selectedDate === d.date ? 'border-brand bg-brand text-slate-950 font-black shadow-lg shadow-amber-500/20' : 'border-slate-800 bg-slate-900 text-slate-300 hover:border-slate-700'"
+                                            class="px-3.5 py-2.5 rounded-xl border text-center transition shrink-0 cursor-pointer min-w-[62px]"
+                                        >
+                                            <span class="block text-[10px] uppercase font-bold" x-text="d.dayName"></span>
+                                            <span class="block text-base font-black leading-none my-1" x-text="d.dayNum"></span>
+                                            <span class="block text-[9px] uppercase" x-text="d.month"></span>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+
+                            {{-- PASSO 3: GRADE DE HORÁRIOS LIVRES --}}
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <label class="text-xs font-bold text-slate-300">3. Horários Disponíveis</label>
+                                    <span class="text-[11px] text-slate-400" x-show="loadingSlots">Consultando agenda...</span>
+                                </div>
+
+                                <div x-show="loadingSlots" class="py-8 text-center text-slate-400 text-xs">
+                                    <svg class="animate-spin h-6 w-6 mx-auto mb-2 text-brand" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                    </svg>
+                                    <span>Calculando horários livres para <strong x-text="totalDuration() + ' min'"></strong>...</span>
+                                </div>
+
+                                <div x-show="!loadingSlots && availableSlots.length > 0" class="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-48 overflow-y-auto pr-1">
+                                    <template x-for="slot in availableSlots" :key="slot.time">
+                                        <button
+                                            type="button"
+                                            @click="selectedTime = slot.time"
+                                            :class="selectedTime === slot.time ? 'border-brand bg-brand text-slate-950 font-black shadow-md scale-105' : 'border-slate-800 bg-slate-900 text-slate-200 hover:border-slate-700'"
+                                            class="py-2.5 px-2 rounded-xl border text-xs font-semibold text-center transition cursor-pointer"
+                                            x-text="slot.time"
+                                        >
+                                        </button>
+                                    </template>
+                                </div>
+
+                                <div x-show="!loadingSlots && availableSlots.length === 0" class="p-5 rounded-xl bg-slate-900 border border-dashed border-slate-800 text-center text-xs text-slate-400">
+                                    😔 Nenhum horário livre para atender <span class="font-bold text-white" x-text="totalDuration() + ' minutos'"></span> nesta data. Escolha outro dia acima.
+                                </div>
+                            </div>
+
+                            {{-- PASSO 4: DADOS DO CLIENTE --}}
+                            <div class="space-y-3 pt-3 border-t border-slate-800">
+                                <label class="block text-xs font-bold text-slate-300">4. Seus Dados de Atendimento</label>
+                                <div>
+                                    <input
+                                        type="text"
+                                        x-model="clientName"
+                                        placeholder="Seu Nome Completo"
+                                        class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand"
+                                    />
+                                </div>
+                                <div>
+                                    <input
+                                        type="tel"
+                                        x-model="clientPhone"
+                                        placeholder="Seu WhatsApp com DDD (Ex: 85999999999)"
+                                        class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand"
+                                    />
+                                </div>
+                            </div>
+
+                            {{-- BOTÃO FINAL DE CONFIRMAÇÃO --}}
                             <button
                                 type="button"
-                                @click="setBarber('any')"
-                                :class="selectedBarber === 'any' ? 'border-brand bg-brand/10 text-white font-bold ring-1 ring-brand' : 'border-slate-800 bg-slate-950 text-slate-300 hover:border-slate-700'"
-                                class="p-2.5 rounded-xl border text-left text-xs transition flex items-center gap-2 cursor-pointer"
+                                @click="submitBooking()"
+                                :disabled="isSubmitting || !selectedTime || !clientName || !clientPhone"
+                                :class="isSubmitting || !selectedTime || !clientName || !clientPhone ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-500' : 'bg-brand hover:brightness-110 text-slate-950 shadow-xl shadow-amber-500/20 cursor-pointer hover:scale-[1.01] active:scale-[0.99]'"
+                                class="w-full rounded-2xl font-black py-4 text-xs uppercase tracking-wider transition flex items-center justify-center gap-2"
                             >
-                                <span class="text-base">⚡</span>
-                                <div>
-                                    <span class="block font-bold">Primeiro Disponível</span>
-                                    <span class="text-[10px] text-slate-400">Mais opções de horário</span>
-                                </div>
+                                <span x-show="!isSubmitting">Confirmar e Garantir Horário</span>
+                                <span x-show="isSubmitting" x-cloak>Gravando Agendamento...</span>
                             </button>
-
-                            @foreach ($barbershop->professionals as $pro)
-                                <button
-                                    type="button"
-                                    @click="setBarber({ id: {{ $pro->id }}, name: '{{ addslashes($pro->display_name) }}' })"
-                                    :class="selectedBarber && selectedBarber.id === {{ $pro->id }} ? 'border-brand bg-brand/10 text-white font-bold ring-1 ring-brand' : 'border-slate-800 bg-slate-950 text-slate-300 hover:border-slate-700'"
-                                    class="p-2.5 rounded-xl border text-left text-xs transition flex items-center gap-2 cursor-pointer"
-                                >
-                                    <span class="text-base">💈</span>
-                                    <div class="truncate">
-                                        <span class="block font-bold truncate">{{ $pro->display_name }}</span>
-                                        <span class="text-[10px] text-slate-400">Especialista</span>
-                                    </div>
-                                </button>
-                            @endforeach
                         </div>
                     </div>
-
-                    {{-- PASSO 2: ESCOLHA DA DATA --}}
-                    <div class="mb-5">
-                        <label class="block text-xs font-bold text-slate-300 mb-2">2. Escolha o Dia</label>
-                        <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-                            <template x-for="d in availableDates" :key="d.date">
-                                <button
-                                    type="button"
-                                    @click="setDate(d.date)"
-                                    :class="selectedDate === d.date ? 'border-brand bg-brand text-slate-950 font-black' : 'border-slate-800 bg-slate-950 text-slate-300 hover:border-slate-700'"
-                                    class="px-3.5 py-2.5 rounded-xl border text-center transition shrink-0 cursor-pointer"
-                                >
-                                    <span class="block text-[10px] uppercase font-bold" x-text="d.dayName"></span>
-                                    <span class="block text-base font-black leading-none my-0.5" x-text="d.dayNum"></span>
-                                    <span class="block text-[9px] uppercase" x-text="d.month"></span>
-                                </button>
-                            </template>
-                        </div>
-                    </div>
-
-                    {{-- PASSO 3: HORÁRIOS LIVRES --}}
-                    <div class="mb-5">
-                        <div class="flex items-center justify-between mb-2">
-                            <label class="text-xs font-bold text-slate-300">3. Horários Disponíveis</label>
-                            <span class="text-[11px] text-slate-400" x-show="loadingSlots">Buscando horários...</span>
-                        </div>
-
-                        <div x-show="loadingSlots" class="p-6 text-center text-slate-400 text-xs">
-                            <svg class="animate-spin h-5 w-5 mx-auto mb-2 text-brand" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                            </svg>
-                            <span>Calculando agenda para <span x-text="totalDuration() + ' minutos'"></span>...</span>
-                        </div>
-
-                        <div x-show="!loadingSlots && availableSlots.length > 0" class="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-40 overflow-y-auto pr-1">
-                            <template x-for="slot in availableSlots" :key="slot.time">
-                                <button
-                                    type="button"
-                                    @click="selectedTime = slot.time"
-                                    :class="selectedTime === slot.time ? 'border-brand bg-brand text-slate-950 font-black shadow-md' : 'border-slate-800 bg-slate-950 text-slate-200 hover:border-slate-700'"
-                                    class="py-2 px-1 rounded-xl border text-xs font-semibold text-center transition cursor-pointer"
-                                    x-text="slot.time"
-                                >
-                                </button>
-                            </template>
-                        </div>
-
-                        <div x-show="!loadingSlots && availableSlots.length === 0" class="p-4 rounded-xl bg-slate-950 border border-dashed border-slate-800 text-center text-xs text-slate-400">
-                            😔 Nenhum horário livre para atender <span x-text="totalDuration() + ' minutos'"></span> nesta data. Escolha outro dia.
-                        </div>
-                    </div>
-
-                    {{-- PASSO 4: DADOS DO CLIENTE --}}
-                    <div class="space-y-3 mb-5 border-t border-slate-800 pt-4">
-                        <label class="block text-xs font-bold text-slate-300">4. Seus Dados de Atendimento</label>
-                        <div>
-                            <input
-                                type="text"
-                                x-model="clientName"
-                                placeholder="Seu Nome Completo"
-                                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand"
-                            />
-                        </div>
-                        <div>
-                            <input
-                                type="tel"
-                                x-model="clientPhone"
-                                placeholder="Seu WhatsApp (Ex: 85999999999)"
-                                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand"
-                            />
-                        </div>
-                    </div>
-
-                    {{-- BOTÃO FINAL --}}
-                    <button
-                        type="button"
-                        @click="submitBooking()"
-                        :disabled="isSubmitting || !selectedTime || !clientName || !clientPhone"
-                        :class="isSubmitting || !selectedTime || !clientName || !clientPhone ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-500' : 'bg-brand hover:brightness-110 text-slate-950 shadow-lg cursor-pointer'"
-                        class="w-full rounded-2xl font-black py-3.5 text-xs uppercase tracking-wider transition flex items-center justify-center gap-2"
-                    >
-                        <span x-show="!isSubmitting">Confirmar e Garantir Horário</span>
-                        <span x-show="isSubmitting" x-cloak>Gravando Agendamento...</span>
-                    </button>
                 </div>
             </template>
 
             {{-- TELA 2: COMPROVANTE DE SUCESSO --}}
             <template x-if="confirmedData">
-                <div class="text-center py-4">
+                <div class="text-center py-6 max-w-lg mx-auto">
                     <div class="h-16 w-16 mx-auto rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-3xl mb-4">
                         ✓
                     </div>
 
-                    <h3 class="text-xl font-black text-white mb-1">Agendamento Garantido!</h3>
-                    <p class="text-xs text-slate-400 mb-6">Seus serviços foram reservados com sucesso na agenda.</p>
+                    <h3 class="text-2xl font-black text-white mb-1">Agendamento Garantido!</h3>
+                    <p class="text-xs text-slate-400 mb-6">Seu horário foi reservado com sucesso no sistema.</p>
 
-                    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 text-left text-xs space-y-2 mb-6">
+                    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-5 text-left text-xs space-y-2.5 mb-6">
                         <div class="flex justify-between border-b border-slate-800/80 pb-2">
                             <span class="text-slate-400">Protocolo:</span>
                             <span class="font-bold text-brand" x-text="'#' + confirmedData.appointment.id"></span>
                         </div>
                         <div class="flex justify-between border-b border-slate-800/80 pb-2">
                             <span class="text-slate-400">Serviço(s):</span>
-                            <span class="font-bold text-white text-right max-w-[240px]" x-text="confirmedData.appointment.services_summary"></span>
+                            <span class="font-bold text-white text-right max-w-[260px]" x-text="confirmedData.appointment.services_summary"></span>
                         </div>
                         <div class="flex justify-between border-b border-slate-800/80 pb-2">
                             <span class="text-slate-400">Barbeiro:</span>
@@ -384,7 +423,7 @@
                             <a
                                 :href="confirmedData.whatsapp_url"
                                 target="_blank"
-                                class="w-full rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3.5 text-xs uppercase tracking-wider transition shadow-lg flex items-center justify-center gap-2"
+                                class="w-full rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black py-4 text-xs uppercase tracking-wider transition shadow-lg flex items-center justify-center gap-2"
                             >
                                 <span>Enviar no WhatsApp da Barbearia</span>
                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
