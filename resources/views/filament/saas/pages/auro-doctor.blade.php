@@ -1,86 +1,42 @@
 <x-filament-panels::page>
-    <div class="space-y-6">
-        <!-- Banner Principal do AuroDoctor -->
-        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-850 to-indigo-950 p-6 sm:p-8 text-white border border-slate-800 shadow-xl">
-            <div class="absolute -right-10 -bottom-10 opacity-10 pointer-events-none">
-                <x-filament::icon icon="heroicon-o-shield-check" class="w-80 h-80 text-amber-400" />
-            </div>
+    <div style="width: 100%; display: flex; flex-direction: column; gap: 24px; color: #f8fafc; font-family: inherit;">
 
-            <div class="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
-                <div class="space-y-2 flex-1">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold uppercase tracking-wider border border-amber-500/30">
+        {{-- 1. BANNER PRINCIPAL DO AURODOCTOR --}}
+        <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155; border-radius: 20px; padding: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
+                <div style="display: flex; flex-direction: column; gap: 6px; max-width: 650px;">
+                    <div style="display: inline-flex; align-items: center; gap: 8px; width: fit-content; background: rgba(217, 119, 6, 0.2); border: 1px solid rgba(217, 119, 6, 0.5); padding: 4px 12px; border-radius: 9999px; color: #fbbf24; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">
                         <span>🩺</span>
                         <span>AuroDoctor • Robô Clínico Multi-Tenant</span>
                     </div>
-
-                    <h2 class="text-2xl sm:text-3xl font-black tracking-tight text-white">
-                        Diagnóstico Geral & Saúde do Sistema
+                    <h2 style="margin: 4px 0 0; font-size: 24px; font-weight: 900; color: #ffffff; letter-spacing: -0.02em;">
+                        Diagnóstico Geral & Saúde da Plataforma
                     </h2>
-
-                    <p class="text-sm text-slate-300 max-w-xl leading-relaxed">
-                        Execute exames clínicos direcionados: analise a infraestrutura global da VPS ou selecione uma instituição parceira específica para auditar seu banco de dados, motor financeiro e integrações isoladas.
+                    <p style="margin: 0; font-size: 13px; color: #94a3b8; line-height: 1.6;">
+                        Execute varreduras clínicas automáticas: audite a conectividade do banco PostgreSQL, permissões de disco, integridade das 6 tabelas centrais do AuroBarber, motor de agendamentos e rotas de acesso.
                     </p>
                 </div>
 
-                <div class="flex flex-col gap-2.5 shrink-0" style="width: 100%; max-width: 380px;">
-                    <!-- Seletor de Tenant / Escola -->
+                <div style="display: flex; flex-direction: column; gap: 12px; min-width: 280px;">
                     <div>
-                        <label class="block text-[11px] font-bold text-amber-300 uppercase tracking-wider mb-1">
-                            Instituição / Alvo
+                        <label style="display: block; font-size: 11px; font-weight: 800; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">
+                            Alvo do Diagnóstico
                         </label>
-                        <select
-                            wire:model.live="selectedTenant"
-                            class="w-full rounded-xl bg-slate-800/90 border border-slate-700 text-white text-xs font-bold px-3 py-2.5 focus:border-amber-400 focus:ring focus:ring-amber-400/20 shadow-sm transition">
+                        <select wire:model.live="selectedTenant"
+                                style="width: 100%; background: #0b1120; border: 1px solid #475569; color: #f8fafc; font-size: 13px; font-weight: 700; padding: 10px 14px; border-radius: 12px; outline: none; cursor: pointer;">
                             @foreach($this->getAvailableTenants() as $key => $label)
-                                <option value="{{ $key }}" class="bg-slate-900 text-white">{{ $label }}</option>
+                                <option value="{{ $key }}" style="background: #0b1120; color: #ffffff;">{{ $label }}</option>
                             @endforeach
                         </select>
                     </div>
 
-                    <!-- Botões de Ação Emparelhados -->
-                    <div class="flex items-center gap-2">
-                        <button
-                            wire:click="runDiagnostics"
-                            wire:loading.attr="disabled"
-                            type="button"
-                            style="flex: 1;"
-                            class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-slate-950 font-black text-xs shadow-md shadow-amber-500/20 hover:brightness-110 active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed">
-                            <span wire:loading.remove wire:target="runDiagnostics">
-                                <x-filament::icon icon="heroicon-m-sparkles" class="w-4 h-4 text-slate-950" />
-                            </span>
-                            <span wire:loading wire:target="runDiagnostics" class="animate-spin">
-                                <x-filament::icon icon="heroicon-m-arrow-path" class="w-4 h-4 text-slate-950" />
-                            </span>
-                            <span wire:loading.remove wire:target="runDiagnostics">Examinar Agora</span>
+                    <div style="display: flex; gap: 10px;">
+                        <button wire:click="runDiagnostics"
+                                wire:loading.attr="disabled"
+                                type="button"
+                                style="flex: 1; background: linear-gradient(135deg, #d97706, #b45309); color: #ffffff; font-weight: 800; font-size: 13px; padding: 12px 18px; border-radius: 12px; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(217, 119, 6, 0.4); transition: all 0.2s ease;">
+                            <span wire:loading.remove wire:target="runDiagnostics">⚡ Examinar Agora</span>
                             <span wire:loading wire:target="runDiagnostics">Examinando...</span>
-                        </button>
-
-                        <button
-                            wire:click="applySystemUpdate"
-                            wire:loading.attr="disabled"
-                            type="button"
-                            title="Atualizador Completo do Sistema: puxa código novo do Git (origin/saas-prod), aplica migrações em todos os bancos de escolas e limpa caches automaticamente"
-                            style="flex: 1.2;"
-                            class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black text-xs shadow-md shadow-indigo-600/25 transition disabled:opacity-50 cursor-pointer active:scale-95">
-                            <span wire:loading.remove wire:target="applySystemUpdate">🚀</span>
-                            <span wire:loading wire:target="applySystemUpdate" class="animate-spin">
-                                <x-filament::icon icon="heroicon-m-arrow-path" class="w-4 h-4 text-white" />
-                            </span>
-                            <span wire:loading.remove wire:target="applySystemUpdate">Atualizar Sistema</span>
-                            <span wire:loading wire:target="applySystemUpdate">Atualizando...</span>
-                        </button>
-                    </div>
-
-                    <!-- Ação secundária: Apenas Migrações (sem git pull) -->
-                    <div class="flex justify-end pt-0.5">
-                        <button
-                            wire:click="runMigrations"
-                            wire:loading.attr="disabled"
-                            type="button"
-                            title="Apenas aplica migrações no banco central e schemas das escolas sem puxar novo código"
-                            class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-400 hover:text-amber-300 transition py-0.5 cursor-pointer">
-                            <span wire:loading.remove wire:target="runMigrations">⚡ Apenas sincronizar migrações de banco</span>
-                            <span wire:loading wire:target="runMigrations" class="animate-pulse text-amber-300">Sincronizando bancos...</span>
                         </button>
                     </div>
                 </div>
@@ -88,181 +44,167 @@
         </div>
 
         @if($report)
-            <!-- Card de Diagnóstico do Paciente -->
-            <div class="rounded-2xl border {{ $report['status'] === 'healthy' ? 'border-emerald-500/40 bg-emerald-500/5' : ($report['status'] === 'warning' ? 'border-amber-500/40 bg-amber-500/5' : 'border-rose-500/40 bg-rose-500/5') }} p-6 shadow-sm transition">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div class="flex items-center gap-4">
-                        <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl {{ $report['status'] === 'healthy' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : ($report['status'] === 'warning' ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30' : 'bg-rose-500 text-white shadow-lg shadow-rose-500/30') }}">
-                            @if($report['status'] === 'healthy')
-                                <x-filament::icon icon="heroicon-m-check-badge" class="h-10 w-10" />
-                            @elseif($report['status'] === 'warning')
-                                <x-filament::icon icon="heroicon-m-exclamation-triangle" class="h-10 w-10" />
+            {{-- 2. STATUS GERAL / SCORE --}}
+            @php
+                $isHealthy = $report['status'] === 'healthy';
+                $isWarning = $report['status'] === 'warning';
+                $accentColor = $isHealthy ? '#10b981' : ($isWarning ? '#f59e0b' : '#ef4444');
+                $accentBg = $isHealthy ? 'rgba(16, 185, 129, 0.12)' : ($isWarning ? 'rgba(245, 158, 11, 0.12)' : 'rgba(239, 68, 68, 0.12)');
+                $accentBorder = $isHealthy ? 'rgba(16, 185, 129, 0.35)' : ($isWarning ? 'rgba(245, 158, 11, 0.35)' : 'rgba(239, 68, 68, 0.35)');
+            @endphp
+
+            <div style="background: {{ $accentBg }}; border: 1px solid {{ $accentBorder }}; border-radius: 20px; padding: 24px 28px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+                <div style="display: flex; align-items: center; gap: 18px;">
+                    <div style="width: 60px; height: 60px; border-radius: 16px; background: {{ $accentColor }}; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 28px; flex-shrink: 0; box-shadow: 0 6px 18px rgba(0,0,0,0.3);">
+                        @if($isHealthy)
+                            ✓
+                        @elseif($isWarning)
+                            !
+                        @else
+                            ✕
+                        @endif
+                    </div>
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: {{ $accentColor }}; letter-spacing: 0.05em;">
+                                Diagnóstico Clínico do Sistema
+                            </span>
+                            <span style="font-size: 11px; color: #94a3b8;">• Executado em {{ \Carbon\Carbon::parse($report['executed_at'])->format('d/m/Y H:i:s') }} ({{ $report['duration_seconds'] }}s)</span>
+                        </div>
+                        <h3 style="margin: 4px 0 0; font-size: 20px; font-weight: 900; color: #ffffff;">
+                            @if($isHealthy)
+                                🎉 O AuroBarber está 100% saudável e operacional!
+                            @elseif($isWarning)
+                                ⚠️ Sistema operacional com alertas de atenção
                             @else
-                                <x-filament::icon icon="heroicon-m-x-circle" class="h-10 w-10" />
+                                🚨 Foram encontradas falhas que necessitam correção imediata!
                             @endif
-                        </div>
-
-                        <div>
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <span class="text-xs font-bold uppercase tracking-wider {{ $report['status'] === 'healthy' ? 'text-emerald-500' : ($report['status'] === 'warning' ? 'text-amber-500' : 'text-rose-500') }}">
-                                    Diagnóstico Clínico
-                                </span>
-                                @php
-                                    $allTenants = $this->getAvailableTenants();
-                                    $currentTenantLabel = $allTenants[$report['target_tenant'] ?? 'global'] ?? 'Global';
-                                @endphp
-                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-500 border border-amber-500/20">
-                                    {{ $currentTenantLabel }}
-                                </span>
-                                <span class="text-xs text-gray-400">• {{ \Carbon\Carbon::parse($report['executed_at'])->format('d/m/Y H:i:s') }} ({{ $report['duration_seconds'] }}s)</span>
-                            </div>
-
-                            <h3 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-white mt-0.5">
-                                @if($report['status'] === 'healthy')
-                                    🎉 Seu sistema está 100% saudável e operacional!
-                                @elseif($report['status'] === 'warning')
-                                    ⚠️ Sistema operacional com alertas de atenção
-                                @else
-                                    🚨 Atenção: Foram encontradas falhas que necessitam correção!
-                                @endif
-                            </h3>
-                        </div>
+                        </h3>
                     </div>
+                </div>
 
-                    <div class="flex items-center gap-3">
-                        <div class="px-5 py-3 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-center shadow-xs">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Score de Saúde</span>
-                            <div class="text-2xl font-black {{ $report['health_score'] >= 90 ? 'text-emerald-500' : ($report['health_score'] >= 70 ? 'text-amber-500' : 'text-rose-500') }}">
-                                {{ $report['health_score'] }}%
-                            </div>
-                        </div>
+                <div style="background: #0b1120; border: 1px solid #1e293b; border-radius: 16px; padding: 14px 24px; text-align: center; min-width: 140px;">
+                    <span style="display: block; font-size: 10px; font-weight: 800; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.05em;">Score de Saúde</span>
+                    <div style="font-size: 32px; font-weight: 900; color: {{ $accentColor }}; margin-top: 2px;">
+                        {{ $report['health_score'] }}%
                     </div>
                 </div>
             </div>
 
-            <!-- Grade de Métricas Rápidas -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="p-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-xs">
-                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total de Checagens</span>
-                    <div class="text-2xl font-black text-gray-900 dark:text-white mt-1">{{ $report['total_checks'] }}</div>
+            {{-- 3. GRADE DE METRICAS RAPIDAS --}}
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px;">
+                <div style="background: #0b1120; border: 1px solid #1e293b; border-radius: 16px; padding: 18px 20px;">
+                    <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.05em;">Total de Checagens</span>
+                    <div style="font-size: 26px; font-weight: 900; color: #ffffff; margin-top: 6px;">{{ $report['total_checks'] }}</div>
                 </div>
 
-                <div class="p-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-xs">
-                    <span class="text-xs font-semibold text-emerald-500 uppercase tracking-wider">Aprovados</span>
-                    <div class="text-2xl font-black text-emerald-500 mt-1">{{ $report['passed'] }}</div>
+                <div style="background: #0b1120; border: 1px solid #1e293b; border-radius: 16px; padding: 18px 20px;">
+                    <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #10b981; letter-spacing: 0.05em;">Aprovados</span>
+                    <div style="font-size: 26px; font-weight: 900; color: #10b981; margin-top: 6px;">{{ $report['passed'] }}</div>
                 </div>
 
-                <div class="p-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-xs">
-                    <span class="text-xs font-semibold text-amber-500 uppercase tracking-wider">Alertas</span>
-                    <div class="text-2xl font-black text-amber-500 mt-1">{{ $report['warnings'] }}</div>
+                <div style="background: #0b1120; border: 1px solid #1e293b; border-radius: 16px; padding: 18px 20px;">
+                    <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #f59e0b; letter-spacing: 0.05em;">Alertas</span>
+                    <div style="font-size: 26px; font-weight: 900; color: #f59e0b; margin-top: 6px;">{{ $report['warnings'] }}</div>
                 </div>
 
-                <div class="p-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-xs">
-                    <span class="text-xs font-semibold text-rose-500 uppercase tracking-wider">Falhas Críticas</span>
-                    <div class="text-2xl font-black {{ $report['failed'] > 0 ? 'text-rose-500' : 'text-gray-400' }} mt-1">{{ $report['failed'] }}</div>
+                <div style="background: #0b1120; border: 1px solid #1e293b; border-radius: 16px; padding: 18px 20px;">
+                    <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #ef4444; letter-spacing: 0.05em;">Falhas Críticas</span>
+                    <div style="font-size: 26px; font-weight: 900; color: {{ $report['failed'] > 0 ? '#ef4444' : '#64748b' }}; margin-top: 6px;">{{ $report['failed'] }}</div>
                 </div>
             </div>
 
-            <!-- Filtros por Categoria -->
-            <div class="flex items-center gap-2 overflow-x-auto pb-1">
+            {{-- 4. FILTROS DE CATEGORIA --}}
+            <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;">
                 @php
                     $categories = [
                         'all' => 'Todas as Checagens',
                         'database' => '🗄️ Banco & Estrutura',
-                        'crud' => '👥 Cadastros (Faker)',
+                        'crud' => '💈 Barbearias & Agendamentos',
                         'financial' => '💰 Motor Financeiro',
                         'routes' => '🌐 Rotas & Telas',
-                        'integrations' => '🔌 Integrações & APIs',
-                        'simulation' => '⚡ Simulações Atômicas',
                         'telemetry' => '🛡️ Telemetria & Incidentes',
                     ];
                 @endphp
 
                 @foreach($categories as $key => $label)
-                    <button
-                        wire:click="setCategory('{{ $key }}')"
-                        type="button"
-                        class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap {{ $activeCategory === $key ? 'bg-amber-500 text-slate-950 shadow-sm' : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-800 hover:border-amber-500/40' }}">
+                    <button wire:click="setCategory('{{ $key }}')"
+                            type="button"
+                            style="padding: 8px 16px; border-radius: 12px; font-size: 12px; font-weight: 800; cursor: pointer; white-space: nowrap; border: 1px solid {{ $activeCategory === $key ? '#f59e0b' : '#1e293b' }}; background: {{ $activeCategory === $key ? '#f59e0b' : '#0b1120' }}; color: {{ $activeCategory === $key ? '#0f172a' : '#cbd5e1' }}; transition: all 0.2s ease;">
                         {{ $label }}
                     </button>
                 @endforeach
             </div>
 
-            <!-- Lista de Checagens Detalhadas -->
-            <div class="space-y-3">
+            {{-- 5. LISTA DE CHECAGENS DETALHADAS --}}
+            <div style="display: flex; flex-direction: column; gap: 12px;">
                 @foreach($report['checks'] as $check)
                     @if($activeCategory === 'all' || $activeCategory === $check['category'])
-                        <div class="p-4 rounded-2xl bg-white dark:bg-gray-900 border {{ $check['status'] === 'passed' ? 'border-gray-100 dark:border-gray-800' : ($check['status'] === 'warning' ? 'border-amber-500/40 bg-amber-500/5' : 'border-rose-500/50 bg-rose-500/5') }} shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 transition hover:border-gray-300 dark:hover:border-gray-700">
-                            <div class="flex items-start gap-3.5">
-                                <div class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg {{ $check['status'] === 'passed' ? 'bg-emerald-500/10 text-emerald-500' : ($check['status'] === 'warning' ? 'bg-amber-500/10 text-amber-500' : 'bg-rose-500/10 text-rose-500') }}">
-                                    @if($check['status'] === 'passed')
-                                        <x-filament::icon icon="heroicon-m-check" class="h-4 w-4" />
-                                    @elseif($check['status'] === 'warning')
-                                        <x-filament::icon icon="heroicon-m-exclamation-triangle" class="h-4 w-4" />
+                        @php
+                            $cPassed = $check['status'] === 'passed';
+                            $cWarning = $check['status'] === 'warning';
+                            $cColor = $cPassed ? '#10b981' : ($cWarning ? '#f59e0b' : '#ef4444');
+                            $cBorder = $cPassed ? '#1e293b' : ($cWarning ? 'rgba(245, 158, 11, 0.4)' : 'rgba(239, 68, 68, 0.5)');
+                            $cBg = $cPassed ? '#0b1120' : ($cWarning ? 'rgba(245, 158, 11, 0.08)' : 'rgba(239, 68, 68, 0.08)');
+                        @endphp
+
+                        <div style="background: {{ $cBg }}; border: 1px solid {{ $cBorder }}; border-radius: 16px; padding: 18px 22px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                            <div style="display: flex; align-items: flex-start; gap: 16px; flex: 1;">
+                                <div style="width: 32px; height: 32px; border-radius: 10px; background: rgba(255, 255, 255, 0.05); border: 1px solid {{ $cBorder }}; display: flex; align-items: center; justify-content: center; color: {{ $cColor }}; font-weight: 900; font-size: 15px; flex-shrink: 0; margin-top: 2px;">
+                                    @if($cPassed)
+                                        ✓
+                                    @elseif($cWarning)
+                                        !
                                     @else
-                                        <x-filament::icon icon="heroicon-m-x-mark" class="h-4 w-4" />
+                                        ✕
                                     @endif
                                 </div>
-
-                                <div class="space-y-1">
-                                    <div class="flex items-center gap-2">
-                                        <h4 class="text-sm font-bold text-gray-900 dark:text-white">
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                        <h4 style="margin: 0; font-size: 14px; font-weight: 800; color: #ffffff;">
                                             {{ $check['name'] }}
                                         </h4>
-                                        <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-500">
+                                        <span style="font-size: 10px; font-family: monospace; background: rgba(255, 255, 255, 0.06); padding: 2px 8px; border-radius: 6px; color: #94a3b8;">
                                             {{ $check['duration_ms'] }} ms
                                         </span>
                                     </div>
-                                    <p class="text-xs {{ $check['status'] === 'failed' ? 'text-rose-600 dark:text-rose-400 font-medium' : 'text-gray-500 dark:text-gray-400' }}">
+                                    <p style="margin: 0; font-size: 13px; color: {{ $check['status'] === 'failed' ? '#fca5a5' : '#94a3b8' }}; line-height: 1.5;">
                                         {{ $check['message'] }}
                                     </p>
-
                                     @if(!empty($check['error']))
-                                        <div class="mt-2 p-3 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-300 font-mono text-[11px] overflow-x-auto select-all">
+                                        <div style="margin-top: 6px; padding: 10px 14px; border-radius: 10px; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; font-family: monospace; font-size: 11px;">
                                             {{ $check['error'] }}
                                         </div>
                                     @endif
                                 </div>
                             </div>
 
-                            <div class="shrink-0 flex items-center justify-end gap-2">
-                                @if($check['id'] === 'telemetry_incidents' && $check['status'] !== 'passed')
-                                    <button
-                                        wire:click="resolveIncidents"
-                                        type="button"
-                                        title="Marca o incidente de telemetria como auditado e resolvido"
-                                        class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 transition flex items-center gap-1 active:scale-95 cursor-pointer">
-                                        <x-filament::icon icon="heroicon-m-check-circle" class="w-3.5 h-3.5 text-emerald-400" />
-                                        <span>Resolver Incidente</span>
-                                    </button>
-                                @endif
-
-                                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider {{ $check['status'] === 'passed' ? 'bg-emerald-500/15 text-emerald-500' : ($check['status'] === 'warning' ? 'bg-amber-500/15 text-amber-500' : 'bg-rose-500/15 text-rose-500') }}">
-                                    {{ $check['status'] === 'passed' ? 'Aprovado' : ($check['status'] === 'warning' ? 'Alerta' : 'Falhou') }}
-                                </span>
-                            </div>
+                            <span style="padding: 4px 12px; border-radius: 9999px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(255, 255, 255, 0.06); border: 1px solid {{ $cBorder }}; color: {{ $cColor }};">
+                                {{ $cPassed ? 'Aprovado' : ($cWarning ? 'Alerta' : 'Falhou') }}
+                            </span>
                         </div>
                     @endif
                 @endforeach
             </div>
         @else
-            <!-- Estado Inicial: Nenhum exame executado ainda -->
-            <div class="p-12 text-center rounded-2xl bg-white dark:bg-gray-900 border border-dashed border-gray-300 dark:border-gray-800">
-                <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/10 text-amber-500 mb-4">
-                    <x-filament::icon icon="heroicon-o-shield-check" class="h-8 w-8" />
+            {{-- ESTADO INICIAL --}}
+            <div style="background: #0b1120; border: 1px dashed #334155; border-radius: 20px; padding: 48px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px;">
+                <div style="width: 64px; height: 64px; border-radius: 20px; background: rgba(217, 119, 6, 0.15); border: 1px solid rgba(217, 119, 6, 0.3); display: flex; align-items: center; justify-content: center; font-size: 28px; color: #fbbf24;">
+                    🩺
                 </div>
-                <h3 class="text-base font-bold text-gray-900 dark:text-white">Nenhum diagnóstico registrado recentemente</h3>
-                <p class="text-xs text-gray-500 max-w-sm mx-auto mt-1 mb-6">
-                    Clique no botão abaixo para o robô percorrer todo o sistema, testar o banco, CRUDs com Faker e emitir o relatório de saúde.
-                </p>
-                <button
-                    wire:click="runDiagnostics"
-                    type="button"
-                    class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 text-slate-950 font-bold text-sm shadow-md hover:bg-amber-400 transition">
-                    <x-filament::icon icon="heroicon-m-sparkles" class="w-4 h-4 text-slate-950" />
-                    <span>Executar Primeira Varredura Agora</span>
+                <div>
+                    <h3 style="margin: 0; font-size: 18px; font-weight: 900; color: #ffffff;">Nenhum diagnóstico registrado recentemente</h3>
+                    <p style="margin: 6px 0 0; font-size: 13px; color: #94a3b8; max-width: 440px;">
+                        Clique no botão abaixo para o robô percorrer o sistema, auditar o banco e emitir o relatório de integridade completo.
+                    </p>
+                </div>
+                <button wire:click="runDiagnostics"
+                        type="button"
+                        style="background: linear-gradient(135deg, #d97706, #b45309); color: #ffffff; font-weight: 800; font-size: 14px; padding: 12px 28px; border-radius: 12px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(217, 119, 6, 0.4);">
+                    Executar Diagnóstico Agora
                 </button>
             </div>
         @endif
+
     </div>
 </x-filament-panels::page>
