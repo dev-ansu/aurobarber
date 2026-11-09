@@ -31,7 +31,12 @@ class BarbershopResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return filament()->getCurrentPanel()?->getId() === 'saas' && auth()->user()?->role === 'master_admin';
+        $panel = filament()->getCurrentPanel();
+        if ($panel && $panel->getId() !== 'saas') {
+            return false;
+        }
+
+        return auth()->user()?->role === 'master_admin';
     }
 
     public static function form(Schema $schema): Schema

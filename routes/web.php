@@ -3,6 +3,9 @@
 use App\Http\Controllers\BookingController;
 use Illuminate\Support\Facades\Route;
 
+// Redirecionamento de conveniência para o SaaS Master
+Route::redirect('/admin/saas', '/saas');
+
 // 1. Landing Page Principal do AuroBarber (SaaS B2B)
 Route::get('/', function () {
     return view('welcome-aurobarber');

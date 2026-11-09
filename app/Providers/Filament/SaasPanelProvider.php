@@ -77,9 +77,6 @@ class SaasPanelProvider extends PanelProvider
             ->resources([
                 BarbershopResource::class,
             ])
-            ->discoverResources(in: app_path('Filament/Saas/Resources'), for: 'App\\Filament\\Saas\\Resources')
-            ->discoverPages(in: app_path('Filament/Saas/Pages'), for: 'App\\Filament\\Saas\\Pages')
-            ->discoverWidgets(in: app_path('Filament/Saas/Widgets'), for: 'App\\Filament\\Saas\\Widgets')
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
