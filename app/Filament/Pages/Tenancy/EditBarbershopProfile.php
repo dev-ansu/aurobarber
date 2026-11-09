@@ -22,7 +22,20 @@ class EditBarbershopProfile extends EditTenantProfile
 {
     public static function getLabel(): string
     {
-        return 'Configurações da Unidade';
+        return 'Configurações da Barbearia';
+    }
+
+    public static function canView(\Illuminate\Database\Eloquent\Model $tenant): bool
+    {
+        $user = auth()->user();
+        if (! $user) {
+            return false;
+        }
+
+        return $user->role === 'master_admin'
+            || $user->role === 'owner'
+            || (int) $tenant->owner_id === (int) $user->id
+            || (method_exists($user, 'hasRole') && $user->hasRole('super_admin'));
     }
 
     public function getMaxWidth(): Width | string | null

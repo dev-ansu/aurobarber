@@ -14,6 +14,7 @@ use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\MenuItem;
 use Filament\Navigation\NavigationGroup;
+use Filament\Navigation\NavigationItem;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -83,6 +84,14 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make('Serviços')->collapsible(),
                 NavigationGroup::make('Financeiro')->collapsed(),
                 NavigationGroup::make('SaaS Master')->collapsed(),
+            ])
+            ->navigationItems([
+                NavigationItem::make('Configurações da Barbearia')
+                    ->icon('heroicon-o-cog-6-tooth')
+                    ->sort(99)
+                    ->url(fn (): string => filament()->getTenant() ? EditBarbershopProfile::getUrl() : '#')
+                    ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.tenant.profile'))
+                    ->visible(fn (): bool => filament()->getTenant() !== null && (auth()->user()?->isOwner() || (method_exists(auth()->user(), 'hasRole') && auth()->user()?->hasRole('super_admin')))),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
