@@ -33,11 +33,11 @@ return [
     |--------------------------------------------------------------------------
     */
 
-    'nav.group' => 'Filament Shield',
-    'nav.role.label' => 'Funções',
+    'nav.group' => 'Equipe',
+    'nav.role.label' => 'Cargos & Permissões',
     'nav.role.icon' => 'heroicon-o-shield-check',
-    'resource.label.role' => 'Função',
-    'resource.label.roles' => 'Funções',
+    'resource.label.role' => 'Cargo & Permissões',
+    'resource.label.roles' => 'Cargos & Permissões',
 
     /*
     |--------------------------------------------------------------------------

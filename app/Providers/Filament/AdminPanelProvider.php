@@ -36,10 +36,17 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->passwordReset()
-            ->profile(EditOwnProfile::class)
+            ->profile(EditOwnProfile::class, isSimple: false)
             ->multiFactorAuthentication([
                 AppAuthentication::make(),
                 EmailAuthentication::make(),
+            ])
+            ->userMenuItems([
+                MenuItem::make()
+                    ->label('Meu Perfil & Segurança')
+                    ->icon('heroicon-o-user-circle')
+                    ->url(fn (): string => EditOwnProfile::getUrl())
+                    ->visible(fn (): bool => auth()->check()),
             ])
             ->brandName('AuroBarber')
             ->colors([
@@ -81,7 +88,13 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->plugins([
-                \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
+                \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make()
+                    ->navigationGroup('Equipe')
+                    ->navigationLabel('Cargos & Permissões')
+                    ->navigationIcon('heroicon-o-shield-check')
+                    ->navigationSort(30)
+                    ->modelLabel('Cargo')
+                    ->pluralModelLabel('Cargos & Permissões'),
             ])
             ->middleware([
                 EncryptCookies::class,

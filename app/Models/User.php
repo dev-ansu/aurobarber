@@ -83,7 +83,7 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasAppAu
 
     public function getTenants(Panel $panel): array|Collection
     {
-        if ($this->role === 'master_admin' || (method_exists($this, 'hasRole') && $this->hasRole('super_admin'))) {
+        if ($this->role === 'master_admin') {
             return Barbershop::where('is_active', true)->get();
         }
 
@@ -92,11 +92,13 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasAppAu
 
     public function canAccessTenant(Model $tenant): bool
     {
-        if ($this->role === 'master_admin' || (method_exists($this, 'hasRole') && $this->hasRole('super_admin'))) {
+        if ($this->role === 'master_admin') {
             return true;
         }
 
-        return $this->barbershops()->where('barbershops.id', $tenant->id)->exists();
+        return $this->barbershops()->where('barbershops.id', $tenant->id)->exists()
+            || $this->ownedBarbershops()->where('id', $tenant->id)->exists()
+            || $this->barbershop_id === $tenant->id;
     }
 
     public function canAccessPanel(Panel $panel): bool
@@ -105,14 +107,22 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasAppAu
             return false;
         }
 
-        // Master admin acessa o SaaS Master e pode inspecionar qualquer barbearia no Admin para suporte
-        if ($this->role === 'master_admin' || (method_exists($this, 'hasRole') && $this->hasRole('super_admin'))) {
+        // Master admin tem acesso irrestrito ao SaaS Master e pode inspecionar unidades
+        if ($this->role === 'master_admin') {
             return true;
         }
 
-        // Painel admin é restrito à equipe da barbearia (dono, barbeiro, recepcionista)
+        // Usuários de barbearias não acessam o SaaS Master
+        if ($panel->getId() === 'saas') {
+            return false;
+        }
+
+        // Painel admin é acessível por qualquer membro vinculado à barbearia
         if ($panel->getId() === 'admin') {
-            return in_array($this->role, ['owner', 'barber', 'receptionist']);
+            return in_array($this->role, ['owner', 'barber', 'receptionist'])
+                || (method_exists($this, 'hasRole') && ($this->hasRole('super_admin') || $this->roles()->exists()))
+                || !empty($this->barbershop_id)
+                || $this->barbershops()->exists();
         }
 
         return false;

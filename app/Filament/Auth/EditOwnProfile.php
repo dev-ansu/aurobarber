@@ -8,6 +8,7 @@ use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\Width;
 
 class EditOwnProfile extends EditProfile
 {
@@ -19,6 +20,11 @@ class EditOwnProfile extends EditProfile
     public static function getLabel(): string
     {
         return 'Meu Perfil & Segurança';
+    }
+
+    public function getMaxWidth(): Width | string | null
+    {
+        return '5xl';
     }
 
     protected function getPasswordFormComponent(): Component
@@ -48,7 +54,7 @@ class EditOwnProfile extends EditProfile
             ->components([
                 Tabs::make('Perfil & Segurança')
                     ->tabs([
-                        Tab::make('Dados Pessoais & Acesso')
+                        Tab::make('Dados Pessoais')
                             ->icon('heroicon-o-user')
                             ->schema([
                                 TextInput::make('name')
@@ -60,7 +66,7 @@ class EditOwnProfile extends EditProfile
                                 $this->getEmailFormComponent()->columnSpanFull(),
                             ]),
 
-                        Tab::make('Alterar Senha')
+                        Tab::make('Segurança & Senha')
                             ->icon('heroicon-o-key')
                             ->schema([
                                 $this->getPasswordFormComponent(),
@@ -75,6 +81,14 @@ class EditOwnProfile extends EditProfile
                             ])),
                     ])
                     ->columnSpanFull(),
+            ]);
+    }
+
+    public function content(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                $this->getFormContentComponent(),
             ]);
     }
 }

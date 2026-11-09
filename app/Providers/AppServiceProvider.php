@@ -32,7 +32,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::before(function ($user, string $ability): ?bool {
-            if (method_exists($user, 'hasRole') && $user->hasRole('super_admin')) {
+            if ($user->role === 'master_admin' || (method_exists($user, 'hasRole') && $user->hasRole('super_admin'))) {
                 return true;
             }
 

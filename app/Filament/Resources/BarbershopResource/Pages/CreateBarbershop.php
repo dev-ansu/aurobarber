@@ -38,7 +38,7 @@ class CreateBarbershop extends CreateRecord
                 'is_active' => true,
             ]);
 
-            $owner->assignRole('barbershop_owner');
+            $owner->assignRole('super_admin');
             $data['owner_id'] = $owner->id;
             $this->createdOwner = $owner;
         }

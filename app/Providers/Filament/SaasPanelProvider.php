@@ -10,6 +10,8 @@ use App\Filament\Pages\Auth\Login;
 use App\Filament\Resources\BarbershopResource;
 use App\Filament\Saas\Pages\SaasDashboard;
 use App\Http\Middleware\EnsurePasswordIsChanged;
+use Filament\Auth\MultiFactor\App\AppAuthentication;
+use Filament\Auth\MultiFactor\Email\EmailAuthentication;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -55,6 +57,10 @@ class SaasPanelProvider extends PanelProvider
             ->login(Login::class)
             ->passwordReset()
             ->profile(EditOwnProfile::class, isSimple: false)
+            ->multiFactorAuthentication([
+                AppAuthentication::make(),
+                EmailAuthentication::make(),
+            ])
             ->userMenuItems([
                 'profile' => MenuItem::make()
                     ->label('Meu Perfil & Segurança')

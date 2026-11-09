@@ -21,7 +21,7 @@ return [
 
     'shield_resource' => [
         'slug' => 'shield/roles',
-        'show_model_path' => true,
+        'show_model_path' => false,
         'cluster' => null,
         'tabs' => [
             'pages' => true,
@@ -195,7 +195,7 @@ return [
             ],
         ],
         'exclude' => [
-            //
+            \App\Filament\Resources\BarbershopResource::class,
         ],
     ],
 
@@ -215,6 +215,7 @@ return [
         'prefix' => 'view',
         'exclude' => [
             Dashboard::class,
+            \App\Filament\Pages\TenantLicenseBlockedPage::class,
         ],
     ],
 
