@@ -34,11 +34,12 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
+            ->login(\App\Filament\Pages\Auth\Login::class)
             ->passwordReset()
             ->profile(EditOwnProfile::class, isSimple: false)
             ->multiFactorAuthentication([
-                AppAuthentication::make(),
+                AppAuthentication::make()
+                    ->recoverable(),
                 EmailAuthentication::make(),
             ])
             ->userMenuItems([

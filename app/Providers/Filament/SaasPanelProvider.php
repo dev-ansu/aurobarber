@@ -58,7 +58,8 @@ class SaasPanelProvider extends PanelProvider
             ->passwordReset()
             ->profile(EditOwnProfile::class, isSimple: false)
             ->multiFactorAuthentication([
-                AppAuthentication::make(),
+                AppAuthentication::make()
+                    ->recoverable(),
                 EmailAuthentication::make(),
             ])
             ->userMenuItems([
