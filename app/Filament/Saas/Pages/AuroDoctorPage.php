@@ -17,9 +17,9 @@ class AuroDoctorPage extends Page
 
     protected static ?string $title = 'AuroDoctor • Robô de Diagnóstico & Saúde do Sistema';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?string $slug = 'doctor';
 
-    protected static string $routePath = '/doctor';
+    protected static ?int $navigationSort = 2;
 
     protected string $view = 'filament.saas.pages.auro-doctor';
 
