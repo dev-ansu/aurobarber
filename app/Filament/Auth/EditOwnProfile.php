@@ -2,7 +2,9 @@
 
 namespace App\Filament\Auth;
 
+use App\Models\Barbershop;
 use Filament\Auth\Pages\EditProfile;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Tabs;
@@ -12,6 +14,31 @@ use Filament\Support\Enums\Width;
 
 class EditOwnProfile extends EditProfile
 {
+    public function boot(): void
+    {
+        if (Filament::hasTenancy() && ! Filament::getTenant() && auth()->check()) {
+            $tenantParam = request()->query('tenant');
+            $tenant = null;
+
+            if ($tenantParam) {
+                $tenant = Barbershop::where('slug', (string) $tenantParam)
+                    ->orWhere('id', is_numeric($tenantParam) ? (int) $tenantParam : 0)
+                    ->first();
+            }
+
+            if (! $tenant) {
+                $user = auth()->user();
+                $tenant = $user?->barbershops()->first()
+                    ?? ($user?->barbershop_id ? Barbershop::find($user->barbershop_id) : null)
+                    ?? Barbershop::first();
+            }
+
+            if ($tenant) {
+                Filament::setTenant($tenant, isQuiet: true);
+            }
+        }
+    }
+
     public static function canAccess(): bool
     {
         return auth()->check();

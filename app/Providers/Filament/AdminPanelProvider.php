@@ -44,10 +44,10 @@ class AdminPanelProvider extends PanelProvider
                 EmailAuthentication::make(),
             ])
             ->userMenuItems([
-                MenuItem::make()
+                'profile' => MenuItem::make()
                     ->label('Meu Perfil & Segurança')
                     ->icon('heroicon-o-user-circle')
-                    ->url(fn (): string => EditOwnProfile::getUrl())
+                    ->url(fn (): string => EditOwnProfile::getUrl(filament()->getTenant() ? ['tenant' => filament()->getTenant()->slug] : []))
                     ->visible(fn (): bool => auth()->check()),
             ])
             ->brandName(fn (): string => filament()->getTenant()?->name ?? 'AuroBarber')
