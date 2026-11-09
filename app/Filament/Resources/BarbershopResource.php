@@ -13,6 +13,7 @@ use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Validation\Rules\Unique;
 
 class BarbershopResource extends Resource
 {
@@ -59,7 +60,7 @@ class BarbershopResource extends Resource
                                     ->label('Link Exclusivo (Slug)')
                                     ->prefix('barber.aurosoft.com.br/')
                                     ->required()
-                                    ->unique(ignoreRecord: true)
+                                    ->unique(ignoreRecord: true, modifyRuleUsing: fn (Unique $rule): Unique => $rule->withoutTrashed())
                                     ->maxLength(255)
                                     ->columnSpanFull(),
 

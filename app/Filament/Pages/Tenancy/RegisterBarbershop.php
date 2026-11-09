@@ -14,6 +14,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Unique;
 
 class RegisterBarbershop extends RegisterTenant
 {
@@ -54,7 +55,11 @@ class RegisterBarbershop extends RegisterTenant
                                     ->prefix('barber.aurosoft.com.br/')
                                     ->placeholder('marinho-aldeota')
                                     ->required()
-                                    ->unique(Barbershop::class, 'slug')
+                                    ->unique(
+                                        Barbershop::class,
+                                        'slug',
+                                        modifyRuleUsing: fn (Unique $rule): Unique => $rule->withoutTrashed(),
+                                    )
                                     ->maxLength(255)
                                     ->columnSpanFull(),
 

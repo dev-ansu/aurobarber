@@ -17,6 +17,7 @@ use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
+use Illuminate\Validation\Rules\Unique;
 
 class EditBarbershopProfile extends EditTenantProfile
 {
@@ -62,7 +63,12 @@ class EditBarbershopProfile extends EditTenantProfile
                                     ->label('Link Exclusivo (Slug)')
                                     ->prefix('barber.aurosoft.com.br/')
                                     ->required()
-                                    ->unique(Barbershop::class, 'slug', ignoreRecord: true)
+                                    ->unique(
+                                        Barbershop::class,
+                                        'slug',
+                                        ignoreRecord: true,
+                                        modifyRuleUsing: fn (Unique $rule): Unique => $rule->withoutTrashed(),
+                                    )
                                     ->maxLength(255)
                                     ->columnSpanFull(),
 
