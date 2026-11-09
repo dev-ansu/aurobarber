@@ -3,8 +3,22 @@
 use App\Http\Controllers\BookingController;
 use Illuminate\Support\Facades\Route;
 
-// Redirecionamento de conveniência para o SaaS Master
+// Redirecionamentos de conveniência e proteção de rotas
 Route::redirect('/admin/saas', '/saas');
+
+Route::get('/admin/force-password-change', function () {
+    if (!auth()->check()) {
+        return redirect('/saas/login');
+    }
+    if (auth()->user()->role === 'master_admin') {
+        return redirect('/saas/force-password-change');
+    }
+    $tenant = auth()->user()->tenants()->first();
+    if ($tenant) {
+        return redirect('/admin/' . $tenant->slug . '/force-password-change');
+    }
+    return redirect('/saas/login');
+});
 
 // 1. Landing Page Principal do AuroBarber (SaaS B2B)
 Route::get('/', function () {
