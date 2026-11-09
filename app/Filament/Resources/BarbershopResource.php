@@ -190,6 +190,56 @@ class BarbershopResource extends Resource
                                     ->default(30)
                                     ->columnSpanFull(),
                             ]),
+
+                        Tab::make('Licença & Faturamento')
+                            ->icon('heroicon-o-key')
+                            ->schema([
+                                Forms\Components\Select::make('license_status')
+                                    ->label('Status da Licença')
+                                    ->options([
+                                        'active' => '✅ Ativa (Acesso Liberado)',
+                                        'trial' => '⏳ Em Teste / Degustação',
+                                        'suspended' => '⛔ Suspensa (Acesso Bloqueado por Inadimplência)',
+                                        'cancelled' => '❌ Cancelada / Encerrada',
+                                    ])
+                                    ->default('active')
+                                    ->required()
+                                    ->native(false)
+                                    ->columnSpanFull(),
+
+                                Forms\Components\DatePicker::make('license_expires_at')
+                                    ->label('Data de Vencimento da Licença')
+                                    ->default(now()->addDays(30))
+                                    ->required()
+                                    ->helperText('Após o vencimento, o sistema entra no período de carência antes do bloqueio total.')
+                                    ->columnSpanFull(),
+
+                                Forms\Components\TextInput::make('grace_period_days')
+                                    ->label('Dias de Carência (Tolerância)')
+                                    ->numeric()
+                                    ->default(5)
+                                    ->minValue(0)
+                                    ->helperText('Quantidade de dias que o cliente pode continuar acessando com alerta após vencer.')
+                                    ->columnSpanFull(),
+
+                                Forms\Components\TextInput::make('monthly_price')
+                                    ->label('Valor da Mensalidade (R$)')
+                                    ->numeric()
+                                    ->prefix('R$')
+                                    ->default(120.00)
+                                    ->columnSpanFull(),
+
+                                Forms\Components\TextInput::make('suspension_reason')
+                                    ->label('Motivo da Suspensão (Exibido na tela de bloqueio)')
+                                    ->placeholder('Ex: Pendência no pagamento da mensalidade de Novembro')
+                                    ->columnSpanFull(),
+
+                                Forms\Components\Textarea::make('license_notes')
+                                    ->label('Observações Internas Financeiras / Contrato')
+                                    ->rows(3)
+                                    ->placeholder('Anotações internas sobre negociação, data de pagamento combinada, etc.')
+                                    ->columnSpanFull(),
+                            ]),
                     ])
                     ->columnSpanFull(),
             ]);
@@ -202,23 +252,121 @@ class BarbershopResource extends Resource
                 Tables\Columns\TextColumn::make('name')
                     ->label('Barbearia')
                     ->searchable()
-                    ->weight('bold'),
+                    ->sortable()
+                    ->weight('bold')
+                    ->description(fn (Barbershop $record): string => "barber.aurosoft.com.br/{$record->slug}"),
 
-                Tables\Columns\TextColumn::make('slug')
-                    ->label('Link Público')
-                    ->formatStateUsing(fn ($state) => "barber.aurosoft.com.br/{$state}"),
+                Tables\Columns\TextColumn::make('owner.name')
+                    ->label('Proprietário')
+                    ->description(fn (Barbershop $record): string => $record->owner?->email ?? '-')
+                    ->searchable(),
 
-                Tables\Columns\TextColumn::make('whatsapp')
-                    ->label('WhatsApp'),
+                Tables\Columns\TextColumn::make('license_status')
+                    ->label('Status Licença')
+                    ->badge()
+                    ->color(fn (Barbershop $record): string => match ($record->license_status) {
+                        'active' => $record->isInGracePeriod() ? 'warning' : 'success',
+                        'trial' => 'primary',
+                        'suspended', 'cancelled' => 'danger',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(function (Barbershop $record): string {
+                        if ($record->isSuspended()) {
+                            return 'Suspensa';
+                        }
+                        if ($record->isInGracePeriod()) {
+                            return 'Em Carência';
+                        }
+                        return match ($record->license_status) {
+                            'active' => 'Ativa',
+                            'trial' => 'Em Teste',
+                            'cancelled' => 'Cancelada',
+                            default => $record->license_status ?? 'Ativa',
+                        };
+                    })
+                    ->description(function (Barbershop $record): ?string {
+                        if ($record->isInGracePeriod()) {
+                            return "Tolerância: {$record->graceDaysRemaining()}d restantes";
+                        }
+                        return null;
+                    }),
+
+                Tables\Columns\TextColumn::make('license_expires_at')
+                    ->label('Vencimento')
+                    ->date('d/m/Y')
+                    ->sortable()
+                    ->description(function (Barbershop $record): string {
+                        if (!$record->license_expires_at) {
+                            return 'Sem data';
+                        }
+                        $days = $record->daysRemaining();
+                        if ($days < 0) {
+                            return abs($days) . ' dias atrasado';
+                        }
+                        if ($days === 0) {
+                            return 'Vence hoje!';
+                        }
+                        return "Restam {$days} dias";
+                    }),
+
+                Tables\Columns\TextColumn::make('monthly_price')
+                    ->label('Mensalidade')
+                    ->money('BRL')
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('city')
-                    ->label('Cidade'),
-
-                Tables\Columns\IconColumn::make('is_active')
-                    ->label('Ativa')
-                    ->boolean(),
+                    ->label('Cidade')
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->actions([
+                Tables\Actions\Action::make('open_panel')
+                    ->label('Painel ↗')
+                    ->icon('heroicon-m-arrow-top-right-on-square')
+                    ->color('info')
+                    ->url(fn (Barbershop $record): string => url("/admin/{$record->slug}"))
+                    ->openUrlInNewTab(),
+
+                Tables\Actions\Action::make('renew_30')
+                    ->label('Renovar +30d')
+                    ->icon('heroicon-m-arrow-path')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalHeading('Renovar Licença por +30 Dias')
+                    ->modalDescription(fn (Barbershop $record): string => "Deseja renovar a licença de {$record->name}? O novo vencimento será " . (($record->license_expires_at && $record->license_expires_at->isFuture()) ? $record->license_expires_at->copy()->addDays(30)->format('d/m/Y') : now()->addDays(30)->format('d/m/Y')) . ".")
+                    ->action(function (Barbershop $record): void {
+                        $record->renew(30);
+                        \Filament\Notifications\Notification::make()
+                            ->title('Licença renovada por +30 dias!')
+                            ->body("Novo vencimento registrado: {$record->license_expires_at->format('d/m/Y')}")
+                            ->success()
+                            ->send();
+                    }),
+
+                Tables\Actions\Action::make('toggle_status')
+                    ->label(fn (Barbershop $record): string => $record->isSuspended() ? 'Reativar' : 'Suspender')
+                    ->icon(fn (Barbershop $record): string => $record->isSuspended() ? 'heroicon-m-check-circle' : 'heroicon-m-no-symbol')
+                    ->color(fn (Barbershop $record): string => $record->isSuspended() ? 'success' : 'danger')
+                    ->requiresConfirmation()
+                    ->modalHeading(fn (Barbershop $record): string => $record->isSuspended() ? "Reativar Sistema: {$record->name}" : "Suspender Sistema: {$record->name}")
+                    ->modalDescription(fn (Barbershop $record): string => $record->isSuspended() ? "O acesso da barbearia {$record->name} será liberado imediatamente." : "O acesso da barbearia {$record->name} será bloqueado por inadimplência.")
+                    ->action(function (Barbershop $record): void {
+                        if ($record->isSuspended()) {
+                            $record->activate();
+                            \Filament\Notifications\Notification::make()
+                                ->title('Barbearia reativada!')
+                                ->body('O acesso ao sistema foi restabelecido.')
+                                ->success()
+                                ->send();
+                        } else {
+                            $record->suspend('Suspensão manual por inadimplência via Painel SaaS');
+                            \Filament\Notifications\Notification::make()
+                                ->title('Barbearia suspensa!')
+                                ->body('O acesso ao painel foi bloqueado.')
+                                ->warning()
+                                ->send();
+                        }
+                    }),
+
                 EditAction::make(),
             ]);
     }

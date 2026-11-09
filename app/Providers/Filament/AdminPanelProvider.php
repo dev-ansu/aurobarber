@@ -57,6 +57,11 @@ class AdminPanelProvider extends PanelProvider
                     ->icon('heroicon-o-arrow-top-right-on-square')
                     ->url(fn (): string => filament()->getTenant() ? url(filament()->getTenant()->slug) : url('/'))
                     ->openUrlInNewTab(),
+                MenuItem::make()
+                    ->label('Voltar ao SaaS Master ⚡')
+                    ->icon('heroicon-o-arrow-left-on-rectangle')
+                    ->url('/saas')
+                    ->visible(fn (): bool => auth()->user()?->role === 'master_admin'),
             ])
             ->renderHook(
                 PanelsRenderHook::GLOBAL_SEARCH_AFTER,
@@ -92,6 +97,9 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
                 \App\Http\Middleware\EnsurePasswordIsChanged::class,
-            ]);
+            ])
+            ->tenantMiddleware([
+                \App\Http\Middleware\EnsureBarbershopLicenseIsValid::class,
+            ], isPersistent: true);
     }
 }

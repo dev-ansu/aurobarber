@@ -83,11 +83,19 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasAppAu
 
     public function getTenants(Panel $panel): array|Collection
     {
+        if ($this->role === 'master_admin' || (method_exists($this, 'hasRole') && $this->hasRole('super_admin'))) {
+            return Barbershop::where('is_active', true)->get();
+        }
+
         return $this->barbershops()->where('is_active', true)->get();
     }
 
     public function canAccessTenant(Model $tenant): bool
     {
+        if ($this->role === 'master_admin' || (method_exists($this, 'hasRole') && $this->hasRole('super_admin'))) {
+            return true;
+        }
+
         return $this->barbershops()->where('barbershops.id', $tenant->id)->exists();
     }
 
@@ -97,14 +105,9 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasAppAu
             return false;
         }
 
-        // Master admin acessa exclusivamente o painel SaaS Master
+        // Master admin acessa o SaaS Master e pode inspecionar qualquer barbearia no Admin para suporte
         if ($this->role === 'master_admin' || (method_exists($this, 'hasRole') && $this->hasRole('super_admin'))) {
-            if ($panel->getId() === 'saas') {
-                return true;
-            }
-
-            // No painel admin das barbearias, só entra se for explicitamente membro da unidade
-            return $this->barbershops()->exists();
+            return true;
         }
 
         // Painel admin é restrito à equipe da barbearia (dono, barbeiro, recepcionista)
@@ -123,5 +126,15 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasAppAu
     public function isBarber(): bool
     {
         return $this->role === 'barber';
+    }
+
+    public function isCollaborator(): bool
+    {
+        return false;
+    }
+
+    public function hasDefinedRole(): bool
+    {
+        return !empty($this->role);
     }
 }

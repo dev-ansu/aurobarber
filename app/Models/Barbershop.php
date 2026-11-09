@@ -34,12 +34,151 @@ class Barbershop extends Model
         'subscription_plan',
         'mercadopago_preapproval_id',
         'is_active',
+        // Licenciamento Aurosoft
+        'license_status',
+        'license_expires_at',
+        'grace_period_days',
+        'monthly_price',
+        'license_notes',
+        'suspended_at',
+        'suspension_reason',
     ];
 
     protected $casts = [
         'opening_hours' => 'array',
         'is_active' => 'boolean',
+        'license_expires_at' => 'datetime',
+        'suspended_at' => 'datetime',
+        'grace_period_days' => 'integer',
+        'monthly_price' => 'decimal:2',
     ];
+
+    /**
+     * Verifica se a barbearia está com a licença ativa e regular (ou em carência).
+     */
+    public function isLicenseActive(): bool
+    {
+        if (! (bool) $this->is_active) {
+            return false;
+        }
+
+        if ($this->license_status === 'suspended' || $this->license_status === 'cancelled') {
+            return false;
+        }
+
+        if ($this->license_expires_at === null) {
+            return true;
+        }
+
+        $graceDays = $this->grace_period_days ?? 5;
+        $deadlineWithGrace = $this->license_expires_at->copy()->addDays($graceDays)->endOfDay();
+
+        return now()->lte($deadlineWithGrace);
+    }
+
+    /**
+     * Verifica se a barbearia está no período de carência (vencida, mas dentro dos 5 dias de tolerância).
+     */
+    public function isInGracePeriod(): bool
+    {
+        if (! (bool) $this->is_active || $this->license_status === 'suspended') {
+            return false;
+        }
+
+        if ($this->license_expires_at === null) {
+            return false;
+        }
+
+        $graceDays = $this->grace_period_days ?? 5;
+        $expiry = $this->license_expires_at->copy()->endOfDay();
+        $deadlineWithGrace = $this->license_expires_at->copy()->addDays($graceDays)->endOfDay();
+
+        return now()->gt($expiry) && now()->lte($deadlineWithGrace);
+    }
+
+    /**
+     * Verifica se está explicitamente suspensa.
+     */
+    public function isSuspended(): bool
+    {
+        return ! (bool) $this->is_active || $this->license_status === 'suspended';
+    }
+
+    /**
+     * Retorna a quantidade de dias restantes até o vencimento oficial (positivo = dias restantes, negativo = dias em atraso).
+     */
+    public function daysRemaining(): int
+    {
+        if (! $this->license_expires_at) {
+            return 999;
+        }
+
+        return (int) now()->startOfDay()->diffInDays($this->license_expires_at->copy()->startOfDay(), false);
+    }
+
+    /**
+     * Quantidade de dias restantes de carência antes do corte total.
+     */
+    public function graceDaysRemaining(): int
+    {
+        if (! $this->isInGracePeriod() || ! $this->license_expires_at) {
+            return 0;
+        }
+
+        $graceDays = $this->grace_period_days ?? 5;
+        $deadline = $this->license_expires_at->copy()->addDays($graceDays)->endOfDay();
+
+        return (int) max(0, now()->diffInDays($deadline, false));
+    }
+
+    /**
+     * Renova a licença por X dias (padrão: 30 dias).
+     */
+    public function renew(int $days = 30): void
+    {
+        $baseDate = ($this->license_expires_at && $this->license_expires_at->isFuture())
+            ? $this->license_expires_at
+            : now();
+
+        $this->forceFill([
+            'license_status' => 'active',
+            'license_expires_at' => $baseDate->copy()->addDays($days),
+            'is_active' => true,
+            'suspended_at' => null,
+            'suspension_reason' => null,
+        ])->save();
+    }
+
+    /**
+     * Suspende o acesso ao sistema da barbearia.
+     */
+    public function suspend(string $reason = 'Suspensão manual por pendência financeira'): void
+    {
+        $this->forceFill([
+            'license_status' => 'suspended',
+            'is_active' => false,
+            'suspended_at' => now(),
+            'suspension_reason' => $reason,
+        ])->save();
+    }
+
+    /**
+     * Reativa o acesso da barbearia.
+     */
+    public function activate(): void
+    {
+        $newExpiresAt = ($this->license_expires_at && $this->license_expires_at->isFuture())
+            ? $this->license_expires_at
+            : now()->addDays(30);
+
+        $this->forceFill([
+            'license_status' => 'active',
+            'is_active' => true,
+            'license_expires_at' => $newExpiresAt,
+            'suspended_at' => null,
+            'suspension_reason' => null,
+        ])->save();
+    }
 
     public function owner(): BelongsTo
     {

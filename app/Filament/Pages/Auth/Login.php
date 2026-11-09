@@ -42,10 +42,10 @@ class Login extends BaseLogin
             $this->throwFailureValidationException();
         }
 
-        // Colaboradores sem papel definido no sistema não possuem autorização para logar
-        if ($user instanceof User && $user->isCollaborator() && ! $user->hasDefinedRole()) {
+        // Usuários sem papel definido no sistema não possuem autorização para logar
+        if ($user instanceof User && method_exists($user, 'isCollaborator') && $user->isCollaborator() && method_exists($user, 'hasDefinedRole') && ! $user->hasDefinedRole()) {
             throw ValidationException::withMessages([
-                'data.email' => 'Acesso bloqueado: Este colaborador não possui um papel (função) atribuído no sistema. Solicite à administração da escola.',
+                'data.email' => 'Acesso bloqueado: Este usuário não possui um papel atribuído no sistema.',
             ]);
         }
 
@@ -77,29 +77,29 @@ class Login extends BaseLogin
     public function getTitle(): string | Htmlable
     {
         return Filament::getCurrentPanel()?->getId() === 'saas'
-            ? 'Acesso SaaS Master • Aurosoft'
-            : 'Acesso Administrativo • Aurosoft';
+            ? 'Acesso SaaS Master • AuroBarber'
+            : 'Acesso Administrativo • AuroBarber';
     }
 
     public function getHeading(): string | Htmlable | null
     {
         return Filament::getCurrentPanel()?->getId() === 'saas'
-            ? 'SaaS Master'
-            : 'Painel de Controle';
+            ? 'AuroBarber SaaS Master'
+            : 'Painel da Barbearia';
     }
 
     public function getSubheading(): string | Htmlable | null
     {
         return Filament::getCurrentPanel()?->getId() === 'saas'
             ? 'Acesso restrito ao Administrador Global da Plataforma.'
-            : 'Acesso restrito para equipe de gestão, coordenação e educadores.';
+            : 'Acesso restrito para equipe da barbearia.';
     }
 
     protected function getEmailFormComponent(): Component
     {
         return TextInput::make('email')
-            ->label('E-mail, CPF ou Usuário')
-            ->placeholder('seu.email@escola.com.br ou CPF')
+            ->label('E-mail ou Usuário')
+            ->placeholder('seu.email@barbearia.com.br')
             ->required()
             ->autocomplete('username')
             ->autofocus();
