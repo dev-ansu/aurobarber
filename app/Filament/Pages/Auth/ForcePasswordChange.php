@@ -34,7 +34,7 @@ class ForcePasswordChange extends Page implements HasForms
 
     public function getMaxContentWidth(): Width | string | null
     {
-        return Width::Medium;
+        return Width::Full;
     }
 
     public static function canAccess(): bool

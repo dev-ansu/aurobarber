@@ -1,5 +1,5 @@
 <x-filament-panels::page>
-    <div style="max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px;">
+    <div style="width: 100%; display: flex; flex-direction: column; gap: 24px;">
         
         {{-- Banner de Alerta de Segurança --}}
         <div style="background: linear-gradient(135deg, rgba(217, 119, 6, 0.15), rgba(15, 23, 42, 0.95)); border: 1px solid rgba(217, 119, 6, 0.4); border-radius: 16px; padding: 20px; display: flex; gap: 16px; align-items: flex-start; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.4);">
