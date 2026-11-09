@@ -58,36 +58,23 @@ class AuroDoctorService
         try {
             $checks = [];
 
-            // 1. Banco de Dados e Estrutura
+            // 1. Banco de Dados e Infraestrutura
             $checks[] = $this->checkDatabaseConnection();
             $checks[] = $this->checkPendingMigrations();
             $checks[] = $this->checkEssentialTables();
             $checks[] = $this->checkStoragePermissions();
             $checks[] = $this->checkServerResources();
 
-            // 2. Módulo de Pessoas & Pedagógico (Verificação Segura / Não-Destrutiva)
-            $checks[] = $this->checkPersonModelIntegrity();
-            $checks[] = $this->checkPedagogicalIntegrity();
-
-            // 3. Motor Financeiro & Integridade Contábil
+            // 2. Módulos Centrais do AuroBarber
+            $checks[] = $this->checkBarbershopModelIntegrity();
+            $checks[] = $this->checkAppointmentsAndServicesIntegrity();
             $checks[] = $this->checkFinancialEngineIntegrity();
 
-            // 4. Varredura de Rotas e Telas (Route Smoke Test)
+            // 3. Varredura de Rotas e Telas (Smoke Test)
             $checks[] = $this->checkPublicRoutes();
             $checks[] = $this->checkFilamentRoutes();
 
-            // 5. Integrações & Serviços (Multi-Unidades)
-            $checks[] = $this->checkPixService();
-            $checks[] = $this->checkOuroModernoIntegration();
-
-            // 6. Testes Funcionais Profundos de Ciclo de Vida (AuroDoctor 2.0 com DB Rollback)
-            $checks[] = $this->simulateInstallmentPaymentLifecycle();
-            $checks[] = $this->simulateContractRenderingAndCertificates();
-            $checks[] = $this->simulateOuroModernoApiPing();
-            $checks[] = $this->simulateStudentPortalLifecycle();
-            $checks[] = $this->simulateSupportTicketsLifecycle();
-
-            // 7. Telemetria Ativa & Monitoramento de Incidentes de Erro 500
+            // 4. Telemetria Ativa & Monitoramento de Incidentes de Erro 500
             $checks[] = $this->checkSystemIncidentsTelemetry();
 
             $totalChecks = count($checks);
@@ -228,7 +215,7 @@ class AuroDoctorService
     private function checkEssentialTables(): array
     {
         $start = microtime(true);
-        $essentialTables = ['schools', 'users', 'people', 'contracts', 'installments', 'audit_logs', 'cash_registers', 'cash_transactions'];
+        $essentialTables = ['barbershops', 'users', 'services', 'professionals', 'appointments', 'cash_movements'];
         $missing = [];
 
         foreach ($essentialTables as $table) {
@@ -243,8 +230,8 @@ class AuroDoctorService
             'category' => 'database',
             'status' => empty($missing) ? 'passed' : 'failed',
             'message' => empty($missing)
-                ? 'Todas as 8 tabelas centrais do ERP existem e estão prontas.'
-                : 'Tabelas ausentes no schema atual: ' . implode(', ', $missing),
+                ? 'Todas as 6 tabelas centrais do AuroBarber existem e estão prontas.'
+                : 'Tabelas ausentes no banco atual: ' . implode(', ', $missing),
             'duration_ms' => round((microtime(true) - $start) * 1000, 1),
         ];
     }
@@ -361,70 +348,69 @@ class AuroDoctorService
         }
     }
 
-    private function checkPersonModelIntegrity(): array
+    private function checkBarbershopModelIntegrity(): array
     {
         $start = microtime(true);
 
         try {
-            // Verifica a integridade de schema, conectividade do Eloquent e índices sem mutação nem exposição de dados
-            $hasCols = Schema::hasColumns('people', ['id', 'name', 'email', 'cpf', 'birth_date', 'created_at']);
+            $hasCols = Schema::hasColumns('barbershops', ['id', 'name', 'slug', 'license_status', 'license_expires_at', 'is_active']);
 
             if (! $hasCols) {
-                throw new \RuntimeException('Colunas essenciais da tabela people não foram encontradas.');
+                throw new \RuntimeException('Colunas essenciais da tabela barbershops não foram encontradas.');
             }
 
-            // Testa consulta básica de leitura de forma anônima e segura
-            $totalCount = Person::withoutGlobalScopes()->count();
+            $totalCount = \App\Models\Barbershop::count();
 
             return [
-                'id' => 'crud_person',
-                'name' => 'Integridade do Módulo de Pessoas e Cadastros',
+                'id' => 'crud_barbershop',
+                'name' => 'Integridade do Módulo de Barbearias & Tenancy',
                 'category' => 'crud',
                 'status' => 'passed',
-                'message' => "Tabela de Pessoas operando normalmente com integridade de índices ({$totalCount} registros). (Modo Seguro / Não-Destrutivo)",
+                'message' => "Tabela de Barbearias operando normalmente ({$totalCount} unidades cadastradas).",
                 'duration_ms' => round((microtime(true) - $start) * 1000, 1),
             ];
         } catch (Throwable $e) {
             return [
-                'id' => 'crud_person',
-                'name' => 'Integridade do Módulo de Pessoas e Cadastros',
+                'id' => 'crud_barbershop',
+                'name' => 'Integridade do Módulo de Barbearias & Tenancy',
                 'category' => 'crud',
                 'status' => 'failed',
-                'message' => 'Falha no módulo de Pessoas: ' . $e->getMessage(),
+                'message' => 'Falha no módulo de Barbearias: ' . $e->getMessage(),
                 'duration_ms' => round((microtime(true) - $start) * 1000, 1),
                 'error' => $e->getMessage(),
             ];
         }
     }
 
-    private function checkPedagogicalIntegrity(): array
+    private function checkAppointmentsAndServicesIntegrity(): array
     {
         $start = microtime(true);
 
         try {
-            $hasCourseCols = Schema::hasColumns('courses', ['id', 'name', 'active', 'workload']);
-            $hasFormationCols = Schema::hasColumns('formations', ['id', 'name', 'active']);
-            $hasPivot = Schema::hasTable('formation_course');
+            $hasServiceCols = Schema::hasColumns('services', ['id', 'barbershop_id', 'name', 'price']);
+            $hasApptCols = Schema::hasColumns('appointments', ['id', 'barbershop_id', 'status', 'scheduled_at']);
 
-            if (! $hasCourseCols || ! $hasFormationCols || ! $hasPivot) {
-                throw new \RuntimeException('Tabelas ou colunas pedagógicas essenciais estão incompletas.');
+            if (! $hasServiceCols || ! $hasApptCols) {
+                throw new \RuntimeException('Tabelas de agendamentos e serviços incompletas.');
             }
 
+            $apptCount = \App\Models\Appointment::count();
+
             return [
-                'id' => 'crud_pedagogical',
-                'name' => 'Módulo Pedagógico (Cursos e Formações)',
+                'id' => 'crud_appointments',
+                'name' => 'Módulo de Agendamentos & Catálogo de Serviços',
                 'category' => 'crud',
                 'status' => 'passed',
-                'message' => 'Estrutura pedagógica, matriz curricular e catálogos de cursos 100% íntegros. (Modo Seguro)',
+                'message' => "Motor de agendamentos e serviços 100% íntegro ({$apptCount} atendimentos registrados).",
                 'duration_ms' => round((microtime(true) - $start) * 1000, 1),
             ];
         } catch (Throwable $e) {
             return [
-                'id' => 'crud_pedagogical',
-                'name' => 'Módulo Pedagógico (Cursos e Formações)',
+                'id' => 'crud_appointments',
+                'name' => 'Módulo de Agendamentos & Catálogo de Serviços',
                 'category' => 'crud',
                 'status' => 'failed',
-                'message' => 'Falha no módulo pedagógico: ' . $e->getMessage(),
+                'message' => 'Falha no motor de agendamentos: ' . $e->getMessage(),
                 'duration_ms' => round((microtime(true) - $start) * 1000, 1),
                 'error' => $e->getMessage(),
             ];
@@ -436,41 +422,29 @@ class AuroDoctorService
         $start = microtime(true);
 
         try {
-            $hasInstallmentCols = Schema::hasColumns('installments', ['id', 'contract_id', 'amount', 'due_date', 'status']);
-            $hasContractCols = Schema::hasColumns('contracts', ['id', 'contract_number', 'student_id', 'status']);
+            $hasCash = Schema::hasTable('cash_movements');
 
-            if (! $hasInstallmentCols || ! $hasContractCols) {
-                throw new \RuntimeException('Estrutura de tabelas financeiras inválida.');
+            if (! $hasCash) {
+                throw new \RuntimeException('Tabela cash_movements não encontrada.');
             }
 
-            // Validação de Integridade Relacional: verifica se há parcelas sem contrato (órfãs) sem expor nenhum dado pessoal
-            $orphanedInstallments = Installment::whereDoesntHave('contract')->count();
-            if ($orphanedInstallments > 0) {
-                return [
-                    'id' => 'financial_engine',
-                    'name' => 'Motor Financeiro e Integridade Contábil',
-                    'category' => 'financial',
-                    'status' => 'warning',
-                    'message' => "Atenção: Detectada(s) {$orphanedInstallments} parcela(s) órfã(s) sem contrato associado.",
-                    'duration_ms' => round((microtime(true) - $start) * 1000, 1),
-                ];
-            }
+            $count = DB::table('cash_movements')->count();
 
             return [
                 'id' => 'financial_engine',
-                'name' => 'Motor Financeiro e Integridade Contábil',
+                'name' => 'Motor de Fechamento de Caixa & Fluxo Financeiro',
                 'category' => 'financial',
                 'status' => 'passed',
-                'message' => 'Estrutura financeira, conciliação e integridade de parcelas 100% conformes. (Modo Seguro / Não-Destrutivo)',
+                'message' => "Módulo financeiro e livro caixa 100% íntegros ({$count} movimentações registradas).",
                 'duration_ms' => round((microtime(true) - $start) * 1000, 1),
             ];
         } catch (Throwable $e) {
             return [
                 'id' => 'financial_engine',
-                'name' => 'Motor Financeiro e Integridade Contábil',
+                'name' => 'Motor de Fechamento de Caixa & Fluxo Financeiro',
                 'category' => 'financial',
                 'status' => 'failed',
-                'message' => 'Falha no motor financeiro: ' . $e->getMessage(),
+                'message' => 'Falha no módulo financeiro: ' . $e->getMessage(),
                 'duration_ms' => round((microtime(true) - $start) * 1000, 1),
                 'error' => $e->getMessage(),
             ];
@@ -481,9 +455,8 @@ class AuroDoctorService
     {
         $start = microtime(true);
         $routesToCheck = [
-            'login' => '/login',
-            'aluno_login' => '/aluno/login',
-            'presenca' => '/presenca',
+            'home' => '/',
+            'saas_login' => '/saas/login',
         ];
 
         $failedRoutes = [];
@@ -507,7 +480,7 @@ class AuroDoctorService
             'category' => 'routes',
             'status' => empty($failedRoutes) ? 'passed' : 'failed',
             'message' => empty($failedRoutes)
-                ? 'Portal do Aluno, Totem de Presença e Tela de Login validados sem erros.'
+                ? 'Landing Page e Tela de Login SaaS validados sem erros.'
                 : 'Falhas nas rotas: ' . implode('; ', $failedRoutes),
             'duration_ms' => round((microtime(true) - $start) * 1000, 1),
         ];
@@ -519,15 +492,11 @@ class AuroDoctorService
         try {
             $routes = Route::getRoutes();
             $filamentRoutesCount = 0;
-            $hasAdminLogin = false;
 
             foreach ($routes as $route) {
                 $name = $route->getName() ?? '';
-                if (str_starts_with($name, 'filament.admin.')) {
+                if (str_starts_with($name, 'filament.')) {
                     $filamentRoutesCount++;
-                }
-                if ($name === 'filament.admin.auth.login') {
-                    $hasAdminLogin = true;
                 }
             }
 
@@ -536,11 +505,10 @@ class AuroDoctorService
             $pageErrors = [];
 
             $testClasses = [
-                'Contratos' => \App\Filament\Resources\Contracts\Pages\ListContracts::class,
-                'Pessoas' => \App\Filament\Resources\People\Pages\ListPeople::class,
-                'Cursos' => \App\Filament\Resources\Courses\Pages\ListCourses::class,
-                'Formações' => \App\Filament\Resources\Formations\Pages\ListFormations::class,
-                'Licenças SaaS' => \App\Filament\Saas\Resources\Licenses\Pages\ListLicenses::class,
+                'Barbearias SaaS' => \App\Filament\Resources\BarbershopResource\Pages\ListBarbershops::class,
+                'Agendamentos' => \App\Filament\Resources\AppointmentResource\Pages\ListAppointments::class,
+                'Serviços' => \App\Filament\Resources\ServiceResource\Pages\ListServices::class,
+                'Profissionais' => \App\Filament\Resources\ProfessionalResource\Pages\ListProfessionals::class,
             ];
 
             foreach ($testClasses as $label => $class) {
@@ -551,18 +519,6 @@ class AuroDoctorService
                     }
                 } catch (Throwable $e) {
                     $pageErrors[] = "{$label}: " . $e->getMessage();
-                }
-            }
-
-            // Teste de Instanciação da Tela de Edição/Visualização de Contrato com Relações
-            $sampleContract = Contract::withoutGlobalScopes()->with(['items', 'installments'])->latest('id')->first();
-            if ($sampleContract) {
-                try {
-                    $editPage = app(\App\Filament\Resources\Contracts\Pages\EditContracts::class);
-                    $editPage->record = $sampleContract;
-                    $pagesTested[] = 'Tela de Edição de Contrato';
-                } catch (Throwable $e) {
-                    $pageErrors[] = "Tela de Contrato: " . $e->getMessage();
                 }
             }
 
@@ -585,7 +541,7 @@ class AuroDoctorService
                 'name' => 'Navegação Sintética de Recursos e Telas (Smoke Test)',
                 'category' => 'routes',
                 'status' => 'passed',
-                'message' => "Mapeadas {$filamentRoutesCount} rotas e validadas {$countPages} telas chave (Contratos, Pessoas, Cursos, Licenças) sem erros 500.",
+                'message' => "Mapeadas {$filamentRoutesCount} rotas e validadas {$countPages} telas chave (Barbearias, Agendamentos, Serviços, Profissionais) sem erros 500.",
                 'duration_ms' => round((microtime(true) - $start) * 1000, 1),
             ];
         } catch (Throwable $e) {
