@@ -138,6 +138,59 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasAppAu
         return $this->role === 'barber';
     }
 
+    /**
+     * Identifica se o usuário logado é um barbeiro com visão restrita (não é dono, nem gerente, nem super_admin).
+     */
+    public function isRestrictedBarber(): bool
+    {
+        if (in_array($this->role, ['master_admin', 'owner'], true)) {
+            return false;
+        }
+
+        if (method_exists($this, 'hasAnyRole') && $this->hasAnyRole(['super_admin', 'barbershop_owner', 'barbershop_manager'])) {
+            return false;
+        }
+
+        return $this->role === 'barber'
+            || (method_exists($this, 'hasRole') && $this->hasRole('barber'))
+            || $this->professional()->exists();
+    }
+
+    /**
+     * Resolve o ID do perfil Professional correspondente a este usuário na barbearia atual.
+     */
+    public function resolveProfessionalId(?int $barbershopId = null): ?int
+    {
+        $barbershopId ??= filament()->getTenant()?->id ?? $this->barbershop_id;
+
+        $direct = Professional::where('user_id', $this->id)
+            ->when($barbershopId, fn ($q) => $q->where('barbershop_id', $barbershopId))
+            ->first();
+
+        if ($direct) {
+            return (int) $direct->id;
+        }
+
+        if ($barbershopId) {
+            $matched = Professional::where('barbershop_id', $barbershopId)
+                ->whereNull('user_id')
+                ->where(function ($q) {
+                    $q->whereRaw('LOWER(name) = ?', [mb_strtolower($this->name)]);
+                    if (!empty($this->phone)) {
+                        $q->orWhere('phone', $this->phone);
+                    }
+                })
+                ->first();
+
+            if ($matched) {
+                $matched->updateQuietly(['user_id' => $this->id]);
+                return (int) $matched->id;
+            }
+        }
+
+        return null;
+    }
+
     public function isCollaborator(): bool
     {
         return false;

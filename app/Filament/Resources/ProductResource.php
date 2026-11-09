@@ -38,6 +38,11 @@ class ProductResource extends Resource
 
     protected static ?int $navigationSort = 20;
 
+    public static function canViewAny(): bool
+    {
+        return ! auth()->user()?->isRestrictedBarber();
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema

@@ -29,6 +29,11 @@ class ServiceResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Serviços';
 
+    public static function canViewAny(): bool
+    {
+        return ! auth()->user()?->isRestrictedBarber();
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema

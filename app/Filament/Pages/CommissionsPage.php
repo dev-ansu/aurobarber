@@ -53,7 +53,11 @@ class CommissionsPage extends Page
         $this->applyPreset('week');
         $tenant = filament()->getTenant();
         if ($tenant) {
-            $this->selectedProfessionalId = $tenant->professionals()->where('is_active', true)->first()?->id;
+            if (auth()->user()?->isRestrictedBarber()) {
+                $this->selectedProfessionalId = auth()->user()->resolveProfessionalId($tenant->id);
+            } else {
+                $this->selectedProfessionalId = $tenant->professionals()->where('is_active', true)->first()?->id;
+            }
         }
     }
 
@@ -85,11 +89,23 @@ class CommissionsPage extends Page
             return collect();
         }
 
-        return $tenant->professionals()->where('is_active', true)->orderBy('display_order')->get();
+        $query = $tenant->professionals()->where('is_active', true)->orderBy('display_order');
+
+        if (auth()->user()?->isRestrictedBarber()) {
+            $proId = auth()->user()->resolveProfessionalId($tenant->id) ?? 0;
+            $query->where('id', $proId);
+        }
+
+        return $query->get();
     }
 
     public function getSelectedProfessionalProperty(): ?Professional
     {
+        if (auth()->user()?->isRestrictedBarber()) {
+            $proId = auth()->user()->resolveProfessionalId();
+            return $proId ? Professional::find($proId) : null;
+        }
+
         if (!$this->selectedProfessionalId) {
             return null;
         }
@@ -111,7 +127,10 @@ class CommissionsPage extends Page
             ->with(['professional', 'service', 'services', 'commissionPayout'])
             ->orderBy('scheduled_at', 'desc');
 
-        if ($this->selectedProfessionalId) {
+        if (auth()->user()?->isRestrictedBarber()) {
+            $proId = auth()->user()->resolveProfessionalId($tenant->id) ?? 0;
+            $query->where('professional_id', $proId);
+        } elseif ($this->selectedProfessionalId) {
             $query->where('professional_id', $this->selectedProfessionalId);
         }
 
@@ -155,7 +174,10 @@ class CommissionsPage extends Page
             ->with(['professional'])
             ->orderBy('created_at', 'desc');
 
-        if ($this->selectedProfessionalId) {
+        if (auth()->user()?->isRestrictedBarber()) {
+            $proId = auth()->user()->resolveProfessionalId($tenant->id) ?? 0;
+            $query->where('professional_id', $proId);
+        } elseif ($this->selectedProfessionalId) {
             $query->where('professional_id', $this->selectedProfessionalId);
         }
 
@@ -164,6 +186,9 @@ class CommissionsPage extends Page
 
     public function openPayoutModal(): void
     {
+        if (auth()->user()?->isRestrictedBarber()) {
+            return;
+        }
         if (!$this->selectedProfessionalId) {
             Notification::make()
                 ->title('Selecione um barbeiro específico para realizar o fechamento.')

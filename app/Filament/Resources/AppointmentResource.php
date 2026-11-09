@@ -32,6 +32,19 @@ class AppointmentResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Agendamentos';
 
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        if ($user && $user->isRestrictedBarber()) {
+            $proId = $user->resolveProfessionalId() ?? 0;
+            $query->where('professional_id', $proId);
+        }
+
+        return $query;
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema
@@ -44,6 +57,9 @@ class AppointmentResource extends Resource
                                 Forms\Components\Select::make('professional_id')
                                     ->label('Barbeiro / Profissional')
                                     ->relationship('professional', 'name')
+                                    ->default(fn () => auth()->user()?->isRestrictedBarber() ? auth()->user()->resolveProfessionalId() : null)
+                                    ->disabled(fn (): bool => (bool) auth()->user()?->isRestrictedBarber())
+                                    ->dehydrated()
                                     ->required()
                                     ->searchable()
                                     ->preload()

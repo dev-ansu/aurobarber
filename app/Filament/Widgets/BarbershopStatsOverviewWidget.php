@@ -24,6 +24,57 @@ class BarbershopStatsOverviewWidget extends BaseWidget
         $startOfMonth = now()->startOfMonth()->format('Y-m-d');
         $endOfMonth = now()->endOfMonth()->format('Y-m-d');
 
+        $user = auth()->user();
+        if ($user && $user->isRestrictedBarber()) {
+            $proId = $user->resolveProfessionalId($tenant->id) ?? 0;
+
+            $todayAppts = Appointment::where('barbershop_id', $tenant->id)
+                ->where('professional_id', $proId)
+                ->whereDate('scheduled_at', $today)
+                ->get();
+
+            $todayCount = $todayAppts->count();
+            $todayCompleted = $todayAppts->where('status', 'completed')->count();
+            $todayInProgress = $todayAppts->where('status', 'in_progress')->count();
+            $todayCommission = (float) $todayAppts->where('status', 'completed')->sum('commission_amount');
+
+            $monthAppts = Appointment::where('barbershop_id', $tenant->id)
+                ->where('professional_id', $proId)
+                ->whereDate('scheduled_at', '>=', $startOfMonth)
+                ->whereDate('scheduled_at', '<=', $endOfMonth)
+                ->where('status', 'completed')
+                ->get();
+
+            $monthCommission = (float) $monthAppts->sum('commission_amount');
+            $pendingCommission = (float) Appointment::where('barbershop_id', $tenant->id)
+                ->where('professional_id', $proId)
+                ->where('status', 'completed')
+                ->where(fn ($q) => $q->whereNull('commission_status')->orWhere('commission_status', 'pending'))
+                ->sum('commission_amount');
+
+            return [
+                Stat::make('Minha Comissão Hoje', 'R$ ' . number_format($todayCommission, 2, ',', '.'))
+                    ->description('Sua comissão acumulada hoje')
+                    ->descriptionIcon('heroicon-m-currency-dollar')
+                    ->color('success'),
+
+                Stat::make('Meus Atendimentos Hoje', $todayCount . ' cliente(s)')
+                    ->description("{$todayCompleted} concluído(s) · {$todayInProgress} na cadeira")
+                    ->descriptionIcon('heroicon-m-calendar-days')
+                    ->color('primary'),
+
+                Stat::make('Minha Comissão no Mês', 'R$ ' . number_format($monthCommission, 2, ',', '.'))
+                    ->description('Mês atual (' . now()->translatedFormat('F') . ')')
+                    ->descriptionIcon('heroicon-m-arrow-trending-up')
+                    ->color('info'),
+
+                Stat::make('Pendente a Receber', 'R$ ' . number_format($pendingCommission, 2, ',', '.'))
+                    ->description('Comissões em aberto para acerto')
+                    ->descriptionIcon('heroicon-m-banknotes')
+                    ->color('warning'),
+            ];
+        }
+
         // Atendimentos de Hoje
         $todayAppts = Appointment::where('barbershop_id', $tenant->id)
             ->whereDate('scheduled_at', $today)

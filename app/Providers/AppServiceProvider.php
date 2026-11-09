@@ -36,6 +36,21 @@ class AppServiceProvider extends ServiceProvider
                 return true;
             }
 
+            // Garante que barbeiros com visão restrita sempre possam acessar sua própria Agenda e Comissões
+            if (method_exists($user, 'isRestrictedBarber') && $user->isRestrictedBarber()) {
+                $barberAllowedAbilities = [
+                    'ViewAny:Appointment',
+                    'View:Appointment',
+                    'Create:Appointment',
+                    'Update:Appointment',
+                    'View:DailySchedule',
+                    'View:CommissionsPage',
+                ];
+                if (in_array($ability, $barberAllowedAbilities, true)) {
+                    return true;
+                }
+            }
+
             return null;
         });
 

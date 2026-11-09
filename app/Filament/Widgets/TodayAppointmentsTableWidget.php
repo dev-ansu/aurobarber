@@ -27,6 +27,10 @@ class TodayAppointmentsTableWidget extends BaseWidget
             ->query(
                 Appointment::query()
                     ->where('barbershop_id', $tenant?->id ?? 0)
+                    ->when(
+                        auth()->user()?->isRestrictedBarber(),
+                        fn ($q) => $q->where('professional_id', auth()->user()->resolveProfessionalId($tenant?->id) ?? 0)
+                    )
                     ->whereDate('scheduled_at', now()->format('Y-m-d'))
                     ->with(['professional', 'service', 'services'])
                     ->orderBy('scheduled_at')

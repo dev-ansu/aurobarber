@@ -29,6 +29,11 @@ class ProfessionalResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Barbeiros';
 
+    public static function canViewAny(): bool
+    {
+        return ! auth()->user()?->isRestrictedBarber();
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema
@@ -54,6 +59,25 @@ class ProfessionalResource extends Resource
                                     ->label('WhatsApp / Telefone')
                                     ->tel()
                                     ->placeholder('85999999999')
+                                    ->columnSpanFull(),
+
+                                Forms\Components\Select::make('user_id')
+                                    ->label('Login do Barbeiro (Colaborador Vinculado)')
+                                    ->options(function () {
+                                        $tenant = filament()->getTenant();
+                                        if (! $tenant) {
+                                            return [];
+                                        }
+
+                                        return $tenant->users()
+                                            ->orderBy('name')
+                                            ->get()
+                                            ->mapWithKeys(fn ($u) => [$u->id => "{$u->name} ({$u->email})"]);
+                                    })
+                                    ->searchable()
+                                    ->preload()
+                                    ->nullable()
+                                    ->helperText('Vincule o login deste barbeiro (criado em Colaboradores / Acessos) para que ele veja apenas a própria agenda e as próprias comissões.')
                                     ->columnSpanFull(),
 
                                 Forms\Components\Textarea::make('bio')

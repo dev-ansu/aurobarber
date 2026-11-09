@@ -75,6 +75,30 @@ class AdminPanelProvider extends PanelProvider
                     ->visible(fn (): bool => auth()->user()?->role === 'master_admin'),
             ])
             ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                fn () => new \Illuminate\Support\HtmlString(
+                    '<link rel="manifest" href="' . url('/manifest.json' . (filament()->getTenant() ? '?tenant=' . filament()->getTenant()->slug : '')) . '">' .
+                    '<meta name="theme-color" content="' . (filament()->getTenant()?->brand_color ?: '#020617') . '">' .
+                    '<meta name="apple-mobile-web-app-capable" content="yes">' .
+                    '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">' .
+                    '<meta name="apple-mobile-web-app-title" content="' . e(filament()->getTenant()?->name ?? 'AuroBarber') . '">' .
+                    '<link rel="apple-touch-icon" href="' . (filament()->getTenant()?->logo_url ? asset('storage/' . filament()->getTenant()->logo_url) : asset('pwa-icon.svg')) . '">' .
+                    '<script>
+                        window.deferredPwaPrompt = null;
+                        window.addEventListener("beforeinstallprompt", function(e) {
+                            e.preventDefault();
+                            window.deferredPwaPrompt = e;
+                            window.dispatchEvent(new CustomEvent("pwa-ready"));
+                        });
+                        if ("serviceWorker" in navigator) {
+                            window.addEventListener("load", function() {
+                                navigator.serviceWorker.register("/sw.js").catch(function() {});
+                            });
+                        }
+                    </script>'
+                )
+            )
+            ->renderHook(
                 PanelsRenderHook::GLOBAL_SEARCH_AFTER,
                 fn () => view('filament.components.public-page-button')
             )

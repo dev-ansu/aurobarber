@@ -5,10 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $barbershop->name }} • Agendamento Online</title>
+    @php
+        $resolvedLogoUrl = $barbershop->logo_url
+            ? (str_starts_with($barbershop->logo_url, 'http') ? $barbershop->logo_url : asset('storage/' . $barbershop->logo_url))
+            : null;
+        $resolvedBannerUrl = $barbershop->banner_url
+            ? (str_starts_with($barbershop->banner_url, 'http') ? $barbershop->banner_url : asset('storage/' . $barbershop->banner_url))
+            : null;
+    @endphp
+    <link rel="manifest" href="{{ url($barbershop->slug . '/manifest.json') }}">
+    <meta name="theme-color" content="{{ $barbershop->brand_color ?: '#020617' }}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="{{ $barbershop->name }}">
+    <link rel="apple-touch-icon" href="{{ $resolvedLogoUrl ?: asset('pwa-icon.svg') }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,600,700,900&display=swap" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script>
+        window.deferredPwaPrompt = null;
+        window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();
+            window.deferredPwaPrompt = e;
+            window.dispatchEvent(new CustomEvent('pwa-ready'));
+        });
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').catch(function() {});
+            });
+        }
+    </script>
     <style>
         :root {
             --brand-color: {{ $barbershop->brand_color ?: '#d97706' }};
@@ -32,11 +59,26 @@
       x-data="bookingApp('{{ $barbershop->slug }}')">
 
     {{-- CABEÇALHO DA BARBEARIA --}}
-    <header class="bg-slate-900/90 border-b border-slate-800/80 backdrop-blur sticky top-0 z-40">
-        <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+    <header class="bg-slate-900/90 border-b border-slate-800/80 backdrop-blur sticky top-0 z-40"
+            x-data="{
+                pwaModalOpen: false,
+                async installPwa() {
+                    if (window.deferredPwaPrompt) {
+                        window.deferredPwaPrompt.prompt();
+                        const { outcome } = await window.deferredPwaPrompt.userChoice;
+                        if (outcome === 'accepted') {
+                            window.deferredPwaPrompt = null;
+                            this.pwaModalOpen = false;
+                        }
+                    } else {
+                        this.pwaModalOpen = true;
+                    }
+                }
+            }">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between gap-2">
             <div class="flex items-center gap-3">
-                @if ($barbershop->logo_url)
-                    <img src="{{ $barbershop->logo_url }}" alt="{{ $barbershop->name }}" class="h-11 w-11 rounded-2xl object-cover border border-slate-700" />
+                @if ($resolvedLogoUrl)
+                    <img src="{{ $resolvedLogoUrl }}" alt="{{ $barbershop->name }}" class="h-11 w-11 rounded-2xl object-cover border border-slate-700" />
                 @else
                     <div class="h-11 w-11 rounded-2xl bg-brand text-slate-950 flex items-center justify-center font-black text-xl shadow-lg">
                         💈
@@ -50,18 +92,74 @@
                 </div>
             </div>
 
-            @if ($barbershop->formatted_whatsapp)
-                <a href="https://api.whatsapp.com/send?phone={{ $barbershop->formatted_whatsapp }}" target="_blank" class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-3.5 py-2 transition shadow-lg shadow-emerald-900/20">
-                    <span>WhatsApp</span>
-                </a>
-            @endif
+            <div class="flex items-center gap-2">
+                <button type="button"
+                        @click="installPwa()"
+                        class="inline-flex items-center gap-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-amber-400 font-bold text-xs px-3 py-2 transition">
+                    <span>📲</span>
+                    <span class="hidden sm:inline">Instalar App</span>
+                    <span class="sm:hidden">App</span>
+                </button>
+
+                @if ($barbershop->formatted_whatsapp)
+                    <a href="https://api.whatsapp.com/send?phone={{ $barbershop->formatted_whatsapp }}" target="_blank" class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-3.5 py-2 transition shadow-lg shadow-emerald-900/20">
+                        <span>WhatsApp</span>
+                    </a>
+                @endif
+            </div>
+        </div>
+
+        {{-- MODAL DE INSTALAÇÃO DO APP DA BARBEARIA --}}
+        <div x-show="pwaModalOpen"
+             x-cloak
+             @click.self="pwaModalOpen = false"
+             class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl">
+                <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-800">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">📲</span>
+                        <div>
+                            <h3 class="text-base font-black text-white">Instalar App • {{ $barbershop->name }}</h3>
+                            <p class="text-xs text-slate-400">Agende em 1 toque direto da tela inicial do seu celular</p>
+                        </div>
+                    </div>
+                    <button type="button" @click="pwaModalOpen = false" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+                </div>
+
+                <div class="space-y-3 text-xs text-slate-300">
+                    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4">
+                        <div class="font-extrabold text-amber-400 mb-1.5">🤖 No Android (Chrome / Samsung)</div>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>Toque nos <strong>3 pontinhos (⋮)</strong> no canto superior do navegador.</li>
+                            <li>Toque em <strong>"Instalar aplicativo"</strong> ou <strong>"Adicionar à tela inicial"</strong>.</li>
+                        </ol>
+                    </div>
+
+                    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4">
+                        <div class="font-extrabold text-sky-400 mb-1.5">🍎 No iPhone / iOS (Safari)</div>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>Toque no ícone de <strong>Compartilhar (quadrado com seta ↑)</strong> na barra inferior.</li>
+                            <li>Role para baixo e toque em <strong>"Adicionar à Tela de Início"</strong>.</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="mt-5 flex justify-end">
+                    <button type="button" @click="pwaModalOpen = false" class="bg-brand text-slate-950 font-black text-xs px-5 py-2.5 rounded-xl">
+                        Entendi, Fechar
+                    </button>
+                </div>
+            </div>
         </div>
     </header>
 
     {{-- CONTEÚDO PRINCIPAL --}}
     <main class="max-w-5xl mx-auto px-4 py-8 w-full">
         {{-- BANNER HERO --}}
-        <div class="rounded-3xl border border-slate-800 bg-slate-900/60 p-6 sm:p-10 mb-8 text-center relative overflow-hidden shadow-xl">
+        <div class="rounded-3xl border border-slate-800 bg-slate-900/60 p-6 sm:p-10 mb-8 text-center relative overflow-hidden shadow-xl"
+             @if ($resolvedBannerUrl)
+                 style="background-image: linear-gradient(to bottom, rgba(2, 6, 23, 0.78), rgba(2, 6, 23, 0.92)), url('{{ $resolvedBannerUrl }}'); background-size: cover; background-position: center;"
+             @endif>
             <div class="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 h-48 w-96 rounded-full bg-brand/20 blur-3xl opacity-50"></div>
             
             <h2 class="text-2xl sm:text-3xl font-black text-white mb-2 relative z-10">{{ $barbershop->headline ?: 'Agende seu horário online em segundos' }}</h2>

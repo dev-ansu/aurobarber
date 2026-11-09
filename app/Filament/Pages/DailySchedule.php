@@ -81,10 +81,16 @@ class DailySchedule extends Page
             return collect();
         }
 
-        return $tenant->professionals()
+        $query = $tenant->professionals()
             ->where('is_active', true)
-            ->orderBy('display_order')
-            ->get();
+            ->orderBy('display_order');
+
+        if (auth()->user()?->isRestrictedBarber()) {
+            $proId = auth()->user()->resolveProfessionalId($tenant->id) ?? 0;
+            $query->where('id', $proId);
+        }
+
+        return $query->get();
     }
 
     public function getServicesProperty(): Collection
@@ -107,11 +113,17 @@ class DailySchedule extends Page
             return collect();
         }
 
-        return Appointment::where('barbershop_id', $tenant->id)
+        $query = Appointment::where('barbershop_id', $tenant->id)
             ->whereDate('scheduled_at', $this->selectedDate)
             ->with(['professional', 'service', 'services'])
-            ->orderBy('scheduled_at')
-            ->get();
+            ->orderBy('scheduled_at');
+
+        if (auth()->user()?->isRestrictedBarber()) {
+            $proId = auth()->user()->resolveProfessionalId($tenant->id) ?? 0;
+            $query->where('professional_id', $proId);
+        }
+
+        return $query->get();
     }
 
     public function getAppointmentsByBarberProperty(): array

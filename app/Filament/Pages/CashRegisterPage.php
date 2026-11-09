@@ -24,6 +24,11 @@ class CashRegisterPage extends Page
 
     protected string $view = 'filament.pages.cash-register-page';
 
+    public static function canAccess(): bool
+    {
+        return ! auth()->user()?->isRestrictedBarber();
+    }
+
     public function getMaxContentWidth(): Width | string | null
     {
         return 'full';
