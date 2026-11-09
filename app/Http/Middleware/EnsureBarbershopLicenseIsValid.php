@@ -7,13 +7,15 @@ namespace App\Http\Middleware;
 use App\Models\Barbershop;
 use Closure;
 use Filament\Facades\Filament;
+use Filament\Support\Colors\Color;
+use Filament\Support\Facades\FilamentColor;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureBarbershopLicenseIsValid
 {
     /**
-     * Valida se a barbearia acessada está com a licença ativa.
+     * Valida se a barbearia acessada está com a licença ativa e aplica o White-Label (cor da marca).
      * Master Admin é sempre isento de bloqueio para poder prestar suporte e auditoria.
      */
     public function handle(Request $request, Closure $next): Response
@@ -25,10 +27,21 @@ class EnsureBarbershopLicenseIsValid
             return $next($request);
         }
 
+        // Aplica dinamicamente a cor da marca da barbearia (White-Label) no painel
+        if (! empty($tenant->brand_color) && preg_match('/^#[0-9A-Fa-f]{6}$/', $tenant->brand_color)) {
+            try {
+                FilamentColor::register([
+                    'primary' => Color::hex($tenant->brand_color),
+                ]);
+            } catch (\Throwable $e) {
+                // Mantém o Amber padrão se a cor for inválida
+            }
+        }
+
         $user = auth()->user();
 
-        // Master admin tem passe livre em qualquer barbearia
-        if ($user && ($user->role === 'master_admin' || (method_exists($user, 'hasRole') && $user->hasRole('super_admin')))) {
+        // Apenas o Master Admin global tem passe livre em barbearia com licença vencida
+        if ($user && $user->role === 'master_admin') {
             return $next($request);
         }
 

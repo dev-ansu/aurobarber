@@ -49,7 +49,9 @@ class AdminPanelProvider extends PanelProvider
                     ->url(fn (): string => EditOwnProfile::getUrl())
                     ->visible(fn (): bool => auth()->check()),
             ])
-            ->brandName('AuroBarber')
+            ->brandName(fn (): string => filament()->getTenant()?->name ?? 'AuroBarber')
+            ->brandLogo(fn (): ?string => filament()->getTenant()?->logo_url ? asset('storage/' . filament()->getTenant()->logo_url) : null)
+            ->brandLogoHeight('2.25rem')
             ->colors([
                 'primary' => Color::Amber,
                 'gray' => Color::Slate,

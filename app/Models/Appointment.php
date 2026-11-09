@@ -21,7 +21,9 @@ class Appointment extends Model
         'scheduled_at',
         'ends_at',
         'status',
+        'is_blocked_slot',
         'service_price',
+        'products_total',
         'commission_rate',
         'commission_amount',
         'payment_method',
@@ -31,6 +33,9 @@ class Appointment extends Model
         'commission_payout_id',
         'commission_paid_at',
         'notes',
+        'rating',
+        'rating_comment',
+        'rated_at',
     ];
 
     protected $casts = [
@@ -38,10 +43,60 @@ class Appointment extends Model
         'ends_at' => 'datetime',
         'paid_at' => 'datetime',
         'commission_paid_at' => 'datetime',
+        'rated_at' => 'datetime',
+        'is_blocked_slot' => 'boolean',
         'service_price' => 'decimal:2',
+        'products_total' => 'decimal:2',
         'commission_rate' => 'decimal:2',
         'commission_amount' => 'decimal:2',
     ];
+
+    protected static function booted(): void
+    {
+        static::saved(function (Appointment $appointment) {
+            if ($appointment->is_blocked_slot || empty($appointment->client_phone) || empty($appointment->barbershop_id)) {
+                return;
+            }
+
+            $cleanPhone = preg_replace('/\D/', '', $appointment->client_phone);
+            if (strlen($cleanPhone) < 8) {
+                return;
+            }
+
+            $client = BarbershopClient::firstOrNew([
+                'barbershop_id' => $appointment->barbershop_id,
+                'phone' => $cleanPhone,
+            ]);
+
+            $client->name = $appointment->client_name ?: ($client->name ?: 'Cliente');
+
+            // Recalcula métricas baseadas nos agendamentos concluídos
+            $completedQuery = static::where('barbershop_id', $appointment->barbershop_id)
+                ->where('is_blocked_slot', false)
+                ->where('status', 'completed')
+                ->where(function ($q) use ($cleanPhone, $appointment) {
+                    $q->where('client_phone', $appointment->client_phone)
+                        ->orWhere('client_phone', $cleanPhone);
+                });
+
+            $completedCount = (int) $completedQuery->count();
+            $totalServiceSpent = (float) $completedQuery->sum('service_price');
+            $totalProductsSpent = (float) $completedQuery->sum('products_total');
+            $lastVisit = $completedQuery->max('scheduled_at');
+
+            $targetCuts = (int) ($appointment->barbershop?->loyalty_target_cuts ?: 10);
+            $redeemed = (int) ($client->loyalty_rewards_redeemed ?? 0);
+            $availableStamps = max(0, $completedCount - ($redeemed * $targetCuts));
+
+            $client->total_visits = $completedCount;
+            $client->total_spent = $totalServiceSpent + $totalProductsSpent;
+            $client->loyalty_stamps = $availableStamps;
+            if ($lastVisit) {
+                $client->last_visit_at = $lastVisit;
+            }
+            $client->saveQuietly();
+        });
+    }
 
     public function barbershop(): BelongsTo
     {
@@ -63,6 +118,18 @@ class Appointment extends Model
         return $this->belongsToMany(Service::class, 'appointment_services')
             ->withPivot('price', 'duration_minutes')
             ->withTimestamps();
+    }
+
+    public function products(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'appointment_products')
+            ->withPivot('quantity', 'unit_price', 'total_price')
+            ->withTimestamps();
+    }
+
+    public function getTotalAmountAttribute(): float
+    {
+        return (float) $this->service_price + (float) $this->products_total;
     }
 
     public function commissionPayout(): BelongsTo

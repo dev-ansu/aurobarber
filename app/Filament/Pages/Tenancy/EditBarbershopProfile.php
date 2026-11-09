@@ -6,10 +6,12 @@ use App\Models\Barbershop;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\ColorPicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
+use Filament\Forms\Components\Toggle;
 use Filament\Pages\Tenancy\EditTenantProfile;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
@@ -25,7 +27,7 @@ class EditBarbershopProfile extends EditTenantProfile
 
     public function getMaxWidth(): Width | string | null
     {
-        return '4xl';
+        return '5xl';
     }
 
     public function form(Schema $schema): Schema
@@ -34,7 +36,7 @@ class EditBarbershopProfile extends EditTenantProfile
             ->components([
                 Tabs::make('Unidade')
                     ->tabs([
-                        Tab::make('Identidade & Marca')
+                        Tab::make('Identidade & Marca (White-Label)')
                             ->icon('heroicon-o-building-storefront')
                             ->schema([
                                 TextInput::make('name')
@@ -57,8 +59,24 @@ class EditBarbershopProfile extends EditTenantProfile
                                     ->columnSpanFull(),
 
                                 ColorPicker::make('brand_color')
-                                    ->label('Cor da Marca')
+                                    ->label('Cor Principal da Marca (Sistema & Página Pública)')
+                                    ->helperText('Esta cor será aplicada automaticamente nos botões, destaques do seu painel e no site de agendamento.')
                                     ->default('#d97706')
+                                    ->columnSpanFull(),
+
+                                FileUpload::make('logo_url')
+                                    ->label('Logomarca da Barbearia')
+                                    ->image()
+                                    ->disk('public')
+                                    ->directory('barbershops/logos')
+                                    ->helperText('Exibida no topo do sistema e na página pública de agendamento.')
+                                    ->columnSpanFull(),
+
+                                FileUpload::make('banner_url')
+                                    ->label('Banner / Foto de Capa (Opcional)')
+                                    ->image()
+                                    ->disk('public')
+                                    ->directory('barbershops/banners')
                                     ->columnSpanFull(),
 
                                 Textarea::make('description')
@@ -75,6 +93,11 @@ class EditBarbershopProfile extends EditTenantProfile
                                     ->label('WhatsApp de Atendimento')
                                     ->tel()
                                     ->placeholder('85999999999')
+                                    ->columnSpanFull(),
+
+                                TextInput::make('instagram')
+                                    ->label('Instagram (@usuario)')
+                                    ->placeholder('@barbeariamarinho')
                                     ->columnSpanFull(),
 
                                 TextInput::make('city')
@@ -130,6 +153,36 @@ class EditBarbershopProfile extends EditTenantProfile
                                         60 => 'A cada 1 hora',
                                     ])
                                     ->default(30)
+                                    ->columnSpanFull(),
+                            ]),
+
+                        Tab::make('Fidelidade & Retorno de Clientes')
+                            ->icon('heroicon-o-gift')
+                            ->schema([
+                                Toggle::make('loyalty_enabled')
+                                    ->label('Ativar Programa de Cartão Fidelidade Automático')
+                                    ->helperText('Contabiliza automaticamente 1 selo a cada atendimento concluído do cliente.')
+                                    ->default(true)
+                                    ->columnSpanFull(),
+
+                                TextInput::make('loyalty_target_cuts')
+                                    ->label('Meta de Cortes para Ganhar 1 Corte/Prêmio')
+                                    ->numeric()
+                                    ->default(10)
+                                    ->minValue(2)
+                                    ->maxValue(50)
+                                    ->suffix('cortes')
+                                    ->helperText('Ex: A cada 10 cortes concluídos, o sistema avisa que o cliente ganhou 1 prêmio.')
+                                    ->columnSpanFull(),
+
+                                TextInput::make('return_reminder_days')
+                                    ->label('Prazo para Alerta de Retorno ("Cliente Sumido")')
+                                    ->numeric()
+                                    ->default(20)
+                                    ->minValue(5)
+                                    ->maxValue(90)
+                                    ->suffix('dias')
+                                    ->helperText('Clientes que não cortam há mais que este número de dias entram na lista de chamada rápida no WhatsApp.')
                                     ->columnSpanFull(),
                             ]),
                     ])

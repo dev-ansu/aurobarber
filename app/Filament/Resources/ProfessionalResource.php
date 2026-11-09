@@ -103,6 +103,25 @@ class ProfessionalResource extends Resource
                                     ->label('Fim do Expediente')
                                     ->default('19:00:00')
                                     ->columnSpanFull(),
+
+                                Forms\Components\Toggle::make('has_lunch_break')
+                                    ->label('Possui Intervalo de Almoço / Pausa Diária')
+                                    ->helperText('Bloqueia automaticamente os horários de almoço na página pública de agendamento.')
+                                    ->default(false)
+                                    ->live()
+                                    ->columnSpanFull(),
+
+                                Forms\Components\TimePicker::make('lunch_start_time')
+                                    ->label('Início do Almoço / Pausa')
+                                    ->default('12:00:00')
+                                    ->visible(fn ($get): bool => (bool) $get('has_lunch_break'))
+                                    ->columnSpanFull(),
+
+                                Forms\Components\TimePicker::make('lunch_end_time')
+                                    ->label('Fim do Almoço / Retorno')
+                                    ->default('13:00:00')
+                                    ->visible(fn ($get): bool => (bool) $get('has_lunch_break'))
+                                    ->columnSpanFull(),
                             ]),
                     ])
                     ->columnSpanFull(),

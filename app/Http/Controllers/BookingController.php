@@ -141,6 +141,18 @@ class BookingController extends Controller
                     continue; // Fora do expediente do profissional
                 }
 
+                // Verifica intervalo de almoço do profissional
+                if ($prof->has_lunch_break && $prof->lunch_start_time && $prof->lunch_end_time) {
+                    $lStartStr = substr($prof->lunch_start_time, 0, 5);
+                    $lEndStr = substr($prof->lunch_end_time, 0, 5);
+                    $lunchStart = Carbon::createFromFormat('Y-m-d H:i', "{$date} {$lStartStr}");
+                    $lunchEnd = Carbon::createFromFormat('Y-m-d H:i', "{$date} {$lEndStr}");
+
+                    if ($slotStart->lt($lunchEnd) && $slotEnd->gt($lunchStart)) {
+                        continue; // Em horário de almoço
+                    }
+                }
+
                 $hasConflict = Appointment::where('professional_id', $prof->id)
                     ->where('status', '!=', 'cancelled')
                     ->whereDate('scheduled_at', $date)
@@ -266,6 +278,20 @@ class BookingController extends Controller
                     ], 422);
                 }
 
+                if ($profCandidate->has_lunch_break && $profCandidate->lunch_start_time && $profCandidate->lunch_end_time) {
+                    $lStartStr = substr($profCandidate->lunch_start_time, 0, 5);
+                    $lEndStr = substr($profCandidate->lunch_end_time, 0, 5);
+                    $lunchStart = Carbon::createFromFormat('Y-m-d H:i', "{$dateStr} {$lStartStr}");
+                    $lunchEnd = Carbon::createFromFormat('Y-m-d H:i', "{$dateStr} {$lEndStr}");
+
+                    if ($scheduledAt->lt($lunchEnd) && $endsAt->gt($lunchStart)) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Este profissional está em intervalo de almoço neste horário.',
+                        ], 422);
+                    }
+                }
+
                 // Verifica conflito para a duração total dos serviços combinados
                 $conflict = Appointment::where('professional_id', $profCandidate->id)
                     ->where('status', '!=', 'cancelled')
@@ -305,6 +331,17 @@ class BookingController extends Controller
 
                     if ($scheduledAt->lt($profStart) || $endsAt->gt($profEnd)) {
                         continue;
+                    }
+
+                    if ($candidate->has_lunch_break && $candidate->lunch_start_time && $candidate->lunch_end_time) {
+                        $lStartStr = substr($candidate->lunch_start_time, 0, 5);
+                        $lEndStr = substr($candidate->lunch_end_time, 0, 5);
+                        $lunchStart = Carbon::createFromFormat('Y-m-d H:i', "{$dateStr} {$lStartStr}");
+                        $lunchEnd = Carbon::createFromFormat('Y-m-d H:i', "{$dateStr} {$lEndStr}");
+
+                        if ($scheduledAt->lt($lunchEnd) && $endsAt->gt($lunchStart)) {
+                            continue;
+                        }
                     }
 
                     $conflict = Appointment::where('professional_id', $candidate->id)

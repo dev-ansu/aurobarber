@@ -168,9 +168,18 @@ class AppointmentResource extends Resource
                     ->wrap(),
 
                 Tables\Columns\TextColumn::make('service_price')
-                    ->label('Valor')
+                    ->label('Total')
+                    ->getStateUsing(fn (Appointment $record): float => (float) $record->service_price + (float) $record->products_total)
                     ->money('BRL')
+                    ->description(fn (Appointment $record): ?string => $record->products_total > 0 ? '+ R$ ' . number_format((float) $record->products_total, 2, ',', '.') . ' em produtos' : null)
                     ->sortable(),
+
+                Tables\Columns\TextColumn::make('rating')
+                    ->label('Avaliação')
+                    ->badge()
+                    ->color('warning')
+                    ->formatStateUsing(fn (?int $state): string => $state ? str_repeat('⭐', $state) : '—')
+                    ->toggleable(),
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
@@ -207,13 +216,118 @@ class AppointmentResource extends Resource
                     ->relationship('professional', 'name'),
             ])
             ->actions([
-                EditAction::make(),
-                Action::make('concluir')
-                    ->label('Concluir')
-                    ->icon('heroicon-o-check-circle')
+                Action::make('whatsapp')
+                    ->label('WhatsApp')
+                    ->icon('heroicon-o-chat-bubble-left-ellipsis')
                     ->color('success')
-                    ->visible(fn (Appointment $record) => $record->status !== 'completed')
-                    ->action(fn (Appointment $record) => $record->update(['status' => 'completed', 'payment_status' => 'paid'])),
+                    ->url(function (Appointment $record): string {
+                        $digits = preg_replace('/\D/', '', (string) $record->client_phone);
+                        $phone = str_starts_with($digits, '55') ? $digits : '55' . $digits;
+                        $dateStr = $record->scheduled_at ? $record->scheduled_at->format('d/m \à\s H:i') : '';
+                        $shopName = $record->barbershop?->name ?? 'Barbearia';
+
+                        if ($record->status === 'completed') {
+                            $rateUrl = url("/avaliar/{$record->id}");
+                            $msg = "Olá *{$record->client_name}*! Obrigado pela preferência hoje na *{$shopName}*. 💈✂️\n\nAvalie seu atendimento rapidinho (leva 5 segundos): {$rateUrl}";
+                        } else {
+                            $msg = "Olá *{$record->client_name}*! Confirmando seu horário na *{$shopName}* para *{$dateStr}* ({$record->services_summary}). Tudo certo? 💈✂️";
+                        }
+
+                        return 'https://wa.me/' . $phone . '?text=' . urlencode($msg);
+                    })
+                    ->openUrlInNewTab(),
+
+                Action::make('concluir')
+                    ->label('Concluir & Comanda')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('primary')
+                    ->visible(fn (Appointment $record) => $record->status !== 'completed' && !$record->is_blocked_slot)
+                    ->form([
+                        Tabs::make('CheckoutComanda')
+                            ->tabs([
+                                Tab::make('Pagamento & Comanda')
+                                    ->icon('heroicon-o-banknotes')
+                                    ->schema([
+                                        Forms\Components\Select::make('payment_method')
+                                            ->label('Forma de Pagamento')
+                                            ->options([
+                                                'pix' => 'PIX',
+                                                'dinheiro' => 'Dinheiro',
+                                                'cartao_credito' => 'Cartão de Crédito',
+                                                'cartao_debito' => 'Cartão de Débito',
+                                            ])
+                                            ->default('pix')
+                                            ->required()
+                                            ->columnSpanFull(),
+
+                                        Forms\Components\Select::make('consumed_product_ids')
+                                            ->label('Adicionar Consumo do Bar / Produtos na Comanda (Opcional)')
+                                            ->options(fn () => \App\Models\Product::where('barbershop_id', filament()->getTenant()?->id)
+                                                ->where('is_active', true)
+                                                ->where('stock_quantity', '>', 0)
+                                                ->get()
+                                                ->mapWithKeys(fn ($p) => [$p->id => "{$p->name} — R$ " . number_format((float) $p->price, 2, ',', '.') . " ({$p->stock_quantity} em estoque)"]))
+                                            ->multiple()
+                                            ->searchable()
+                                            ->preload()
+                                            ->helperText('Os produtos selecionados serão somados ao total e baixados automaticamente do estoque.')
+                                            ->columnSpanFull(),
+                                    ]),
+                            ])
+                            ->columnSpanFull(),
+                    ])
+                    ->action(function (Appointment $record, array $data): void {
+                        $productIds = (array) ($data['consumed_product_ids'] ?? []);
+                        $productsTotal = 0.0;
+
+                        if (!empty($productIds)) {
+                            $products = \App\Models\Product::whereIn('id', $productIds)->get();
+                            foreach ($products as $prod) {
+                                $productsTotal += (float) $prod->price;
+                                $record->products()->attach($prod->id, [
+                                    'quantity' => 1,
+                                    'unit_price' => $prod->price,
+                                    'total_price' => $prod->price,
+                                ]);
+                                $prod->decrement('stock_quantity', 1);
+                            }
+                        }
+
+                        $commRate = (float) ($record->professional?->commission_rate ?? 50.0);
+                        $commAmount = round(((float) $record->service_price * $commRate) / 100, 2);
+
+                        $record->update([
+                            'status' => 'completed',
+                            'payment_status' => 'paid',
+                            'payment_method' => $data['payment_method'] ?? 'pix',
+                            'paid_at' => now(),
+                            'products_total' => (float) $record->products_total + $productsTotal,
+                            'commission_rate' => $commRate,
+                            'commission_amount' => $commAmount,
+                            'commission_status' => 'pending',
+                        ]);
+
+                        $grandTotal = (float) $record->service_price + (float) $record->products_total;
+
+                        \App\Models\CashMovement::create([
+                            'barbershop_id' => $record->barbershop_id,
+                            'appointment_id' => $record->id,
+                            'type' => 'in',
+                            'category' => 'Atendimento',
+                            'description' => "Atendimento #{$record->id} - {$record->client_name} ({$record->services_summary})",
+                            'amount' => $grandTotal,
+                            'payment_method' => $data['payment_method'] ?? 'pix',
+                            'occurred_at' => now(),
+                        ]);
+
+                        \Filament\Notifications\Notification::make()
+                            ->title('Atendimento concluído e lançado no Caixa!')
+                            ->body('Total recebido: R$ ' . number_format($grandTotal, 2, ',', '.'))
+                            ->success()
+                            ->send();
+                    }),
+
+                EditAction::make(),
             ])
             ->bulkActions([
                 BulkActionGroup::make([

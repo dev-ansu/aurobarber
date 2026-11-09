@@ -42,11 +42,17 @@ class Barbershop extends Model
         'license_notes',
         'suspended_at',
         'suspension_reason',
+        'loyalty_enabled',
+        'loyalty_target_cuts',
+        'return_reminder_days',
     ];
 
     protected $casts = [
         'opening_hours' => 'array',
         'is_active' => 'boolean',
+        'loyalty_enabled' => 'boolean',
+        'loyalty_target_cuts' => 'integer',
+        'return_reminder_days' => 'integer',
         'license_expires_at' => 'datetime',
         'suspended_at' => 'datetime',
         'grace_period_days' => 'integer',
@@ -232,6 +238,16 @@ class Barbershop extends Model
     public function cashMovements(): HasMany
     {
         return $this->hasMany(CashMovement::class);
+    }
+
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class)->orderBy('name');
+    }
+
+    public function clients(): HasMany
+    {
+        return $this->hasMany(BarbershopClient::class)->orderByDesc('last_visit_at');
     }
 
     public function getFormattedWhatsappAttribute(): ?string

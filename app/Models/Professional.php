@@ -23,6 +23,9 @@ class Professional extends Model
         'working_days',
         'work_start_time',
         'work_end_time',
+        'has_lunch_break',
+        'lunch_start_time',
+        'lunch_end_time',
         'display_order',
         'is_active',
     ];
@@ -30,6 +33,7 @@ class Professional extends Model
     protected $casts = [
         'commission_rate' => 'decimal:2',
         'working_days' => 'array',
+        'has_lunch_break' => 'boolean',
         'is_active' => 'boolean',
     ];
 
