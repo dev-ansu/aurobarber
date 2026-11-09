@@ -4,27 +4,32 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\AppointmentResource\Pages;
 use App\Models\Appointment;
-use App\Models\Professional;
+use App\Models\CashMovement;
+use App\Models\Product;
 use App\Models\Service;
+use App\Services\SensitiveClientData;
+use App\Services\SensitiveClientDataAccess;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms;
+use Filament\Notifications\Notification;
+use Filament\Resources\Resource;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
-use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class AppointmentResource extends Resource
 {
     protected static ?string $model = Appointment::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-calendar-days';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-calendar-days';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Atendimento';
+    protected static string|\UnitEnum|null $navigationGroup = 'Atendimento';
 
     protected static ?string $navigationLabel = 'Agendamentos';
 
@@ -32,7 +37,7 @@ class AppointmentResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Agendamentos';
 
-    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery();
         $user = auth()->user();
@@ -112,7 +117,8 @@ class AppointmentResource extends Resource
                                 Forms\Components\TextInput::make('client_phone')
                                     ->label('WhatsApp do Cliente')
                                     ->tel()
-                                    ->required()
+                                    ->required(fn (): bool => app(SensitiveClientDataAccess::class)->canView())
+                                    ->visible(fn (): bool => app(SensitiveClientDataAccess::class)->canView())
                                     ->placeholder('(85) 99999-9999')
                                     ->columnSpanFull(),
 
@@ -172,7 +178,10 @@ class AppointmentResource extends Resource
 
                 Tables\Columns\TextColumn::make('client_phone')
                     ->label('WhatsApp')
-                    ->searchable(),
+                    ->searchable(query: fn (Builder $query, string $search): Builder => app(SensitiveClientDataAccess::class)->canView()
+                        ? $query->where('client_phone_hash', SensitiveClientData::phoneHash($search))
+                        : $query->whereRaw('1 = 0'))
+                    ->formatStateUsing(fn (?string $state): string => SensitiveClientData::maskPhone($state)),
 
                 Tables\Columns\TextColumn::make('professional.name')
                     ->label('Barbeiro')
@@ -187,7 +196,7 @@ class AppointmentResource extends Resource
                     ->label('Total')
                     ->getStateUsing(fn (Appointment $record): float => (float) $record->service_price + (float) $record->products_total)
                     ->money('BRL')
-                    ->description(fn (Appointment $record): ?string => $record->products_total > 0 ? '+ R$ ' . number_format((float) $record->products_total, 2, ',', '.') . ' em produtos' : null)
+                    ->description(fn (Appointment $record): ?string => $record->products_total > 0 ? '+ R$ '.number_format((float) $record->products_total, 2, ',', '.').' em produtos' : null)
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('rating')
@@ -232,13 +241,29 @@ class AppointmentResource extends Resource
                     ->relationship('professional', 'name'),
             ])
             ->actions([
+                Action::make('viewSensitiveData')
+                    ->label('Ver contato')
+                    ->icon('heroicon-o-eye')
+                    ->visible(fn (): bool => app(SensitiveClientDataAccess::class)->canView())
+                    ->action(function (Appointment $record): void {
+                        app(SensitiveClientDataAccess::class)->record($record, ['client_phone', 'client_email']);
+
+                        Notification::make()
+                            ->title('Contato do cliente')
+                            ->body(trim(($record->client_phone ?? 'Sem telefone').($record->client_email ? ' • '.$record->client_email : '')))
+                            ->info()
+                            ->persistent()
+                            ->send();
+                    }),
                 Action::make('whatsapp')
                     ->label('WhatsApp')
                     ->icon('heroicon-o-chat-bubble-left-ellipsis')
                     ->color('success')
+                    ->visible(fn (): bool => app(SensitiveClientDataAccess::class)->canView())
                     ->url(function (Appointment $record): string {
+                        app(SensitiveClientDataAccess::class)->record($record, ['client_phone']);
                         $digits = preg_replace('/\D/', '', (string) $record->client_phone);
-                        $phone = str_starts_with($digits, '55') ? $digits : '55' . $digits;
+                        $phone = str_starts_with($digits, '55') ? $digits : '55'.$digits;
                         $dateStr = $record->scheduled_at ? $record->scheduled_at->format('d/m \à\s H:i') : '';
                         $shopName = $record->barbershop?->name ?? 'Barbearia';
 
@@ -249,7 +274,7 @@ class AppointmentResource extends Resource
                             $msg = "Olá *{$record->client_name}*! Confirmando seu horário na *{$shopName}* para *{$dateStr}* ({$record->services_summary}). Tudo certo? 💈✂️";
                         }
 
-                        return 'https://wa.me/' . $phone . '?text=' . urlencode($msg);
+                        return 'https://wa.me/'.$phone.'?text='.urlencode($msg);
                     })
                     ->openUrlInNewTab(),
 
@@ -257,7 +282,7 @@ class AppointmentResource extends Resource
                     ->label('Concluir & Comanda')
                     ->icon('heroicon-o-check-circle')
                     ->color('primary')
-                    ->visible(fn (Appointment $record) => $record->status !== 'completed' && !$record->is_blocked_slot)
+                    ->visible(fn (Appointment $record) => $record->status !== 'completed' && ! $record->is_blocked_slot)
                     ->form([
                         Tabs::make('CheckoutComanda')
                             ->tabs([
@@ -278,11 +303,11 @@ class AppointmentResource extends Resource
 
                                         Forms\Components\Select::make('consumed_product_ids')
                                             ->label('Adicionar Consumo do Bar / Produtos na Comanda (Opcional)')
-                                            ->options(fn () => \App\Models\Product::where('barbershop_id', filament()->getTenant()?->id)
+                                            ->options(fn () => Product::where('barbershop_id', filament()->getTenant()?->id)
                                                 ->where('is_active', true)
                                                 ->where('stock_quantity', '>', 0)
                                                 ->get()
-                                                ->mapWithKeys(fn ($p) => [$p->id => "{$p->name} — R$ " . number_format((float) $p->price, 2, ',', '.') . " ({$p->stock_quantity} em estoque)"]))
+                                                ->mapWithKeys(fn ($p) => [$p->id => "{$p->name} — R$ ".number_format((float) $p->price, 2, ',', '.')." ({$p->stock_quantity} em estoque)"]))
                                             ->multiple()
                                             ->searchable()
                                             ->preload()
@@ -296,8 +321,8 @@ class AppointmentResource extends Resource
                         $productIds = (array) ($data['consumed_product_ids'] ?? []);
                         $productsTotal = 0.0;
 
-                        if (!empty($productIds)) {
-                            $products = \App\Models\Product::whereIn('id', $productIds)->get();
+                        if (! empty($productIds)) {
+                            $products = Product::whereIn('id', $productIds)->get();
                             foreach ($products as $prod) {
                                 $productsTotal += (float) $prod->price;
                                 $record->products()->attach($prod->id, [
@@ -325,7 +350,7 @@ class AppointmentResource extends Resource
 
                         $grandTotal = (float) $record->service_price + (float) $record->products_total;
 
-                        \App\Models\CashMovement::create([
+                        CashMovement::create([
                             'barbershop_id' => $record->barbershop_id,
                             'appointment_id' => $record->id,
                             'type' => 'in',
@@ -336,9 +361,9 @@ class AppointmentResource extends Resource
                             'occurred_at' => now(),
                         ]);
 
-                        \Filament\Notifications\Notification::make()
+                        Notification::make()
                             ->title('Atendimento concluído e lançado no Caixa!')
-                            ->body('Total recebido: R$ ' . number_format($grandTotal, 2, ',', '.'))
+                            ->body('Total recebido: R$ '.number_format($grandTotal, 2, ',', '.'))
                             ->success()
                             ->send();
                     }),

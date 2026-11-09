@@ -25,7 +25,7 @@ class TwoFactorCodeMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "🔐 Código de Segurança Aurosoft: {$this->code}",
+            subject: "Código de Segurança AuroBarber: {$this->code}",
         );
     }
 

@@ -13,9 +13,17 @@ return [
     | a conventional file to locate the various service credentials.
     |
     */
-    'ouro_moderno' => [
-        'url' => env('OURO_MODERNO_URL'),
-        'token' => env('OURO_MODERNO_TOKEN'),
+    'google_drive' => [
+        'enabled' => env('GOOGLE_DRIVE_BACKUP_ENABLED', false),
+        'client_id' => env('GOOGLE_DRIVE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_DRIVE_CLIENT_SECRET'),
+        'refresh_token' => env('GOOGLE_DRIVE_REFRESH_TOKEN'),
+        'folder_id' => env('GOOGLE_DRIVE_FOLDER_ID'),
+    ],
+    'saas_master' => [
+        'name' => env('SAAS_MASTER_NAME'),
+        'email' => env('SAAS_MASTER_EMAIL'),
+        'password' => env('SAAS_MASTER_PASSWORD'),
     ],
 
     'postmark' => [

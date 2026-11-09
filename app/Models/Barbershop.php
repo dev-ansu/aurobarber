@@ -34,7 +34,7 @@ class Barbershop extends Model
         'subscription_plan',
         'mercadopago_preapproval_id',
         'is_active',
-        // Licenciamento Aurosoft
+        // AuroBarber product licensing
         'license_status',
         'license_expires_at',
         'grace_period_days',
@@ -240,6 +240,11 @@ class Barbershop extends Model
         return $this->hasMany(CashMovement::class);
     }
 
+    public function payables(): HasMany
+    {
+        return $this->hasMany(Payable::class);
+    }
+
     public function products(): HasMany
     {
         return $this->hasMany(Product::class)->orderBy('name');
@@ -252,11 +257,12 @@ class Barbershop extends Model
 
     public function getFormattedWhatsappAttribute(): ?string
     {
-        if (!$this->whatsapp) {
+        if (! $this->whatsapp) {
             return null;
         }
 
         $digits = preg_replace('/\D/', '', $this->whatsapp);
-        return str_starts_with($digits, '55') ? $digits : '55' . $digits;
+
+        return str_starts_with($digits, '55') ? $digits : '55'.$digits;
     }
 }

@@ -2,74 +2,51 @@
 
 declare(strict_types=1);
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Payable;
-use Illuminate\Auth\Access\HandlesAuthorization;
+use App\Models\User;
+use Filament\Facades\Filament;
 
 class PayablePolicy
 {
-    use HandlesAuthorization;
-    
-    public function viewAny(AuthUser $authUser): bool
+    public function viewAny(User $user): bool
     {
-        return $authUser->can('ViewAny:Payable');
+        return $this->canManageCurrentBarbershop($user);
     }
 
-    public function view(AuthUser $authUser, Payable $payable): bool
+    public function view(User $user, Payable $payable): bool
     {
-        return $authUser->can('View:Payable');
+        return $this->canManageCurrentBarbershop($user, $payable);
     }
 
-    public function create(AuthUser $authUser): bool
+    public function create(User $user): bool
     {
-        return $authUser->can('Create:Payable');
+        return $this->canManageCurrentBarbershop($user);
     }
 
-    public function update(AuthUser $authUser, Payable $payable): bool
+    public function update(User $user, Payable $payable): bool
     {
-        return $authUser->can('Update:Payable');
+        return $payable->status === 'pending'
+            && $this->canManageCurrentBarbershop($user, $payable);
     }
 
-    public function delete(AuthUser $authUser, Payable $payable): bool
+    public function delete(User $user, Payable $payable): bool
     {
-        return $authUser->can('Delete:Payable');
+        return $payable->status === 'pending'
+            && $this->canManageCurrentBarbershop($user, $payable);
     }
 
-    public function deleteAny(AuthUser $authUser): bool
+    private function canManageCurrentBarbershop(User $user, ?Payable $payable = null): bool
     {
-        return $authUser->can('DeleteAny:Payable');
-    }
+        $tenant = Filament::getTenant();
 
-    public function restore(AuthUser $authUser, Payable $payable): bool
-    {
-        return $authUser->can('Restore:Payable');
-    }
+        if (! $tenant || $user->isRestrictedBarber() || ! $user->canAccessTenant($tenant)) {
+            return false;
+        }
 
-    public function forceDelete(AuthUser $authUser, Payable $payable): bool
-    {
-        return $authUser->can('ForceDelete:Payable');
+        return $payable === null || (int) $payable->barbershop_id === (int) $tenant->getKey();
     }
-
-    public function forceDeleteAny(AuthUser $authUser): bool
-    {
-        return $authUser->can('ForceDeleteAny:Payable');
-    }
-
-    public function restoreAny(AuthUser $authUser): bool
-    {
-        return $authUser->can('RestoreAny:Payable');
-    }
-
-    public function replicate(AuthUser $authUser, Payable $payable): bool
-    {
-        return $authUser->can('Replicate:Payable');
-    }
-
-    public function reorder(AuthUser $authUser): bool
-    {
-        return $authUser->can('Reorder:Payable');
-    }
-
 }

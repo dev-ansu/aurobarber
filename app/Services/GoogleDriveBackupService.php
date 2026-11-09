@@ -2,9 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\School;
-use Filament\Facades\Filament;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -12,10 +9,12 @@ use RuntimeException;
 
 class GoogleDriveBackupService
 {
-    protected ?School $school = null;
     protected ?string $clientId = null;
+
     protected ?string $clientSecret = null;
+
     protected ?string $refreshToken = null;
+
     protected ?string $folderId = null;
 
     public function __construct()
@@ -25,57 +24,10 @@ class GoogleDriveBackupService
 
     public function resolveCredentials(): void
     {
-        $school = null;
-        try {
-            $school = Filament::getTenant();
-        } catch (\Throwable) {
-            $school = null;
-        }
-
-        // Se a unidade ativa não possui configuração própria, busca na Matriz ou primeira unidade configurada
-        if (! $school instanceof School || blank($school->google_drive_client_id)) {
-            $school = School::query()
-                ->where('is_headquarters', true)
-                ->whereNotNull('google_drive_client_id')
-                ->where('google_drive_client_id', '!=', '')
-                ->first()
-                ?? School::query()
-                    ->whereNotNull('google_drive_client_id')
-                    ->where('google_drive_client_id', '!=', '')
-                    ->orderBy('id')
-                    ->first()
-                ?? School::getHeadquarters();
-        }
-
-        $this->school = $school;
-
-        // 1. Tenta carregar as credenciais da escola ativa ou herdada da Matriz
-        if ($school && filled($school->google_drive_client_id)) {
-            $this->clientId = $school->google_drive_client_id;
-            try {
-                $this->clientSecret = filled($school->google_drive_client_secret)
-                    ? Crypt::decryptString($school->google_drive_client_secret)
-                    : null;
-            } catch (\Throwable) {
-                $this->clientSecret = $school->google_drive_client_secret;
-            }
-
-            try {
-                $this->refreshToken = filled($school->google_drive_refresh_token)
-                    ? Crypt::decryptString($school->google_drive_refresh_token)
-                    : null;
-            } catch (\Throwable) {
-                $this->refreshToken = $school->google_drive_refresh_token;
-            }
-
-            $this->folderId = $school->google_drive_folder_id;
-        }
-
-        // 2. Fallback para variáveis de ambiente (.env) caso a escola não tenha configurado no painel
-        $this->clientId ??= config('services.google_drive.client_id', env('GOOGLE_DRIVE_CLIENT_ID'));
-        $this->clientSecret ??= config('services.google_drive.client_secret', env('GOOGLE_DRIVE_CLIENT_SECRET'));
-        $this->refreshToken ??= config('services.google_drive.refresh_token', env('GOOGLE_DRIVE_REFRESH_TOKEN'));
-        $this->folderId ??= config('services.google_drive.folder_id', env('GOOGLE_DRIVE_FOLDER_ID'));
+        $this->clientId = config('services.google_drive.client_id');
+        $this->clientSecret = config('services.google_drive.client_secret');
+        $this->refreshToken = config('services.google_drive.refresh_token');
+        $this->folderId = config('services.google_drive.folder_id');
     }
 
     public function isConfigured(): bool
@@ -88,11 +40,7 @@ class GoogleDriveBackupService
 
     public function isEnabled(): bool
     {
-        if ($this->school && isset($this->school->google_drive_backup_enabled)) {
-            return (bool) $this->school->google_drive_backup_enabled;
-        }
-
-        return true;
+        return (bool) config('services.google_drive.enabled', false);
     }
 
     /**
@@ -114,7 +62,7 @@ class GoogleDriveBackupService
         if (! $response->successful()) {
             $error = $response->json('error_description') ?? $response->body();
             Log::error('Erro ao autenticar com Google Drive API', ['response' => $error]);
-            throw new RuntimeException('Falha na autenticação do Google Drive: ' . $error);
+            throw new RuntimeException('Falha na autenticação do Google Drive: '.$error);
         }
 
         $token = $response->json('access_token');
@@ -141,18 +89,18 @@ class GoogleDriveBackupService
         $metadata = [
             'name' => $filename,
             'parents' => [$this->folderId],
-            'description' => 'Backup automático de segurança do Aurosoft — ' . now()->format('d/m/Y H:i:s'),
+            'description' => 'Backup automático do AuroBarber — '.now()->format('d/m/Y H:i:s'),
         ];
 
         // Upload Multipart padrão com Content-Type multipart/related
-        $boundary = '-------AurosoftBackupBoundary' . uniqid();
-        $delimiter = "\r\n--" . $boundary . "\r\n";
-        $closeDelim = "\r\n--" . $boundary . "--";
+        $boundary = '-------AuroBarberBackupBoundary'.uniqid();
+        $delimiter = "\r\n--".$boundary."\r\n";
+        $closeDelim = "\r\n--".$boundary.'--';
 
-        $metaPart = $delimiter .
-            "Content-Type: application/json; charset=UTF-8\r\n\r\n" .
-            json_encode($metadata) .
-            $delimiter .
+        $metaPart = $delimiter.
+            "Content-Type: application/json; charset=UTF-8\r\n\r\n".
+            json_encode($metadata).
+            $delimiter.
             "Content-Type: application/zip\r\n\r\n";
 
         $tempPayload = tempnam(sys_get_temp_dir(), 'gdrive_upload_');
@@ -179,8 +127,8 @@ class GoogleDriveBackupService
         curl_setopt($ch, CURLOPT_TIMEOUT, 600); // 10 minutos para grandes backups
         curl_setopt($ch, CURLOPT_POSTFIELDS, $payloadData);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Authorization: Bearer ' . $accessToken,
-            'Content-Type: multipart/related; boundary=' . $boundary,
+            'Authorization: Bearer '.$accessToken,
+            'Content-Type: multipart/related; boundary='.$boundary,
         ]);
 
         $responseBody = curl_exec($ch);
@@ -190,7 +138,7 @@ class GoogleDriveBackupService
 
         if ($curlError) {
             Log::error('Erro de conexão ao enviar backup para Google Drive', ['error' => $curlError]);
-            throw new RuntimeException('Erro de rede ao conectar com o Google Drive: ' . $curlError);
+            throw new RuntimeException('Erro de rede ao conectar com o Google Drive: '.$curlError);
         }
 
         if ($httpCode !== 200 && $httpCode !== 201) {
@@ -225,7 +173,7 @@ class GoogleDriveBackupService
 
         try {
             $accessToken = $this->getAccessToken();
-            $query = sprintf("'%s' in parents and trashed = false and name contains 'aurosoft'", $this->folderId);
+            $query = sprintf("'%s' in parents and trashed = false and (name contains 'aurobarber' or name contains 'aurosoft')", $this->folderId);
 
             $response = Http::withToken($accessToken)
                 ->timeout(15)
@@ -242,7 +190,7 @@ class GoogleDriveBackupService
 
             return $response->json('files') ?? [];
         } catch (\Throwable $e) {
-            Log::warning('Não foi possível listar backups do Google Drive: ' . $e->getMessage());
+            Log::warning('Não foi possível listar backups do Google Drive: '.$e->getMessage());
 
             return [];
         }

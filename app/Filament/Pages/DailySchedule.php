@@ -3,8 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\Appointment;
-use App\Models\Professional;
-use App\Models\Service;
+use App\Models\Barbershop;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -13,9 +12,9 @@ use Illuminate\Support\Collection;
 
 class DailySchedule extends Page
 {
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-view-columns';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-view-columns';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Atendimento';
+    protected static string|\UnitEnum|null $navigationGroup = 'Atendimento';
 
     protected static ?string $navigationLabel = 'Agenda Diária';
 
@@ -25,7 +24,7 @@ class DailySchedule extends Page
 
     protected string $view = 'filament.pages.daily-schedule';
 
-    public function getMaxContentWidth(): Width | string | null
+    public function getMaxContentWidth(): Width|string|null
     {
         return 'full';
     }
@@ -34,19 +33,30 @@ class DailySchedule extends Page
 
     // Estado do Modal de Encaixe Rápido
     public bool $quickModalOpen = false;
+
     public ?int $quickProfessionalId = null;
+
     public ?int $quickServiceId = null;
+
     public string $quickTime = '10:00';
+
     public string $quickClientName = '';
+
     public string $quickClientPhone = '';
+
     public string $activeModalTab = 'atendimento'; // atendimento | cliente
 
     // Estado do Modal de Conclusão e Recebimento
     public bool $checkoutModalOpen = false;
+
     public ?int $checkoutAppointmentId = null;
+
     public string $checkoutPaymentMethod = 'pix'; // pix, dinheiro, debito, credito
+
     public float $checkoutAmount = 0.00;
+
     public ?string $checkoutClientName = '';
+
     public ?string $checkoutServicesSummary = '';
 
     public function mount(): void
@@ -77,7 +87,7 @@ class DailySchedule extends Page
     public function getProfessionalsProperty(): Collection
     {
         $tenant = filament()->getTenant();
-        if (!$tenant) {
+        if (! $tenant) {
             return collect();
         }
 
@@ -96,7 +106,7 @@ class DailySchedule extends Page
     public function getServicesProperty(): Collection
     {
         $tenant = filament()->getTenant();
-        if (!$tenant) {
+        if (! $tenant) {
             return collect();
         }
 
@@ -109,7 +119,7 @@ class DailySchedule extends Page
     public function getDailyAppointmentsProperty(): Collection
     {
         $tenant = filament()->getTenant();
-        if (!$tenant) {
+        if (! $tenant) {
             return collect();
         }
 
@@ -163,7 +173,7 @@ class DailySchedule extends Page
         $appt->save();
 
         Notification::make()
-            ->title('Status atualizado para: ' . $appt->status_label)
+            ->title('Status atualizado para: '.$appt->status_label)
             ->success()
             ->send();
     }
@@ -181,7 +191,7 @@ class DailySchedule extends Page
 
     public function confirmCheckout(): void
     {
-        if (!$this->checkoutAppointmentId) {
+        if (! $this->checkoutAppointmentId) {
             return;
         }
 
@@ -198,7 +208,7 @@ class DailySchedule extends Page
 
         Notification::make()
             ->title('Atendimento concluído e pagamento registrado!')
-            ->body("Recebido via {$appt->payment_method} no valor de R$ " . number_format($appt->service_price, 2, ',', '.'))
+            ->body("Recebido via {$appt->payment_method} no valor de R$ ".number_format($appt->service_price, 2, ',', '.'))
             ->success()
             ->send();
     }
@@ -216,6 +226,12 @@ class DailySchedule extends Page
 
     public function saveQuickAppointment(): void
     {
+        $tenant = filament()->getTenant();
+        abort_unless(
+            $tenant instanceof Barbershop && auth()->user()?->canAccessTenant($tenant),
+            403,
+        );
+
         $this->validate([
             'quickProfessionalId' => 'required|exists:professionals,id',
             'quickServiceId' => 'required|exists:services,id',
@@ -224,9 +240,15 @@ class DailySchedule extends Page
             'quickClientPhone' => 'required|string|min:8|max:20',
         ]);
 
-        $tenant = filament()->getTenant();
-        $service = Service::findOrFail($this->quickServiceId);
-        $professional = Professional::findOrFail($this->quickProfessionalId);
+        $service = $tenant->services()->findOrFail($this->quickServiceId);
+        $professional = $tenant->professionals()->findOrFail($this->quickProfessionalId);
+
+        if (
+            auth()->user()?->isRestrictedBarber()
+            && (int) $professional->getKey() !== (int) (auth()->user()?->resolveProfessionalId($tenant->id) ?? 0)
+        ) {
+            abort(403);
+        }
 
         $scheduledAt = Carbon::createFromFormat('Y-m-d H:i', "{$this->selectedDate} {$this->quickTime}");
         $endsAt = $scheduledAt->copy()->addMinutes($service->duration_minutes);
@@ -260,7 +282,7 @@ class DailySchedule extends Page
         $this->quickModalOpen = false;
 
         Notification::make()
-            ->title('Encaixe agendado com sucesso para ' . $professional->display_name)
+            ->title('Encaixe agendado com sucesso para '.$professional->display_name)
             ->success()
             ->send();
     }

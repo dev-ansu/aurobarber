@@ -11,7 +11,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class TwoFactorChallengeController extends Controller
@@ -20,7 +19,7 @@ class TwoFactorChallengeController extends Controller
         protected TwoFactorAuthService $twoFactorService
     ) {}
 
-    public function show(Request $request): View | RedirectResponse
+    public function show(Request $request): View|RedirectResponse
     {
         $userId = $request->session()->get('2fa.user_id');
 
@@ -32,6 +31,7 @@ class TwoFactorChallengeController extends Controller
 
         if (! $user) {
             $request->session()->forget(['2fa.user_id', '2fa.remember', '2fa.panel']);
+
             return $this->redirectToLogin();
         }
 
@@ -57,13 +57,15 @@ class TwoFactorChallengeController extends Controller
 
         if (! $user) {
             $request->session()->forget(['2fa.user_id', '2fa.remember', '2fa.panel']);
+
             return $this->redirectToLogin();
         }
 
-        $rateKey = '2fa_attempts_' . $user->id;
+        $rateKey = '2fa_attempts_'.$user->id;
 
         if (RateLimiter::tooManyAttempts($rateKey, 5)) {
             $seconds = RateLimiter::availableIn($rateKey);
+
             return back()->withErrors([
                 'code' => "Muitas tentativas incorretas. Aguarde {$seconds} segundos antes de tentar novamente.",
             ]);
@@ -73,6 +75,7 @@ class TwoFactorChallengeController extends Controller
 
         if (! $this->twoFactorService->verifyCode($user, $code)) {
             RateLimiter::hit($rateKey, 300); // 5 min decay
+
             return back()->withErrors([
                 'code' => 'Código de segurança incorreto ou expirado. Verifique o seu e-mail e tente novamente.',
             ]);
@@ -110,10 +113,11 @@ class TwoFactorChallengeController extends Controller
             return $this->redirectToLogin();
         }
 
-        $rateKey = '2fa_resend_' . $user->id;
+        $rateKey = '2fa_resend_'.$user->id;
 
         if (RateLimiter::tooManyAttempts($rateKey, 1)) {
             $seconds = RateLimiter::availableIn($rateKey);
+
             return back()->with('warning', "Aguarde {$seconds} segundos antes de solicitar um novo código.");
         }
 
@@ -137,12 +141,11 @@ class TwoFactorChallengeController extends Controller
         $panel = $panel ?? session('2fa.panel', 'admin');
 
         if ($panel === 'saas') {
-            $saasDomain = (string) env('SAAS_PANEL_DOMAIN', 'master.aurosoft.com.br');
-            return redirect("https://{$saasDomain}/login");
-        }
+            $saasDomain = config('app.saas_panel_domain');
 
-        if ($panel === 'student') {
-            return redirect('/portal-aluno/login');
+            return filled($saasDomain)
+                ? redirect()->away("https://{$saasDomain}/login")
+                : redirect('/saas/login');
         }
 
         return redirect('/admin/login');
@@ -151,12 +154,9 @@ class TwoFactorChallengeController extends Controller
     protected function getPanelUrl(string $panel): string
     {
         if ($panel === 'saas') {
-            $saasDomain = (string) env('SAAS_PANEL_DOMAIN', 'master.aurosoft.com.br');
-            return "https://{$saasDomain}";
-        }
+            $saasDomain = config('app.saas_panel_domain');
 
-        if ($panel === 'student') {
-            return '/portal-aluno';
+            return filled($saasDomain) ? "https://{$saasDomain}" : url('/saas');
         }
 
         return '/admin';
@@ -173,11 +173,11 @@ class TwoFactorChallengeController extends Controller
         $domain = $parts[1];
 
         if (strlen($name) <= 2) {
-            $maskedName = substr($name, 0, 1) . '***';
+            $maskedName = substr($name, 0, 1).'***';
         } else {
-            $maskedName = substr($name, 0, 2) . str_repeat('*', max(3, strlen($name) - 3)) . substr($name, -1);
+            $maskedName = substr($name, 0, 2).str_repeat('*', max(3, strlen($name) - 3)).substr($name, -1);
         }
 
-        return $maskedName . '@' . $domain;
+        return $maskedName.'@'.$domain;
     }
 }

@@ -40,11 +40,6 @@ class EnsureBarbershopLicenseIsValid
 
         $user = auth()->user();
 
-        // Apenas o Master Admin global tem passe livre em barbearia com licença vencida
-        if ($user && $user->role === 'master_admin') {
-            return $next($request);
-        }
-
         // Rotas liberadas dentro do tenant: tela de bloqueio e logout
         if ($request->routeIs('filament.admin.tenant.pages.tenant-license-blocked') ||
             $request->is('*/licenca-bloqueada*') ||

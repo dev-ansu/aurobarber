@@ -5,13 +5,10 @@
         || str_starts_with($host, 'master.')
         || request()->is("{$saasPath}*") 
         || request()->is('saas*');
-    $isStudent = (\Filament\Facades\Filament::getCurrentPanel()?->getId() === 'student')
-        || request()->is('portal-aluno*');
-
-    $currentPanel = $isSaas ? 'saas' : ($isStudent ? 'student' : 'admin');
+    $currentPanel = $isSaas ? 'saas' : 'admin';
     $manifestUrl = url('/pwa/manifest.webmanifest') . '?panel=' . $currentPanel;
 @endphp
-<!-- Aurosoft Favicon, PWA Meta Tags & Service Worker -->
+<!-- AuroBarber PWA metadata and service worker -->
 <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
 <link rel="alternate icon" href="{{ asset('favicon.ico') }}">
 <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon.png') }}">
@@ -21,7 +18,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="{{ $isSaas ? 'SaaS Master' : ($isStudent ? 'Portal Aluno' : 'Aurosoft') }}">
+<meta name="apple-mobile-web-app-title" content="{{ $isSaas ? 'AuroBarber SaaS' : 'AuroBarber' }}">
 
 <script>
     if ('serviceWorker' in navigator) {
@@ -29,7 +26,7 @@
             navigator.serviceWorker.register('/sw.js').then(function(reg) {
                 reg.update();
             }).catch(function(err) {
-                console.warn('Aurosoft PWA SW registration failed: ', err);
+                console.warn('AuroBarber PWA service worker registration failed: ', err);
             });
         });
     }

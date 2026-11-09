@@ -17,7 +17,8 @@ use Illuminate\Support\Str;
 
 class TwoFactorAuthService
 {
-    public const COOKIE_PREFIX = 'aurosoft_device_';
+    public const COOKIE_PREFIX = 'aurobarber_device_';
+
     public const TRUSTED_DAYS = 30;
 
     /**
@@ -34,7 +35,7 @@ class TwoFactorAuthService
      */
     public function isDeviceTrusted(User $user, Request $request): bool
     {
-        $cookieName = self::COOKIE_PREFIX . $user->id;
+        $cookieName = self::COOKIE_PREFIX.$user->id;
         $cookieValue = $request->cookie($cookieName);
 
         if (empty($cookieValue) || ! is_string($cookieValue)) {
@@ -85,7 +86,7 @@ class TwoFactorAuthService
                 userAgent: $request->userAgent(),
             ));
         } catch (\Throwable $e) {
-            Log::error('Falha ao enviar código 2FA por e-mail: ' . $e->getMessage(), [
+            Log::error('Falha ao enviar código 2FA por e-mail: '.$e->getMessage(), [
                 'user_id' => $user->id,
                 'email' => $user->email,
             ]);
@@ -144,7 +145,7 @@ class TwoFactorAuthService
             'expires_at' => now()->addDays($days),
         ]);
 
-        $cookieName = self::COOKIE_PREFIX . $user->id;
+        $cookieName = self::COOKIE_PREFIX.$user->id;
         $minutes = $days * 24 * 60;
 
         Cookie::queue(

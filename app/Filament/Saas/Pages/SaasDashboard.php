@@ -7,8 +7,9 @@ namespace App\Filament\Saas\Pages;
 use App\Models\Appointment;
 use App\Models\Barbershop;
 use App\Models\Professional;
-use App\Models\User;
 use BackedEnum;
+use Carbon\Carbon;
+use Filament\Notifications\Notification;
 use Filament\Pages\Dashboard;
 
 class SaasDashboard extends Dashboard
@@ -26,18 +27,26 @@ class SaasDashboard extends Dashboard
     protected string $view = 'filament.saas.pages.dashboard';
 
     public int $totalBarbershops = 0;
+
     public int $activeBarbershops = 0;
+
     public int $graceBarbershops = 0;
+
     public int $suspendedBarbershops = 0;
+
     public int $totalBarbers = 0;
+
     public int $totalAppointments = 0;
+
     public float $totalGrossRevenue = 0.0;
 
     /** @var array<int, array<string, mixed>> */
     public array $recentBarbershops = [];
 
     public ?int $editingBarbershopId = null;
+
     public ?string $editingBarbershopName = null;
+
     public ?string $newDueDate = null;
 
     public function mount(): void
@@ -47,8 +56,10 @@ class SaasDashboard extends Dashboard
 
     public function openDueDateModal(int $barbershopId): void
     {
+        abort_unless(auth()->user()?->role === 'master_admin', 403);
+
         $b = Barbershop::find($barbershopId);
-        if (!$b) {
+        if (! $b) {
             return;
         }
 
@@ -66,21 +77,23 @@ class SaasDashboard extends Dashboard
 
     public function saveDueDate(): void
     {
-        if (!$this->editingBarbershopId || !$this->newDueDate) {
+        abort_unless(auth()->user()?->role === 'master_admin', 403);
+
+        if (! $this->editingBarbershopId || ! $this->newDueDate) {
             return;
         }
 
         $b = Barbershop::find($this->editingBarbershopId);
         if ($b) {
-            $b->license_expires_at = \Carbon\Carbon::parse($this->newDueDate)->endOfDay();
+            $b->license_expires_at = Carbon::parse($this->newDueDate)->endOfDay();
             $b->license_status = 'active';
             $b->is_active = true;
             $b->suspended_at = null;
             $b->suspension_reason = null;
             $b->save();
 
-            \Filament\Notifications\Notification::make()
-                ->title("Vencimento atualizado com sucesso!")
+            Notification::make()
+                ->title('Vencimento atualizado com sucesso!')
                 ->body("A barbearia {$b->name} teve o vencimento ajustado para {$b->license_expires_at->format('d/m/Y')}. O acesso está regularizado!")
                 ->success()
                 ->send();
@@ -92,12 +105,14 @@ class SaasDashboard extends Dashboard
 
     public function loadMetrics(): void
     {
+        abort_unless(auth()->user()?->role === 'master_admin', 403);
+
         $allBarbershops = Barbershop::with('owner')->latest('id')->get();
 
         $this->totalBarbershops = $allBarbershops->count();
-        $this->activeBarbershops = $allBarbershops->filter(fn ($b) => $b->isLicenseActive() && !$b->isInGracePeriod())->count();
+        $this->activeBarbershops = $allBarbershops->filter(fn ($b) => $b->isLicenseActive() && ! $b->isInGracePeriod())->count();
         $this->graceBarbershops = $allBarbershops->filter(fn ($b) => $b->isInGracePeriod())->count();
-        $this->suspendedBarbershops = $allBarbershops->filter(fn ($b) => $b->isSuspended() || !$b->isLicenseActive())->count();
+        $this->suspendedBarbershops = $allBarbershops->filter(fn ($b) => $b->isSuspended() || ! $b->isLicenseActive())->count();
         $this->totalBarbers = Professional::count();
         $this->totalAppointments = Appointment::count();
         $this->totalGrossRevenue = (float) Appointment::where('status', 'completed')->sum('service_price');
@@ -119,23 +134,25 @@ class SaasDashboard extends Dashboard
                 'days_remaining' => $b->daysRemaining(),
                 'expires_at_formatted' => $b->license_expires_at?->format('d/m/Y') ?? 'Não definido',
                 'monthly_price' => number_format((float) ($b->monthly_price ?? 120.00), 2, ',', '.'),
-                'admin_url' => url('/admin/' . $b->slug),
+                'admin_url' => null,
             ])
             ->toArray();
     }
 
     public function renew30(int $barbershopId): void
     {
+        abort_unless(auth()->user()?->role === 'master_admin', 403);
+
         $b = Barbershop::find($barbershopId);
-        if (!$b) {
+        if (! $b) {
             return;
         }
 
         $b->renew(30);
         $this->loadMetrics();
 
-        \Filament\Notifications\Notification::make()
-            ->title("Licença renovada por +30 dias!")
+        Notification::make()
+            ->title('Licença renovada por +30 dias!')
             ->body("A barbearia {$b->name} teve o vencimento estendido para {$b->license_expires_at->format('d/m/Y')}.")
             ->success()
             ->send();
@@ -143,22 +160,24 @@ class SaasDashboard extends Dashboard
 
     public function toggleStatus(int $barbershopId): void
     {
+        abort_unless(auth()->user()?->role === 'master_admin', 403);
+
         $b = Barbershop::find($barbershopId);
-        if (!$b) {
+        if (! $b) {
             return;
         }
 
         if ($b->isSuspended()) {
             $b->activate();
-            \Filament\Notifications\Notification::make()
-                ->title("Barbearia reativada!")
+            Notification::make()
+                ->title('Barbearia reativada!')
                 ->body("O acesso de {$b->name} foi restabelecido.")
                 ->success()
                 ->send();
         } else {
             $b->suspend('Suspensão manual por inadimplência via Painel SaaS');
-            \Filament\Notifications\Notification::make()
-                ->title("Barbearia suspensa!")
+            Notification::make()
+                ->title('Barbearia suspensa!')
                 ->body("O acesso de {$b->name} foi bloqueado imediatamente.")
                 ->warning()
                 ->send();

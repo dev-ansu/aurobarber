@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\SensitiveClientData;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -53,6 +54,21 @@ class Appointment extends Model
 
     protected static function booted(): void
     {
+        static::saving(function (Appointment $appointment): void {
+            $plainPhone = $appointment->client_phone;
+            $plainEmail = $appointment->client_email;
+            $appointment->client_phone_hash = SensitiveClientData::phoneHash($plainPhone);
+            $appointment->client_email_hash = SensitiveClientData::emailHash($plainEmail);
+
+            if (! SensitiveClientData::isEncrypted($appointment->getRawOriginal('client_phone'))) {
+                $appointment->client_phone = SensitiveClientData::encrypt($plainPhone);
+            }
+
+            if (! SensitiveClientData::isEncrypted($appointment->getRawOriginal('client_email'))) {
+                $appointment->client_email = SensitiveClientData::encrypt($plainEmail);
+            }
+        });
+
         static::saved(function (Appointment $appointment) {
             if ($appointment->is_blocked_slot || empty($appointment->client_phone) || empty($appointment->barbershop_id)) {
                 return;
@@ -65,8 +81,9 @@ class Appointment extends Model
 
             $client = BarbershopClient::firstOrNew([
                 'barbershop_id' => $appointment->barbershop_id,
-                'phone' => $cleanPhone,
+                'phone_hash' => $appointment->client_phone_hash,
             ]);
+            $client->phone = $cleanPhone;
 
             $client->name = $appointment->client_name ?: ($client->name ?: 'Cliente');
 
@@ -74,10 +91,7 @@ class Appointment extends Model
             $completedQuery = static::where('barbershop_id', $appointment->barbershop_id)
                 ->where('is_blocked_slot', false)
                 ->where('status', 'completed')
-                ->where(function ($q) use ($cleanPhone, $appointment) {
-                    $q->where('client_phone', $appointment->client_phone)
-                        ->orWhere('client_phone', $cleanPhone);
-                });
+                ->where('client_phone_hash', $appointment->client_phone_hash);
 
             $completedCount = (int) $completedQuery->count();
             $totalServiceSpent = (float) $completedQuery->sum('service_price');
@@ -96,6 +110,26 @@ class Appointment extends Model
             }
             $client->saveQuietly();
         });
+    }
+
+    public function getClientPhoneAttribute(?string $value): ?string
+    {
+        return SensitiveClientData::decrypt($value);
+    }
+
+    public function setClientPhoneAttribute(?string $value): void
+    {
+        $this->attributes['client_phone'] = SensitiveClientData::encrypt($value);
+    }
+
+    public function getClientEmailAttribute(?string $value): ?string
+    {
+        return SensitiveClientData::decrypt($value);
+    }
+
+    public function setClientEmailAttribute(?string $value): void
+    {
+        $this->attributes['client_email'] = SensitiveClientData::encrypt($value);
     }
 
     public function barbershop(): BelongsTo

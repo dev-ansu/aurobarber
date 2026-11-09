@@ -5,6 +5,8 @@ namespace App\Filament\Resources\BarbershopClientResource\Pages;
 use App\Filament\Resources\BarbershopClientResource;
 use App\Models\Appointment;
 use App\Models\BarbershopClient;
+use App\Services\SensitiveClientData;
+use App\Services\SensitiveClientDataAccess;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 
@@ -18,11 +20,12 @@ class ListBarbershopClients extends ListRecords
 
         // Sincroniza automaticamente clientes de agendamentos anteriores na primeira abertura
         $tenant = filament()->getTenant();
-        if ($tenant) {
+        if ($tenant && app(SensitiveClientDataAccess::class)->canView()) {
             $appointments = Appointment::where('barbershop_id', $tenant->id)
                 ->where('is_blocked_slot', false)
                 ->whereNotNull('client_phone')
                 ->get()
+                ->each(fn (Appointment $appointment) => app(SensitiveClientDataAccess::class)->record($appointment, ['client_phone']))
                 ->groupBy(fn ($a) => preg_replace('/\D/', '', (string) $a->client_phone));
 
             $targetCuts = (int) ($tenant->loyalty_target_cuts ?: 10);
@@ -40,10 +43,11 @@ class ListBarbershopClients extends ListRecords
 
                 $client = BarbershopClient::firstOrNew([
                     'barbershop_id' => $tenant->id,
-                    'phone' => (string) $cleanPhone,
+                    'phone_hash' => SensitiveClientData::phoneHash((string) $cleanPhone),
                 ]);
 
-                if (!$client->exists) {
+                if (! $client->exists) {
+                    $client->phone = (string) $cleanPhone;
                     $client->name = $latest->client_name ?: 'Cliente';
                     $client->total_visits = $completedCount;
                     $client->total_spent = $spent;
@@ -60,7 +64,8 @@ class ListBarbershopClients extends ListRecords
         return [
             CreateAction::make()
                 ->label('Novo Cliente')
-                ->icon('heroicon-o-user-plus'),
+                ->icon('heroicon-o-user-plus')
+                ->visible(fn (): bool => app(SensitiveClientDataAccess::class)->canView()),
         ];
     }
 }

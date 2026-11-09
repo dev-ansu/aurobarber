@@ -11,7 +11,6 @@ use Filament\Auth\MultiFactor\Email\Contracts\HasEmailAuthentication;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasTenants;
 use Filament\Panel;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,7 +22,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements FilamentUser, HasTenants, HasAppAuthentication, HasAppAuthenticationRecovery, HasEmailAuthentication
+class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAppAuthenticationRecovery, HasEmailAuthentication, HasTenants
 {
     use HasFactory, HasRoles, Notifiable;
     use InteractsWithAppAuthentication;
@@ -83,17 +82,24 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasAppAu
 
     public function getTenants(Panel $panel): array|Collection
     {
-        if ($this->role === 'master_admin') {
-            return Barbershop::where('is_active', true)->get();
+        if ($panel->getId() !== 'admin' || $this->role === 'master_admin') {
+            return [];
         }
 
-        return $this->barbershops()->where('is_active', true)->get();
+        return Barbershop::query()
+            ->where('is_active', true)
+            ->where(function ($query): void {
+                $query->whereHas('users', fn ($users) => $users->whereKey($this->getKey()))
+                    ->orWhere('owner_id', $this->getKey())
+                    ->orWhere('id', $this->barbershop_id ?? 0);
+            })
+            ->get();
     }
 
     public function canAccessTenant(Model $tenant): bool
     {
-        if ($this->role === 'master_admin') {
-            return true;
+        if ($this->role === 'master_admin' || ! $tenant instanceof Barbershop) {
+            return false;
         }
 
         return $this->barbershops()->where('barbershops.id', $tenant->id)->exists()
@@ -103,26 +109,22 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasAppAu
 
     public function canAccessPanel(Panel $panel): bool
     {
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return false;
         }
 
-        // Master admin tem acesso irrestrito ao SaaS Master e pode inspecionar unidades
         if ($this->role === 'master_admin') {
-            return true;
+            return $panel->getId() === 'saas';
         }
 
-        // Usuários de barbearias não acessam o SaaS Master
         if ($panel->getId() === 'saas') {
             return false;
         }
 
-        // Painel admin é acessível por qualquer membro vinculado à barbearia
         if ($panel->getId() === 'admin') {
-            return in_array($this->role, ['owner', 'barber', 'receptionist'])
-                || (method_exists($this, 'hasRole') && ($this->hasRole('super_admin') || $this->roles()->exists()))
-                || !empty($this->barbershop_id)
-                || $this->barbershops()->exists();
+            return $this->barbershop_id !== null
+                || $this->barbershops()->exists()
+                || $this->ownedBarbershops()->exists();
         }
 
         return false;
@@ -130,7 +132,7 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasAppAu
 
     public function isOwner(): bool
     {
-        return $this->role === 'owner' || $this->role === 'master_admin';
+        return $this->role === 'owner';
     }
 
     public function isBarber(): bool
@@ -176,7 +178,7 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasAppAu
                 ->whereNull('user_id')
                 ->where(function ($q) {
                     $q->whereRaw('LOWER(name) = ?', [mb_strtolower($this->name)]);
-                    if (!empty($this->phone)) {
+                    if (! empty($this->phone)) {
                         $q->orWhere('phone', $this->phone);
                     }
                 })
@@ -184,6 +186,7 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasAppAu
 
             if ($matched) {
                 $matched->updateQuietly(['user_id' => $this->id]);
+
                 return (int) $matched->id;
             }
         }
@@ -198,6 +201,6 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasAppAu
 
     public function hasDefinedRole(): bool
     {
-        return !empty($this->role);
+        return ! empty($this->role);
     }
 }

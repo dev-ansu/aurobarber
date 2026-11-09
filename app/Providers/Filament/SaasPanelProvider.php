@@ -9,6 +9,7 @@ use App\Filament\Pages\Auth\ForcePasswordChange;
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Resources\BarbershopResource;
 use App\Filament\Saas\Pages\SaasDashboard;
+use App\Filament\Saas\Pages\SaasSupportSettings;
 use App\Http\Middleware\EnsurePasswordIsChanged;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Auth\MultiFactor\Email\EmailAuthentication;
@@ -34,7 +35,7 @@ class SaasPanelProvider extends PanelProvider
      */
     public function register(): void
     {
-        if (! (bool) env('SAAS_ENABLED', true)) {
+        if (! config('app.saas_enabled')) {
             return;
         }
 
@@ -43,13 +44,13 @@ class SaasPanelProvider extends PanelProvider
 
     public function panel(Panel $panel): Panel
     {
-        $saasDomain = env('SAAS_PANEL_DOMAIN');
+        $saasDomain = config('app.saas_panel_domain');
 
         $panel = $panel
             ->id('saas')
             ->path('saas');
 
-        if (!empty($saasDomain) && $saasDomain !== 'master.aurosoft.com.br') {
+        if (! empty($saasDomain)) {
             $panel = $panel->domain($saasDomain);
         }
 
@@ -79,7 +80,7 @@ class SaasPanelProvider extends PanelProvider
             ])
             ->pages([
                 SaasDashboard::class,
-                \App\Filament\Saas\Pages\AuroDoctorPage::class,
+                SaasSupportSettings::class,
                 ForcePasswordChange::class,
             ])
             ->resources([

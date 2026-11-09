@@ -1,14 +1,14 @@
 <div
-    id="aurosoft-global-toast-container"
+    id="aurobarber-global-toast-container"
     style="position: fixed; top: 1.25rem; right: 1.25rem; z-index: 99999; display: flex; flex-direction: column; gap: 0.75rem; max-width: 26rem; width: calc(100vw - 2.5rem); pointer-events: none;"
 ></div>
 
 <script>
     (function () {
-        if (window.__aurosoftErrorInterceptorInstalled) return;
-        window.__aurosoftErrorInterceptorInstalled = true;
+        if (window.__aurobarberErrorInterceptorInstalled) return;
+        window.__aurobarberErrorInterceptorInstalled = true;
 
-        window.showAurosoftToast = function (title, message, type = 'danger') {
+        window.showAurobarberToast = function (title, message, type = 'danger') {
             try {
                 if (typeof window.FilamentNotification === 'function') {
                     const notif = new window.FilamentNotification()
@@ -24,7 +24,7 @@
                 // Fallback para o toast nativo abaixo
             }
 
-            const container = document.getElementById('aurosoft-global-toast-container');
+            const container = document.getElementById('aurobarber-global-toast-container');
             if (!container) return;
 
             const toast = document.createElement('div');
@@ -99,7 +99,7 @@
                         title = 'Sessão Expirada';
                         message = 'Sua sessão ficou inativa por algum tempo. Recarregando a página automaticamente...';
                         type = 'warning';
-                        window.showAurosoftToast(title, message, type);
+                        window.showAurobarberToast(title, message, type);
                         setTimeout(() => window.location.reload(), 1800);
                         return;
                     }
@@ -137,7 +137,7 @@
                         }
                     }
 
-                    window.showAurosoftToast(title, message, type);
+                    window.showAurobarberToast(title, message, type);
                 });
             });
         });

@@ -4,7 +4,6 @@ namespace App\Filament\Pages;
 
 use App\Models\Appointment;
 use App\Models\CashMovement;
-use Carbon\Carbon;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
@@ -12,9 +11,9 @@ use Illuminate\Support\Collection;
 
 class CashRegisterPage extends Page
 {
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-currency-dollar';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-currency-dollar';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Financeiro';
+    protected static string|\UnitEnum|null $navigationGroup = 'Financeiro';
 
     protected static ?string $navigationLabel = 'Fechamento de Caixa';
 
@@ -29,7 +28,7 @@ class CashRegisterPage extends Page
         return ! auth()->user()?->isRestrictedBarber();
     }
 
-    public function getMaxContentWidth(): Width | string | null
+    public function getMaxContentWidth(): Width|string|null
     {
         return 'full';
     }
@@ -38,8 +37,11 @@ class CashRegisterPage extends Page
 
     // Modal de Movimentação (Sangria / Suprimento / Abertura)
     public bool $movementModalOpen = false;
+
     public string $movementType = 'outflow'; // opening, inflow, outflow
+
     public float $movementAmount = 0.00;
+
     public string $movementDescription = '';
 
     // Modal de Impressão do Caixa
@@ -63,13 +65,14 @@ class CashRegisterPage extends Page
     public function getDailyTransactionsProperty(): Collection
     {
         $tenant = filament()->getTenant();
-        if (!$tenant) {
+        if (! $tenant) {
             return collect();
         }
 
         return Appointment::where('barbershop_id', $tenant->id)
             ->whereDate('scheduled_at', $this->selectedDate)
             ->where('status', 'completed')
+            ->where('payment_status', 'paid')
             ->with(['professional', 'service', 'services'])
             ->orderBy('scheduled_at', 'desc')
             ->get();
@@ -78,7 +81,7 @@ class CashRegisterPage extends Page
     public function getDailyMovementsProperty(): Collection
     {
         $tenant = filament()->getTenant();
-        if (!$tenant) {
+        if (! $tenant) {
             return collect();
         }
 
@@ -94,11 +97,11 @@ class CashRegisterPage extends Page
         $txs = $this->dailyTransactions;
         $movs = $this->dailyMovements;
 
-        $pix = (float) $txs->where('payment_method', 'pix')->sum('service_price');
-        $dinheiroCortes = (float) $txs->where('payment_method', 'dinheiro')->sum('service_price');
-        $debito = (float) $txs->where('payment_method', 'debito')->sum('service_price');
-        $credito = (float) $txs->where('payment_method', 'credito')->sum('service_price');
-        $outros = (float) $txs->whereNotIn('payment_method', ['pix', 'dinheiro', 'debito', 'credito'])->sum('service_price');
+        $pix = (float) $txs->where('payment_method', 'pix')->sum('total_amount');
+        $dinheiroCortes = (float) $txs->where('payment_method', 'dinheiro')->sum('total_amount');
+        $debito = (float) $txs->where('payment_method', 'debito')->sum('total_amount');
+        $credito = (float) $txs->where('payment_method', 'credito')->sum('total_amount');
+        $outros = (float) $txs->whereNotIn('payment_method', ['pix', 'dinheiro', 'debito', 'credito'])->sum('total_amount');
 
         $faturamentoTotal = $pix + $dinheiroCortes + $debito + $credito + $outros;
 
@@ -146,7 +149,7 @@ class CashRegisterPage extends Page
         ]);
 
         $tenant = filament()->getTenant();
-        if (!$tenant) {
+        if (! $tenant) {
             return;
         }
 

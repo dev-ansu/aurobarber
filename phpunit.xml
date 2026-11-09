@@ -5,11 +5,8 @@
          colors="true"
 >
     <testsuites>
-        <testsuite name="Unit">
-            <directory>tests/Unit</directory>
-        </testsuite>
         <testsuite name="Feature">
-            <directory>tests/Feature</directory>
+            <directory>tests/Feature/Aurobarber</directory>
         </testsuite>
     </testsuites>
     <source>
@@ -33,6 +30,5 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
-        <env name="LICENSE_CHECK_ENABLED" value="false"/>
     </php>
 </phpunit>

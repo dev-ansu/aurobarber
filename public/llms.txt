@@ -1,18 +1,15 @@
-# Aurosoft
+# AuroBarber
 
-> Sistema Operacional em Nuvem (SaaS ERP & LMS) completo para Escolas de Cursos Livres e Profissionalizantes.
+AuroBarber is a SaaS management system for barbershops, developed by Aurosoft, a software house.
 
-Aurosoft é a plataforma definitiva de gestão escolar, secretaria digital amparada na LDB 9.394/96, totem biométrico de presença, motor financeiro integrado via Pix e LMS próprio conectado com a plataforma Ouro Moderno.
+## Product
 
-## Recursos e Módulos Principais
+- Barbershop scheduling and online appointment booking
+- Staff, services, clients, and commissions
+- Cash register, payables, and cash-flow forecasting
+- Tenant isolation and configurable licensing
+- Optional application backups to Google Drive
 
-- [Demonstração Pública da Plataforma](https://demo.aurosoft.com.br): Ambiente interativo com dados simulados para experimentar todos os recursos da secretaria, financeiro e portal do aluno.
-- [Vitrine Pública e Mini-Site de Cursos](https://demo.aurosoft.com.br/vitrine): Catálogo online de cursos com captação direta de leads no WhatsApp da escola.
-- [Portal do Aluno](https://demo.aurosoft.com.br/aluno/login): Sala de aula digital, vídeos, apostilas e acompanhamento pedagógico.
-- [Totem de Presença em Laboratório](https://demo.aurosoft.com.br/presenca): Registro rápido de frequência e pontualidade por teclado numérico ou biometria.
-- [Termos de Uso e Contrato de Licença](https://aurosoft.com.br/termos-de-uso): Políticas de contratação e uso de software em nuvem.
-- [Política de Privacidade e LGPD](https://aurosoft.com.br/privacidade): Práticas de segurança, tratamento e guarda de dados conforme a LGPD brasileira.
+## Site
 
-## Especificações Técnicas
-
-- [Documentação Técnica Completa](https://aurosoft.com.br/llms-full.txt): Contexto arquitetural expandido, modelo de dados multi-tenant PostgreSQL e contratos de API.
+https://barber.aurosoft.com.br/

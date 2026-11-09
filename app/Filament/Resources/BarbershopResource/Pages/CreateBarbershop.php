@@ -16,16 +16,17 @@ class CreateBarbershop extends CreateRecord
     protected static string $resource = BarbershopResource::class;
 
     protected ?string $generatedTempPassword = null;
+
     protected ?User $createdOwner = null;
 
     protected function handleRecordCreation(array $data): Model
     {
         $ownerType = $data['owner_type'] ?? 'existing';
-        $sendEmail = !isset($data['send_welcome_email']) || (bool) $data['send_welcome_email'];
+        $sendEmail = ! isset($data['send_welcome_email']) || (bool) $data['send_welcome_email'];
 
         if ($ownerType === 'new') {
             // Gera senha temporária legível e segura (ex: Barber#8392!)
-            $this->generatedTempPassword = 'Barber#' . rand(1000, 9999) . '!';
+            $this->generatedTempPassword = 'Barber#'.rand(1000, 9999).'!';
 
             $owner = User::create([
                 'name' => $data['owner_name'],
@@ -38,7 +39,7 @@ class CreateBarbershop extends CreateRecord
                 'is_active' => true,
             ]);
 
-            $owner->assignRole('super_admin');
+            $owner->assignRole('barbershop_owner');
             $data['owner_id'] = $owner->id;
             $this->createdOwner = $owner;
         }
@@ -60,7 +61,12 @@ class CreateBarbershop extends CreateRecord
 
         // Vincula o proprietário à unidade (pivot de tenants)
         if ($barbershop->owner_id) {
-            $barbershop->users()->syncWithoutDetaching([$barbershop->owner_id]);
+            $barbershop->users()->syncWithoutDetaching([
+                $barbershop->owner_id => [
+                    'role' => 'owner',
+                    'is_primary' => true,
+                ],
+            ]);
         }
 
         // Provisionamento inicial: Catálogo básico de serviços
@@ -97,14 +103,14 @@ class CreateBarbershop extends CreateRecord
         // Disparo do e-mail de boas-vindas com a senha temporária
         if ($this->createdOwner && $this->generatedTempPassword && $sendEmail) {
             try {
-                $loginUrl = url('/admin/' . $barbershop->slug);
+                $loginUrl = url('/admin/'.$barbershop->slug);
                 $this->createdOwner->notify(new NewBarbershopWelcomeNotification(
                     $barbershop,
                     $this->generatedTempPassword,
                     $loginUrl
                 ));
             } catch (\Throwable $e) {
-                logger()->error('Falha ao enviar e-mail de boas-vindas para nova barbearia: ' . $e->getMessage());
+                logger()->error('Falha ao enviar e-mail de boas-vindas para nova barbearia: '.$e->getMessage());
             }
         }
 

@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\Barbershop;
+use BezhanSalleh\FilamentShield\Resources\Roles\RoleResource;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Illuminate\Http\Request;
@@ -32,8 +34,13 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::before(function ($user, string $ability): ?bool {
-            if ($user->role === 'master_admin' || (method_exists($user, 'hasRole') && $user->hasRole('super_admin'))) {
+            if ($user->role === 'master_admin') {
                 return true;
+            }
+
+            $tenant = filament()->getTenant();
+            if ($user->role === 'owner' && $tenant instanceof Barbershop) {
+                return $user->canAccessTenant($tenant);
             }
 
             // Garante que barbeiros com visão restrita sempre possam acessar sua própria Agenda e Comissões
@@ -60,8 +67,7 @@ class AppServiceProvider extends ServiceProvider
                 || app('url')->hasValidRelativeSignature($this, $ignoreQuery);
         });
 
-        if (request()->header('x-forwarded-proto') === 'https'
-            || str_contains(request()->header('host', ''), 'barber.aurosoft.com.br')) {
+        if (request()->header('x-forwarded-proto') === 'https') {
             URL::forceScheme('https');
         }
 
@@ -81,8 +87,8 @@ class AppServiceProvider extends ServiceProvider
                 ->symbols();
         });
 
-        if (class_exists(\BezhanSalleh\FilamentShield\Resources\Roles\RoleResource::class)) {
-            \BezhanSalleh\FilamentShield\Resources\Roles\RoleResource::scopeToTenant(false);
+        if (class_exists(RoleResource::class)) {
+            RoleResource::scopeToTenant(false);
         }
     }
 }

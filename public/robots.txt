@@ -5,4 +5,4 @@ Disallow: /admin/
 Disallow: /saas/
 Disallow: /app/
 
-Sitemap: https://aurosoft.com.br/sitemap.xml
+Sitemap: https://barber.aurosoft.com.br/sitemap.xml

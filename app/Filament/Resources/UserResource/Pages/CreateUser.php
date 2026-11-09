@@ -3,8 +3,10 @@
 namespace App\Filament\Resources\UserResource\Pages;
 
 use App\Filament\Resources\UserResource;
+use App\Models\Barbershop;
+use App\Models\Professional;
 use Filament\Resources\Pages\CreateRecord;
-use Illuminate\Database\Eloquent\Model;
+use Spatie\Permission\Models\Role;
 
 class CreateUser extends CreateRecord
 {
@@ -13,9 +15,13 @@ class CreateUser extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $tenant = filament()->getTenant();
-        if ($tenant) {
-            $data['barbershop_id'] = $tenant->id;
+        abort_unless($tenant instanceof Barbershop, 403);
+
+        if (auth()->user()?->role === 'master_admin') {
+            abort(403);
         }
+
+        $data['barbershop_id'] = $tenant->id;
         $data['role'] = $data['role'] ?? 'barber';
         $data['email_verified_at'] = now();
 
@@ -25,7 +31,9 @@ class CreateUser extends CreateRecord
     protected function afterCreate(): void
     {
         $tenant = filament()->getTenant();
-        if ($tenant && $this->record) {
+        abort_unless($tenant instanceof Barbershop, 403);
+
+        if ($this->record) {
             $tenant->users()->syncWithoutDetaching([
                 $this->record->id => [
                     'role' => 'barber',
@@ -35,7 +43,7 @@ class CreateUser extends CreateRecord
 
             // Se não tiver nenhum cargo selecionado, atribui o cargo 'barber' por padrão
             if (method_exists($this->record, 'roles') && $this->record->roles()->count() === 0) {
-                $barberRole = \Spatie\Permission\Models\Role::where('name', 'barber')->first();
+                $barberRole = Role::where('name', 'barber')->first();
                 if ($barberRole) {
                     $this->record->assignRole($barberRole);
                 }
@@ -43,10 +51,10 @@ class CreateUser extends CreateRecord
 
             // Se for um barbeiro restrito, vincula ou cria automaticamente a ficha de Barbeiro (Professional)
             if ($this->record->isRestrictedBarber()) {
-                $existingProf = \App\Models\Professional::where('barbershop_id', $tenant->id)
+                $existingProf = Professional::where('barbershop_id', $tenant->id)
                     ->whereNull('user_id')
                     ->where(function ($q) {
-                        $q->whereRaw('LOWER(name) = ?', [ mb_strtolower(trim($this->record->name)) ]);
+                        $q->whereRaw('LOWER(name) = ?', [mb_strtolower(trim($this->record->name))]);
                         if (! empty($this->record->phone)) {
                             $q->orWhere('phone', $this->record->phone);
                         }
@@ -56,7 +64,7 @@ class CreateUser extends CreateRecord
                 if ($existingProf) {
                     $existingProf->update(['user_id' => $this->record->id]);
                 } else {
-                    \App\Models\Professional::firstOrCreate(
+                    Professional::firstOrCreate(
                         [
                             'barbershop_id' => $tenant->id,
                             'user_id' => $this->record->id,

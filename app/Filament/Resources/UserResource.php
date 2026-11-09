@@ -3,18 +3,19 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
+use App\Models\Barbershop;
 use App\Models\User;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Resources\Resource;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
-use Filament\Resources\Resource;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -25,9 +26,9 @@ class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-users';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-users';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Equipe';
+    protected static string|\UnitEnum|null $navigationGroup = 'Equipe';
 
     protected static ?string $navigationLabel = 'Colaboradores / Acessos';
 
@@ -41,7 +42,29 @@ class UserResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return ! auth()->user()?->isRestrictedBarber();
+        return filament()->getTenant() !== null
+            && auth()->user()?->role !== 'master_admin'
+            && ! auth()->user()?->isRestrictedBarber();
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $tenant = filament()->getTenant();
+
+        if (! $tenant instanceof Barbershop) {
+            return parent::getEloquentQuery()->whereRaw('1 = 0');
+        }
+
+        return parent::getEloquentQuery()
+            ->where('users.role', '!=', 'master_admin')
+            ->whereDoesntHave('roles', fn (Builder $query): Builder => $query
+                ->where('name', 'master_admin'))
+            ->where(function (Builder $query) use ($tenant): void {
+                $query->whereHas('barbershops', fn (Builder $barbershops): Builder => $barbershops
+                    ->whereKey($tenant->getKey()))
+                    ->orWhere('users.barbershop_id', $tenant->getKey())
+                    ->orWhere('users.id', $tenant->owner_id ?? 0);
+            });
     }
 
     public static function form(Schema $schema): Schema
@@ -82,7 +105,12 @@ class UserResource extends Resource
                             ->schema([
                                 Select::make('roles')
                                     ->label('Cargo / Papel no Sistema')
-                                    ->relationship('roles', 'name')
+                                    ->relationship(
+                                        'roles',
+                                        'name',
+                                        modifyQueryUsing: fn (Builder $query): Builder => $query
+                                            ->whereNotIn('name', ['super_admin', 'master_admin']),
+                                    )
                                     ->multiple()
                                     ->preload()
                                     ->searchable()

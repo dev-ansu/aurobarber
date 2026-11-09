@@ -1,6 +1,8 @@
 <?php
 
 declare(strict_types=1);
+use App\Filament\Pages\TenantLicenseBlockedPage;
+use App\Filament\Resources\BarbershopResource;
 use BezhanSalleh\FilamentShield\Resources\Roles\RoleResource;
 use Filament\Pages\Dashboard;
 use Filament\Widgets\AccountWidget;
@@ -27,7 +29,7 @@ return [
             'pages' => true,
             'widgets' => true,
             'resources' => true,
-            'custom_permissions' => false,
+            'custom_permissions' => true,
         ],
     ],
 
@@ -195,7 +197,7 @@ return [
             ],
         ],
         'exclude' => [
-            \App\Filament\Resources\BarbershopResource::class,
+            BarbershopResource::class,
         ],
     ],
 
@@ -215,7 +217,7 @@ return [
         'prefix' => 'view',
         'exclude' => [
             Dashboard::class,
-            \App\Filament\Pages\TenantLicenseBlockedPage::class,
+            TenantLicenseBlockedPage::class,
         ],
     ],
 
@@ -253,7 +255,9 @@ return [
     |
     */
 
-    'custom_permissions' => [],
+    'custom_permissions' => [
+        'View:SensitiveClientData' => 'Visualizar dados pessoais de clientes',
+    ],
 
     /*
     |--------------------------------------------------------------------------

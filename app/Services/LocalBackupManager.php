@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -39,7 +38,7 @@ class LocalBackupManager
             $dump = $work.'/database.dump';
             $this->runPgDump($connection, $dump);
 
-            $filename = 'aurosoft-'.($safetyCopy ? 'pre-restore-' : 'backup-').now()->format('Ymd-His').'.zip';
+            $filename = 'aurobarber-'.($safetyCopy ? 'pre-restore-' : 'backup-').now()->format('Ymd-His').'.zip';
             $archivePath = $base.'/'.$filename;
             $zip = new ZipArchive;
 
@@ -47,26 +46,12 @@ class LocalBackupManager
                 throw new RuntimeException('Não foi possível criar o arquivo ZIP do backup.');
             }
 
-            $schoolsManifest = [];
-            try {
-                $schoolsManifest = DB::table('schools')
-                    ->orderBy('id')
-                    ->get(['id', 'trade_name', 'legal_name'])
-                    ->map(fn ($s): array => [
-                        'id' => $s->id,
-                        'name' => $s->trade_name ?: $s->legal_name,
-                    ])
-                    ->all();
-            } catch (\Throwable) {
-            }
-
             if (! $zip->addFile($dump, 'database.dump') || ! $zip->addFromString('manifest.json', json_encode([
                 'application' => config('app.name'),
                 'created_at' => now()->toIso8601String(),
                 'database_driver' => 'pgsql',
-                'scope' => 'all_schools',
-                'schools_count' => count($schoolsManifest),
-                'schools' => $schoolsManifest,
+                'scope' => 'application',
+                'tenant_model' => 'barbershops',
                 'format' => 1,
             ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR))) {
                 $zip->close();
@@ -209,7 +194,7 @@ class LocalBackupManager
         $manifest = is_string($manifestContents) ? json_decode($manifestContents, true) : null;
         if (! is_array($manifest) || ($manifest['database_driver'] ?? null) !== 'pgsql' || $zip->locateName('database.dump') === false) {
             $zip->close();
-            throw new RuntimeException('O arquivo não contém um backup PostgreSQL válido do Aurosoft.');
+            throw new RuntimeException('O arquivo não contém um backup PostgreSQL válido do AuroBarber.');
         }
         $zip->close();
 
@@ -218,7 +203,7 @@ class LocalBackupManager
 
         $filename = basename($sourcePath);
         if (! $this->isAllowedFilename($filename)) {
-            $filename = 'aurosoft-backup-'.now()->format('Ymd-His').'.zip';
+            $filename = 'aurobarber-backup-'.now()->format('Ymd-His').'.zip';
         }
 
         $targetPath = $base.'/'.$filename;
@@ -238,8 +223,10 @@ class LocalBackupManager
                 $root = $letter.':\\';
                 if (@is_dir($root)) {
                     $patterns = [
+                        $root.'aurobarber-*.zip',
                         $root.'aurosoft-*.zip',
                         $root.'*.zip',
+                        $root.'*\\aurobarber-*.zip',
                         $root.'*\\aurosoft-*.zip',
                     ];
                     foreach ($patterns as $pattern) {
@@ -497,7 +484,8 @@ class LocalBackupManager
 
     private function isAllowedFilename(string $filename): bool
     {
-        return preg_match('/^aurosoft-(?:backup|pre-restore)-\d{8}-\d{6}\.zip$/', $filename) === 1;
+        // Keep existing Aurosoft-named archives restorable while new backups use the AuroBarber prefix.
+        return preg_match('/^(?:aurobarber|aurosoft)-(?:backup|pre-restore)-\d{8}-\d{6}\.zip$/', $filename) === 1;
     }
 
     private function archivePath(string $filename): string

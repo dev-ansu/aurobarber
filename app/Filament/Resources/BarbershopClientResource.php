@@ -4,6 +4,8 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\BarbershopClientResource\Pages;
 use App\Models\BarbershopClient;
+use App\Services\SensitiveClientData;
+use App\Services\SensitiveClientDataAccess;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -21,14 +23,15 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Str;
 
 class BarbershopClientResource extends Resource
 {
     protected static ?string $model = BarbershopClient::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-heart';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-heart';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Atendimento';
+    protected static string|\UnitEnum|null $navigationGroup = 'Atendimento';
 
     protected static ?string $navigationLabel = 'Clientes, Retorno & Fidelidade';
 
@@ -64,7 +67,8 @@ class BarbershopClientResource extends Resource
                                     ->label('WhatsApp do Cliente')
                                     ->tel()
                                     ->placeholder('85999999999')
-                                    ->required()
+                                    ->required(fn (): bool => app(SensitiveClientDataAccess::class)->canView())
+                                    ->visible(fn (): bool => app(SensitiveClientDataAccess::class)->canView())
                                     ->maxLength(30)
                                     ->columnSpanFull(),
 
@@ -112,12 +116,14 @@ class BarbershopClientResource extends Resource
                     ->weight('bold')
                     ->searchable()
                     ->sortable()
-                    ->description(fn (BarbershopClient $record): ?string => $record->notes ? \Illuminate\Support\Str::limit($record->notes, 45) : null),
+                    ->description(fn (BarbershopClient $record): ?string => $record->notes ? Str::limit($record->notes, 45) : null),
 
                 TextColumn::make('phone')
                     ->label('WhatsApp')
-                    ->searchable()
-                    ->copyable(),
+                    ->searchable(query: fn (Builder $query, string $search): Builder => app(SensitiveClientDataAccess::class)->canView()
+                        ? $query->where('phone_hash', SensitiveClientData::phoneHash($search))
+                        : $query->whereRaw('1 = 0'))
+                    ->formatStateUsing(fn (?string $state): string => SensitiveClientData::maskPhone($state)),
 
                 TextColumn::make('total_visits')
                     ->label('Visitas')
@@ -131,6 +137,7 @@ class BarbershopClientResource extends Resource
                     ->badge()
                     ->color(function (BarbershopClient $record): string {
                         $target = (int) ($record->barbershop?->loyalty_target_cuts ?: 10);
+
                         return $record->loyalty_stamps >= $target ? 'success' : 'warning';
                     })
                     ->formatStateUsing(function (int $state, BarbershopClient $record): string {
@@ -138,6 +145,7 @@ class BarbershopClientResource extends Resource
                         if ($state >= $target) {
                             return "🎁 PRÊMIO LIBERADO ({$state}/{$target})";
                         }
+
                         return "⭐ {$state} / {$target} selos";
                     })
                     ->sortable(),
@@ -151,6 +159,7 @@ class BarbershopClientResource extends Resource
                         if ($days === null) {
                             return 'gray';
                         }
+
                         return $days >= $limit ? 'danger' : 'success';
                     })
                     ->formatStateUsing(function (BarbershopClient $record): string {
@@ -162,6 +171,7 @@ class BarbershopClientResource extends Resource
                             return 'Hoje';
                         }
                         $limit = (int) ($record->barbershop?->return_reminder_days ?: 20);
+
                         return $days >= $limit ? "⏰ Há {$days} dias (Chamar!)" : "Há {$days} dia(s)";
                     })
                     ->sortable(),
@@ -182,6 +192,7 @@ class BarbershopClientResource extends Resource
                     ->label('🔁 Hora de Voltar (+20 dias sem cortar)')
                     ->query(function (Builder $query): Builder {
                         $days = (int) (filament()->getTenant()?->return_reminder_days ?: 20);
+
                         return $query->whereNotNull('last_visit_at')
                             ->where('last_visit_at', '<=', now()->subDays($days));
                     }),
@@ -190,6 +201,7 @@ class BarbershopClientResource extends Resource
                     ->label('🎁 Com Prêmio Fidelidade Liberado')
                     ->query(function (Builder $query): Builder {
                         $target = (int) (filament()->getTenant()?->loyalty_target_cuts ?: 10);
+
                         return $query->where('loyalty_stamps', '>=', $target);
                     }),
 
@@ -198,13 +210,29 @@ class BarbershopClientResource extends Resource
                     ->query(fn (Builder $query): Builder => $query->whereMonth('birth_date', now()->month)),
             ])
             ->actions([
+                Action::make('viewSensitiveData')
+                    ->label('Ver telefone')
+                    ->icon('heroicon-o-eye')
+                    ->visible(fn (): bool => app(SensitiveClientDataAccess::class)->canView())
+                    ->action(function (BarbershopClient $record): void {
+                        app(SensitiveClientDataAccess::class)->record($record, ['phone']);
+
+                        Notification::make()
+                            ->title('WhatsApp do cliente')
+                            ->body((string) $record->phone)
+                            ->info()
+                            ->persistent()
+                            ->send();
+                    }),
                 Action::make('whatsapp_retorno')
                     ->label('Chamar WhatsApp')
                     ->icon('heroicon-o-chat-bubble-left-right')
                     ->color('success')
+                    ->visible(fn (): bool => app(SensitiveClientDataAccess::class)->canView())
                     ->url(function (BarbershopClient $record): string {
+                        app(SensitiveClientDataAccess::class)->record($record, ['phone']);
                         $digits = preg_replace('/\D/', '', $record->phone);
-                        $phone = str_starts_with($digits, '55') ? $digits : '55' . $digits;
+                        $phone = str_starts_with($digits, '55') ? $digits : '55'.$digits;
                         $shop = $record->barbershop;
                         $shopName = $shop?->name ?? 'nossa Barbearia';
                         $bookingUrl = $shop ? url("/{$shop->slug}") : url('/');
@@ -221,7 +249,7 @@ class BarbershopClientResource extends Resource
                             $msg = "Olá *{$record->name}*! Tudo certo? Equipe da *{$shopName}* falando aqui. 💈✂️ Link rápido da nossa agenda: {$bookingUrl}";
                         }
 
-                        return 'https://wa.me/' . $phone . '?text=' . urlencode($msg);
+                        return 'https://wa.me/'.$phone.'?text='.urlencode($msg);
                     })
                     ->openUrlInNewTab(),
 
@@ -234,6 +262,7 @@ class BarbershopClientResource extends Resource
                     ->modalDescription('Isso descontará a meta de selos atual e contabilizará +1 prêmio entregue ao cliente.')
                     ->visible(function (BarbershopClient $record): bool {
                         $target = (int) ($record->barbershop?->loyalty_target_cuts ?: 10);
+
                         return $record->loyalty_stamps >= $target;
                     })
                     ->action(function (BarbershopClient $record): void {

@@ -124,12 +124,6 @@
                                 </td>
                                 <td style="padding: 16px 20px; text-align: right; white-space: nowrap;">
                                     <div style="display: inline-flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: nowrap;">
-                                        {{-- Botão Abrir Painel --}}
-                                        <a href="{{ $shop['admin_url'] }}" target="_blank"
-                                           style="white-space: nowrap; flex-shrink: 0; background: #1e293b; color: #f1f5f9; padding: 7px 13px; border-radius: 8px; text-decoration: none; font-size: 11px; font-weight: 800; border: 1px solid #334155; display: inline-flex; align-items: center; gap: 4px;">
-                                            <span>Painel</span> <span>↗</span>
-                                        </a>
-
                                         {{-- Botão Definir Vencimento --}}
                                         <button wire:click="openDueDateModal({{ $shop['id'] }})"
                                                 type="button"

@@ -30,16 +30,10 @@ class CreateSystemBackup extends Command
 
             // Upload para o Google Drive se configurado e habilitado
             if (! $this->option('no-cloud') && $driveService->isConfigured() && $driveService->isEnabled()) {
-                $this->line('Iniciando sincronização com o Google Drive (Nuvem de 2TB)...');
-                $filePath = storage_path('app/private/backups/' . $filename);
+                $this->line('Iniciando sincronização com o Google Drive...');
+                $filePath = storage_path('app/private/backups/'.$filename);
                 $uploadResult = $driveService->uploadFile($filePath, $filename);
                 $this->info("✓ Cópia de segurança enviada para o Google Drive com sucesso! (ID: {$uploadResult['file_id']})");
-
-                // Registra o timestamp em todas as unidades escolares da rede
-                \App\Models\School::query()->update([
-                    'google_drive_last_backup_at' => now(),
-                    'google_drive_last_backup_status' => 'Concluído com sucesso (ID: ' . $uploadResult['file_id'] . ')',
-                ]);
             }
 
             return self::SUCCESS;

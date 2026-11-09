@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\BarbershopClientResource\Pages;
 
 use App\Filament\Resources\BarbershopClientResource;
+use App\Models\Barbershop;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateBarbershopClient extends CreateRecord
@@ -11,7 +12,13 @@ class CreateBarbershopClient extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $data['barbershop_id'] = filament()->getTenant()?->id ?? auth()->user()?->barbershop_id ?? 1;
+        $tenant = filament()->getTenant();
+        abort_unless(
+            $tenant instanceof Barbershop && auth()->user()?->canAccessTenant($tenant),
+            403,
+        );
+
+        $data['barbershop_id'] = $tenant->getKey();
         $data['phone'] = preg_replace('/\D/', '', (string) ($data['phone'] ?? ''));
 
         return $data;

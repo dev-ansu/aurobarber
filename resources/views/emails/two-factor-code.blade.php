@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Código de Segurança • Aurosoft</title>
+    <title>Código de Segurança • AuroBarber</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -139,15 +139,15 @@
     <div class="container">
         <div class="header">
             <div class="logo-badge">A</div>
-            <h2 class="logo-text">Aurosoft</h2>
+            <h2 class="logo-text">AuroBarber</h2>
             <span class="logo-sub">Autenticação em Duas Etapas</span>
         </div>
 
         <h1>Código de Verificação de Login</h1>
         
-        <p>Olá, <strong>{{ $user->person?->name ?? $user->name }}</strong>.</p>
+        <p>Olá, <strong>{{ $user->name }}</strong>.</p>
         
-        <p>Identificamos uma tentativa de login na sua conta do Aurosoft. Use o código de 6 dígitos abaixo para autorizar o acesso:</p>
+        <p>Identificamos uma tentativa de login na sua conta do AuroBarber. Use o código de 6 dígitos abaixo para autorizar o acesso:</p>
 
         <div class="code-wrapper">
             <div class="code-box">{{ $code }}</div>
@@ -173,11 +173,11 @@
 
         <div class="alert-box">
             <strong>⚠️ Não reconhece esta tentativa?</strong><br>
-            Se você não tentou fazer login agora, outra pessoa pode saber a sua senha. Acesse o Aurosoft imediatamente e altere suas credenciais de segurança.
+            Se você não tentou fazer login agora, outra pessoa pode saber a sua senha. Acesse o AuroBarber imediatamente e altere suas credenciais de segurança.
         </div>
 
         <div class="footer">
-            Aurosoft • Sistema de Gestão Escolar & SaaS Educacional<br>
+            AuroBarber • Gestão de Barbearias<br>
             Este é um e-mail automático do sistema de segurança.
         </div>
     </div>

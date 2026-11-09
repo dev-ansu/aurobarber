@@ -1,8 +1,7 @@
 <x-filament-panels::page>
     @php
         $barbershop = $this->getBarbershop();
-        $supportPhone = config('license.support_phone', env('SAAS_SUPPORT_PHONE', '(85) 99999-9999'));
-        $cleanPhone = preg_replace('/\D/', '', $supportPhone);
+        $cleanPhone = app(\App\Services\SaasSupportContact::class)->phoneDigits();
         $barberName = $barbershop?->name ?? 'Barbearia';
         $waMessage = urlencode("Olá! Estou no painel do AuroBarber da barbearia '{$barberName}' e gostaria de regularizar a nossa licença de acesso.");
     @endphp

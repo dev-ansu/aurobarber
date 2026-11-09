@@ -13,7 +13,9 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    'name' => env('APP_NAME', 'AuroBarber'),
+    'saas_enabled' => (bool) env('SAAS_ENABLED', true),
+    'saas_panel_domain' => env('SAAS_PANEL_DOMAIN'),
 
     /*
     |--------------------------------------------------------------------------

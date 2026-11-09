@@ -9,7 +9,7 @@
             if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
                 this.isInstalled = true;
             }
-            if (localStorage.getItem('aurosoft_pwa_dismissed') === 'true') {
+            if (localStorage.getItem('aurobarber_pwa_dismissed') === 'true') {
                 this.dismissed = true;
             }
             window.addEventListener('pwa-installable', () => {
@@ -41,7 +41,7 @@
         },
         dismiss() {
             this.dismissed = true;
-            localStorage.setItem('aurosoft_pwa_dismissed', 'true');
+            localStorage.setItem('aurobarber_pwa_dismissed', 'true');
         }
     }"
     x-cloak
@@ -54,7 +54,7 @@
             type="button"
             @click="handleInstallClick()"
             class="flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-slate-900/95 dark:bg-gray-800/95 hover:bg-black dark:hover:bg-gray-700 text-white shadow-xl shadow-black/25 border border-amber-500/50 backdrop-blur transition transform hover:scale-105 active:scale-95 text-xs font-semibold"
-            title="Instalar Aurosoft na Área de Trabalho"
+            title="Instalar AuroBarber na Área de Trabalho"
         >
             <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-tr from-amber-500 to-amber-300 text-slate-950 text-xs font-black shadow-sm">
                 A
@@ -96,7 +96,7 @@
                         A
                     </div>
                     <div>
-                        <h3 class="text-base font-bold text-gray-900 dark:text-white">Criar Atalho do Aurosoft</h3>
+                        <h3 class="text-base font-bold text-gray-900 dark:text-white">Criar Atalho do AuroBarber</h3>
                         <p class="text-xs text-gray-500 dark:text-gray-400">Instale como aplicativo nativo na sua Área de Trabalho</p>
                     </div>
                 </div>
@@ -112,7 +112,7 @@
             <!-- Conteúdo do Modal -->
             <div class="py-4 space-y-3.5 text-xs">
                 <p class="text-gray-600 dark:text-gray-300 text-xs">
-                    Como o sistema é acessado pela rede local, utilize o recurso de aplicativo integrado do seu navegador. Ele cria o atalho oficial com o ícone do Aurosoft na sua Área de Trabalho e abre em uma janela própria de aplicativo (sem abas e sem barra de URL):
+                    Instale o AuroBarber como aplicativo pelo navegador. O atalho abre o sistema em uma janela própria, sem abas e sem a barra de endereço:
                 </p>
 
                 <!-- Passo a passo: Microsoft Edge -->
@@ -124,7 +124,7 @@
                     <ol class="space-y-1.5 text-gray-700 dark:text-gray-300 pl-4 list-decimal">
                         <li>Clique no menu <strong>···</strong> (3 pontinhos no canto superior direito do Edge).</li>
                         <li>Passe o mouse em <strong>Aplicativos</strong> (Apps).</li>
-                        <li>Clique em <strong>"Instalar este site como um aplicativo"</strong> (ou <em>Instalar Aurosoft</em>).</li>
+                        <li>Clique em <strong>"Instalar este site como um aplicativo"</strong> (ou <em>Instalar AuroBarber</em>).</li>
                         <li>Clique em <strong>Instalar</strong>.</li>
                     </ol>
                     <p class="mt-2 text-[11px] text-blue-800 dark:text-blue-300 font-medium">
@@ -141,7 +141,7 @@
                     <ol class="space-y-1.5 text-gray-700 dark:text-gray-300 pl-4 list-decimal">
                         <li>Clique no menu <strong>⋮</strong> (3 pontinhos no canto superior direito do Chrome).</li>
                         <li>Passe o mouse em <strong>Salvar e compartilhar</strong> (ou <em>Mais ferramentas</em>).</li>
-                        <li>Clique em <strong>"Criar atalho..."</strong> ou <strong>"Instalar Aurosoft"</strong>.</li>
+                        <li>Clique em <strong>"Criar atalho..."</strong> ou <strong>"Instalar AuroBarber"</strong>.</li>
                         <li><strong>Importante:</strong> Marque a caixinha <strong>☑ "Abrir como janela"</strong> e clique em <strong>Criar</strong>.</li>
                     </ol>
                 </div>

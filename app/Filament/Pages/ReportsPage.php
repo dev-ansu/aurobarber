@@ -3,19 +3,17 @@
 namespace App\Filament\Pages;
 
 use App\Models\Appointment;
-use App\Models\Professional;
-use App\Models\Service;
+use App\Services\SensitiveClientDataAccess;
 use Carbon\Carbon;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 class ReportsPage extends Page
 {
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-chart-bar-square';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-chart-bar-square';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Financeiro';
+    protected static string|\UnitEnum|null $navigationGroup = 'Financeiro';
 
     protected static ?string $navigationLabel = 'Relatórios & Ranking';
 
@@ -30,15 +28,19 @@ class ReportsPage extends Page
         return ! auth()->user()?->isRestrictedBarber();
     }
 
-    public function getMaxContentWidth(): Width | string | null
+    public function getMaxContentWidth(): Width|string|null
     {
         return 'full';
     }
 
     public string $activeTab = 'ranking'; // ranking, services, absent
+
     public string $periodPreset = 'month'; // month, 30days, year
+
     public string $startDate = '';
+
     public string $endDate = '';
+
     public int $absentDays = 45; // dias sem retornar
 
     public function mount(): void
@@ -71,7 +73,7 @@ class ReportsPage extends Page
     public function getBarbersRankingProperty(): Collection
     {
         $tenant = filament()->getTenant();
-        if (!$tenant) {
+        if (! $tenant) {
             return collect();
         }
 
@@ -102,7 +104,7 @@ class ReportsPage extends Page
     public function getTopServicesProperty(): Collection
     {
         $tenant = filament()->getTenant();
-        if (!$tenant) {
+        if (! $tenant) {
             return collect();
         }
 
@@ -133,33 +135,46 @@ class ReportsPage extends Page
     public function getAbsentClientsProperty(): Collection
     {
         $tenant = filament()->getTenant();
-        if (!$tenant) {
+        if (! $tenant) {
             return collect();
         }
 
         $cutoffDate = now()->subDays($this->absentDays)->format('Y-m-d');
 
         // Busca o último atendimento de cada cliente
+        $canViewContacts = app(SensitiveClientDataAccess::class)->canView();
+
         return Appointment::where('barbershop_id', $tenant->id)
             ->where('status', 'completed')
-            ->select('client_name', 'client_phone', DB::raw('MAX(scheduled_at) as last_appointment'), DB::raw('COUNT(*) as total_cuts'))
-            ->groupBy('client_name', 'client_phone')
+            ->select('client_name', 'client_phone_hash')
+            ->selectRaw('MAX(id) as id, MAX(client_phone) as client_phone, MAX(scheduled_at) as last_appointment, COUNT(*) as total_cuts')
+            ->groupBy('client_name', 'client_phone_hash')
             ->havingRaw('MAX(scheduled_at) <= ?', [$cutoffDate])
             ->orderBy('last_appointment', 'asc')
             ->limit(50)
             ->get()
-            ->map(function ($record) {
+            ->map(function ($record) use ($canViewContacts) {
                 $lastDate = Carbon::parse($record->last_appointment);
                 $daysAway = (int) $lastDate->diffInDays(now());
 
-                $cleanPhone = preg_replace('/\D/', '', $record->client_phone);
-                $phone55 = str_starts_with($cleanPhone, '55') ? $cleanPhone : '55' . $cleanPhone;
-                $encodedMsg = urlencode("Fala {$record->client_name}, tudo bem? Notamos que já faz {$daysAway} dias desde o seu último corte! Que tal agendar um horário para dar um trato no visual esta semana?");
-                $whatsappUrl = "https://api.whatsapp.com/send?phone={$phone55}&text={$encodedMsg}";
+                $phone = $canViewContacts ? $record->client_phone : null;
+                if ($phone) {
+                    app(SensitiveClientDataAccess::class)->record($record, ['client_phone']);
+                }
+
+                $whatsappUrl = null;
+                if ($phone) {
+                    $cleanPhone = preg_replace('/\D/', '', $phone);
+                    $phone55 = str_starts_with($cleanPhone, '55') ? $cleanPhone : '55'.$cleanPhone;
+                    $encodedMsg = urlencode("Fala {$record->client_name}, tudo bem? Notamos que já faz {$daysAway} dias desde o seu último corte! Que tal agendar um horário para dar um trato no visual esta semana?");
+                    $whatsappUrl = "https://api.whatsapp.com/send?phone={$phone55}&text={$encodedMsg}";
+                }
 
                 return [
                     'client_name' => $record->client_name,
-                    'client_phone' => $record->client_phone,
+                    'client_phone' => $phone
+                        ? $phone
+                        : 'Contato protegido',
                     'last_appointment' => $lastDate,
                     'days_away' => $daysAway,
                     'total_cuts' => $record->total_cuts,

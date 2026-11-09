@@ -150,9 +150,8 @@ return [
     | Session Cookie Domain
     |--------------------------------------------------------------------------
     |
-    | Forçado como null para garantir isolamento estrito Host-Only (RFC 6265).
-    | Impede categoricamente o vazamento de cookies de sessão entre subdomínios
-    | (ex: master.aurosoft.com.br vs itep.aurosoft.com.br).
+    | Keeping this null creates host-only cookies and prevents session sharing
+    | between the SaaS panel and barbershop hostnames.
     |
     */
 
