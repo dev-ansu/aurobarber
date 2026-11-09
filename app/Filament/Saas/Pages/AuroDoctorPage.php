@@ -61,24 +61,15 @@ class AuroDoctorPage extends Page
         ];
 
         try {
-            $licenses = \App\Models\License::query()
-                ->where('type', 'cloud_saas')
-                ->whereNotNull('schema_name')
-                ->orderBy('trade_name')
+            $barbershops = \App\Models\Barbershop::query()
+                ->orderBy('name')
                 ->get();
 
-            foreach ($licenses as $lic) {
-                $name = $lic->trade_name ?: $lic->client_name;
-                $options[$lic->schema_name] = "🏫 {$name} (schema: {$lic->schema_name})";
-            }
-
-            $tenantService = app(\App\Services\TenantService::class);
-            $demo = collect($tenantService->listTenants())->firstWhere('name', 'demo');
-            if ($demo) {
-                $options['demo'] = '🎮 Ambiente Demo (schema: demo)';
+            foreach ($barbershops as $b) {
+                $options[$b->slug] = "💈 {$b->name} (slug: {$b->slug})";
             }
         } catch (\Throwable) {
-            // Silencioso caso a tabela licenses não exista
+            // Silencioso em caso de falha de conexão inicial
         }
 
         return $options;

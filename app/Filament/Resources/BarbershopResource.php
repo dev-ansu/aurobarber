@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\BarbershopResource\Pages;
 use App\Models\Barbershop;
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Forms;
 use Filament\Schemas\Components\Tabs;
@@ -319,14 +320,51 @@ class BarbershopResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->actions([
-                Tables\Actions\Action::make('open_panel')
+                Action::make('open_panel')
                     ->label('Painel ↗')
                     ->icon('heroicon-m-arrow-top-right-on-square')
                     ->color('info')
                     ->url(fn (Barbershop $record): string => url("/admin/{$record->slug}"))
                     ->openUrlInNewTab(),
 
-                Tables\Actions\Action::make('renew_30')
+                Action::make('change_due_date')
+                    ->label('Vencimento')
+                    ->icon('heroicon-m-calendar')
+                    ->color('warning')
+                    ->modalHeading(fn (Barbershop $record): string => "Definir Vencimento: {$record->name}")
+                    ->modalDescription('Defina uma data de vencimento específica combinada com o cliente.')
+                    ->modalSubmitActionLabel('Salvar Vencimento')
+                    ->form([
+                        Forms\Components\DatePicker::make('new_expires_at')
+                            ->label('Nova Data de Vencimento')
+                            ->default(fn (Barbershop $record) => $record->license_expires_at?->format('Y-m-d') ?? now()->addDays(30)->format('Y-m-d'))
+                            ->required()
+                            ->helperText('O sistema aplicará a carência de 5 dias automaticamente a partir desta data.')
+                            ->columnSpanFull(),
+
+                        Forms\Components\Toggle::make('reactivate')
+                            ->label('Reativar acesso da barbearia imediatamente')
+                            ->default(true)
+                            ->columnSpanFull(),
+                    ])
+                    ->action(function (Barbershop $record, array $data): void {
+                        $record->license_expires_at = \Carbon\Carbon::parse($data['new_expires_at'])->endOfDay();
+                        if (!empty($data['reactivate'])) {
+                            $record->license_status = 'active';
+                            $record->is_active = true;
+                            $record->suspended_at = null;
+                            $record->suspension_reason = null;
+                        }
+                        $record->save();
+
+                        \Filament\Notifications\Notification::make()
+                            ->title('Vencimento atualizado!')
+                            ->body("Novo vencimento de {$record->name}: {$record->license_expires_at->format('d/m/Y')}")
+                            ->success()
+                            ->send();
+                    }),
+
+                Action::make('renew_30')
                     ->label('Renovar +30d')
                     ->icon('heroicon-m-arrow-path')
                     ->color('success')
@@ -342,7 +380,7 @@ class BarbershopResource extends Resource
                             ->send();
                     }),
 
-                Tables\Actions\Action::make('toggle_status')
+                Action::make('toggle_status')
                     ->label(fn (Barbershop $record): string => $record->isSuspended() ? 'Reativar' : 'Suspender')
                     ->icon(fn (Barbershop $record): string => $record->isSuspended() ? 'heroicon-m-check-circle' : 'heroicon-m-no-symbol')
                     ->color(fn (Barbershop $record): string => $record->isSuspended() ? 'success' : 'danger')

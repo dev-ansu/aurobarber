@@ -72,6 +72,7 @@ class SaasPanelProvider extends PanelProvider
             ])
             ->pages([
                 SaasDashboard::class,
+                \App\Filament\Saas\Pages\AuroDoctorPage::class,
                 ForcePasswordChange::class,
             ])
             ->resources([

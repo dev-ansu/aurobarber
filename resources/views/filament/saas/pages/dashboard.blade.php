@@ -72,44 +72,44 @@
                 <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; color: #cbd5e1;">
                     <thead>
                         <tr style="border-bottom: 1px solid #1e293b; background: rgba(15, 23, 42, 0.6); color: #94a3b8; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">
-                            <th style="padding: 14px 20px;">Barbearia</th>
-                            <th style="padding: 14px 20px;">Proprietário</th>
-                            <th style="padding: 14px 20px;">Status da Licença</th>
-                            <th style="padding: 14px 20px;">Vencimento</th>
-                            <th style="padding: 14px 20px;">Mensalidade</th>
-                            <th style="padding: 14px 20px; text-align: right;">Ações de Controle</th>
+                            <th style="padding: 14px 20px; white-space: nowrap;">Barbearia</th>
+                            <th style="padding: 14px 20px; white-space: nowrap;">Proprietário</th>
+                            <th style="padding: 14px 20px; white-space: nowrap;">Status da Licença</th>
+                            <th style="padding: 14px 20px; white-space: nowrap;">Vencimento</th>
+                            <th style="padding: 14px 20px; white-space: nowrap;">Mensalidade</th>
+                            <th style="padding: 14px 20px; text-align: right; white-space: nowrap;">Ações de Controle</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($recentBarbershops as $shop)
                             <tr style="border-bottom: 1px solid #1e293b;">
-                                <td style="padding: 16px 20px; font-weight: 800; color: #ffffff;">
+                                <td style="padding: 16px 20px; font-weight: 800; color: #ffffff; white-space: nowrap;">
                                     {{ $shop['name'] }}
                                     <div style="font-size: 11px; font-weight: 400; color: #94a3b8;">{{ $shop['slug'] }} • {{ $shop['city'] }}</div>
                                 </td>
-                                <td style="padding: 16px 20px;">
+                                <td style="padding: 16px 20px; white-space: nowrap;">
                                     <div style="font-weight: 700; color: #f1f5f9;">{{ $shop['owner_name'] }}</div>
                                     <div style="font-size: 11px; color: #64748b;">{{ $shop['owner_email'] }}</div>
                                 </td>
-                                <td style="padding: 16px 20px;">
+                                <td style="padding: 16px 20px; white-space: nowrap;">
                                     @if($shop['is_suspended'])
-                                        <span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 9999px; border: 1px solid rgba(239, 68, 68, 0.3);">
+                                        <span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 9999px; border: 1px solid rgba(239, 68, 68, 0.3); display: inline-block; white-space: nowrap;">
                                             SUSPENSA (BLOQUEADA)
                                         </span>
                                     @elseif($shop['is_in_grace'])
                                         <div style="display: flex; flex-direction: column; gap: 2px;">
-                                            <span style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 9999px; border: 1px solid rgba(245, 158, 11, 0.3); width: fit-content;">
+                                            <span style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 9999px; border: 1px solid rgba(245, 158, 11, 0.3); width: fit-content; white-space: nowrap;">
                                                 EM CARÊNCIA
                                             </span>
-                                            <span style="font-size: 10px; color: #fbbf24; font-weight: 700;">{{ $shop['grace_days_remaining'] }}d de tolerância restantes</span>
+                                            <span style="font-size: 10px; color: #fbbf24; font-weight: 700; white-space: nowrap;">{{ $shop['grace_days_remaining'] }}d de tolerância</span>
                                         </div>
                                     @else
-                                        <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 9999px; border: 1px solid rgba(16, 185, 129, 0.3);">
+                                        <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 9999px; border: 1px solid rgba(16, 185, 129, 0.3); display: inline-block; white-space: nowrap;">
                                             ATIVA (REGULAR)
                                         </span>
                                     @endif
                                 </td>
-                                <td style="padding: 16px 20px;">
+                                <td style="padding: 16px 20px; white-space: nowrap;">
                                     <div style="font-weight: 700; color: #f1f5f9; font-family: monospace;">{{ $shop['expires_at_formatted'] }}</div>
                                     @if($shop['days_remaining'] < 0)
                                         <div style="font-size: 11px; color: #ef4444; font-weight: 700;">Vencida há {{ abs($shop['days_remaining']) }} dias</div>
@@ -119,35 +119,45 @@
                                         <div style="font-size: 11px; color: #64748b;">Restam {{ $shop['days_remaining'] }} dias</div>
                                     @endif
                                 </td>
-                                <td style="padding: 16px 20px; font-weight: 700; color: #38bdf8;">
+                                <td style="padding: 16px 20px; font-weight: 700; color: #38bdf8; white-space: nowrap;">
                                     R$ {{ $shop['monthly_price'] }}
                                 </td>
-                                <td style="padding: 16px 20px; text-align: right;">
-                                    <div style="display: inline-flex; align-items: center; gap: 8px;">
+                                <td style="padding: 16px 20px; text-align: right; white-space: nowrap;">
+                                    <div style="display: inline-flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: nowrap;">
                                         {{-- Botão Abrir Painel --}}
                                         <a href="{{ $shop['admin_url'] }}" target="_blank"
-                                           style="background: #1e293b; color: #f1f5f9; padding: 6px 12px; border-radius: 8px; text-decoration: none; font-size: 11px; font-weight: 800; border: 1px solid #334155; display: inline-flex; align-items: center; gap: 4px;">
-                                            Painel ↗
+                                           style="white-space: nowrap; flex-shrink: 0; background: #1e293b; color: #f1f5f9; padding: 7px 13px; border-radius: 8px; text-decoration: none; font-size: 11px; font-weight: 800; border: 1px solid #334155; display: inline-flex; align-items: center; gap: 4px;">
+                                            <span>Painel</span> <span>↗</span>
                                         </a>
+
+                                        {{-- Botão Definir Vencimento --}}
+                                        <button wire:click="openDueDateModal({{ $shop['id'] }})"
+                                                type="button"
+                                                style="white-space: nowrap; flex-shrink: 0; background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); padding: 7px 11px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
+                                            📅 Data
+                                        </button>
 
                                         {{-- Botão Renovar +30d --}}
                                         <button wire:click="renew30({{ $shop['id'] }})"
+                                                type="button"
                                                 wire:confirm="Deseja renovar a licença de '{{ $shop['name'] }}' por mais 30 dias?"
-                                                style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
+                                                style="white-space: nowrap; flex-shrink: 0; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); padding: 7px 11px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
                                             +30 Dias
                                         </button>
 
                                         {{-- Botão Suspender / Reativar --}}
                                         @if($shop['is_suspended'])
                                             <button wire:click="toggleStatus({{ $shop['id'] }})"
+                                                    type="button"
                                                     wire:confirm="Deseja REATIVAR o acesso de '{{ $shop['name'] }}'?"
-                                                    style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 800;">
+                                                    style="white-space: nowrap; flex-shrink: 0; background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; padding: 7px 11px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 800;">
                                                 Reativar
                                             </button>
                                         @else
                                             <button wire:click="toggleStatus({{ $shop['id'] }})"
+                                                    type="button"
                                                     wire:confirm="Atenção: Deseja SUSPENDER '{{ $shop['name'] }}'? O acesso dos lojistas será bloqueado."
-                                                    style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 800;">
+                                                    style="white-space: nowrap; flex-shrink: 0; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); padding: 7px 11px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 800;">
                                                 Suspender
                                             </button>
                                         @endif
@@ -165,6 +175,36 @@
                 </table>
             </div>
         </div>
+
+        {{-- MODAL DE AJUSTE DIRETO DE VENCIMENTO --}}
+        @if($editingBarbershopId)
+            <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 99999; padding: 20px;">
+                <div style="background: #0f172a; border: 1px solid #334155; border-radius: 20px; max-width: 480px; width: 100%; padding: 28px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8); display: flex; flex-direction: column; gap: 20px;">
+                    <div>
+                        <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #fbbf24; letter-spacing: 0.05em;">Acordo de Pagamento</span>
+                        <h3 style="margin: 4px 0 0; font-size: 18px; font-weight: 900; color: #ffffff;">Alterar Vencimento: {{ $editingBarbershopName }}</h3>
+                        <p style="margin: 6px 0 0; font-size: 13px; color: #94a3b8; line-height: 1.5;">Defina a data exata combinada com o cliente. O sistema regularizará o acesso e a carência de 5 dias passará a valer após esta data.</p>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label style="font-size: 13px; font-weight: 700; color: #e2e8f0;">Nova Data de Vencimento:</label>
+                        <input type="date" wire:model="newDueDate" 
+                               style="background: #1e293b; color: #f8fafc; border: 1px solid #475569; border-radius: 10px; padding: 12px 16px; font-size: 14px; outline: none; width: 100%;" />
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+                        <button type="button" wire:click="closeDueDateModal" 
+                                style="background: transparent; color: #94a3b8; border: 1px solid #475569; padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer;">
+                            Cancelar
+                        </button>
+                        <button type="button" wire:click="saveDueDate" 
+                                style="background: linear-gradient(135deg, #d97706, #b45309); color: #ffffff; border: none; padding: 10px 22px; border-radius: 10px; font-size: 13px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.4);">
+                            Salvar e Liberar Acesso
+                        </button>
+                    </div>
+                </div>
+            </div>
+        @endif
 
     </div>
 </x-filament-panels::page>

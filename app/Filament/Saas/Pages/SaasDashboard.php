@@ -36,8 +36,57 @@ class SaasDashboard extends Dashboard
     /** @var array<int, array<string, mixed>> */
     public array $recentBarbershops = [];
 
+    public ?int $editingBarbershopId = null;
+    public ?string $editingBarbershopName = null;
+    public ?string $newDueDate = null;
+
     public function mount(): void
     {
+        $this->loadMetrics();
+    }
+
+    public function openDueDateModal(int $barbershopId): void
+    {
+        $b = Barbershop::find($barbershopId);
+        if (!$b) {
+            return;
+        }
+
+        $this->editingBarbershopId = $barbershopId;
+        $this->editingBarbershopName = $b->name;
+        $this->newDueDate = $b->license_expires_at?->format('Y-m-d') ?? now()->addDays(30)->format('Y-m-d');
+    }
+
+    public function closeDueDateModal(): void
+    {
+        $this->editingBarbershopId = null;
+        $this->editingBarbershopName = null;
+        $this->newDueDate = null;
+    }
+
+    public function saveDueDate(): void
+    {
+        if (!$this->editingBarbershopId || !$this->newDueDate) {
+            return;
+        }
+
+        $b = Barbershop::find($this->editingBarbershopId);
+        if ($b) {
+            $b->license_expires_at = \Carbon\Carbon::parse($this->newDueDate)->endOfDay();
+            $b->license_status = 'active';
+            $b->is_active = true;
+            $b->suspended_at = null;
+            $b->suspension_reason = null;
+            $b->save();
+
+            \Filament\Notifications\Notification::make()
+                ->title("Vencimento atualizado com sucesso!")
+                ->body("A barbearia {$b->name} teve o vencimento ajustado para {$b->license_expires_at->format('d/m/Y')}. O acesso está regularizado!")
+                ->success()
+                ->send();
+        }
+
+        $this->closeDueDateModal();
         $this->loadMetrics();
     }
 

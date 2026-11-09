@@ -53,6 +53,18 @@ class Barbershop extends Model
         'monthly_price' => 'decimal:2',
     ];
 
+    protected static function booted(): void
+    {
+        static::saving(function (Barbershop $barbershop) {
+            // Se a licença estiver ativa ou com data futura, garante que is_active seja true
+            if ($barbershop->license_status === 'active' && ! (bool) $barbershop->is_active) {
+                $barbershop->is_active = true;
+                $barbershop->suspended_at = null;
+                $barbershop->suspension_reason = null;
+            }
+        });
+    }
+
     /**
      * Verifica se a barbearia está com a licença ativa e regular (ou em carência).
      */
