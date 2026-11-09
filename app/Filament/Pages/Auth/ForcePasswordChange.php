@@ -45,7 +45,12 @@ class ForcePasswordChange extends Page implements HasForms
     public function mount(): void
     {
         if (!auth()->check() || !auth()->user()->must_change_password) {
-            $this->redirect(filament()->getUrl());
+            if ($user->role === 'master_admin') {
+            $this->redirect(url('/saas'));
+            return;
+        }
+
+        $this->redirect(filament()->getUrl());
             return;
         }
 
@@ -113,6 +118,11 @@ class ForcePasswordChange extends Page implements HasForms
             ->body('Sua nova senha está ativa. Seu acesso ao sistema está liberado!')
             ->success()
             ->send();
+
+        if ($user->role === 'master_admin') {
+            $this->redirect(url('/saas'));
+            return;
+        }
 
         $this->redirect(filament()->getUrl());
     }

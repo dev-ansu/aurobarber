@@ -31,7 +31,7 @@ class BarbershopResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->role === 'master_admin';
+        return filament()->getCurrentPanel()?->getId() === 'saas' && auth()->user()?->role === 'master_admin';
     }
 
     public static function form(Schema $schema): Schema
@@ -132,6 +132,7 @@ class BarbershopResource extends Resource
                                     ->label('Enviar E-mail de Boas-Vindas com Senha Temporária e Instruções')
                                     ->helperText('O dono receberá o link do painel e a senha temporária, sendo obrigado a redefinir no primeiro acesso.')
                                     ->default(true)
+                                    ->dehydrated()
                                     ->visible(fn ($get) => $get('owner_type') === 'new')
                                     ->columnSpanFull(),
 

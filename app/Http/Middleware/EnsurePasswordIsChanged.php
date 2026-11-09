@@ -15,7 +15,7 @@ class EnsurePasswordIsChanged
 
         if ($user && (bool) $user->must_change_password) {
             // Permite deslogar
-            if ($request->routeIs('filament.admin.auth.logout')) {
+            if ($request->routeIs('filament.*.auth.logout') || $request->is('*/logout')) {
                 return $next($request);
             }
 
@@ -29,6 +29,12 @@ class EnsurePasswordIsChanged
                 return $next($request);
             }
 
+            // Se for Master Admin ou estiver no painel SaaS, vai para o SaaS Master
+            if ($user->role === 'master_admin' || $request->is('saas*')) {
+                return redirect()->to(url('/saas/force-password-change'));
+            }
+
+            // Para donos/barbeiros no painel admin
             $panel = filament()->getCurrentPanel();
             $tenant = filament()->getTenant() ?? ($panel ? $user->getTenants($panel)->first() : null);
 
@@ -36,7 +42,7 @@ class EnsurePasswordIsChanged
                 return redirect()->to(url('/admin/' . $tenant->slug . '/force-password-change'));
             }
 
-            return redirect()->to(url('/admin/force-password-change'));
+            return redirect()->to(url('/saas/force-password-change'));
         }
 
         return $next($request);

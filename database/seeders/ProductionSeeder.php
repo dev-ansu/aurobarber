@@ -43,26 +43,5 @@ class ProductionSeeder extends Seeder
             ]
         );
         $masterAdmin->assignRole('super_admin');
-
-        // 3. Unidade Matriz Oficial do SaaS (Âncora de Tenancy)
-        $matriz = Barbershop::updateOrCreate(
-            ['slug' => 'matriz'],
-            [
-                'name' => 'AuroBarber - Matriz',
-                'owner_id' => $masterAdmin->id,
-                'headline' => 'Unidade Matriz Oficial • Central SaaS AuroBarber',
-                'city' => 'Fortaleza / CE',
-                'is_active' => true,
-                'brand_color' => '#d97706',
-                'opening_hours' => [
-                    'days' => ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'],
-                    'start_time' => '08:00',
-                    'end_time' => '19:30',
-                    'slot_interval' => 30,
-                ],
-            ]
-        );
-
-        $matriz->users()->syncWithoutDetaching([$masterAdmin->id]);
     }
 }

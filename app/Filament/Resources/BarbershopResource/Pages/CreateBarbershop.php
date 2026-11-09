@@ -21,7 +21,7 @@ class CreateBarbershop extends CreateRecord
     protected function handleRecordCreation(array $data): Model
     {
         $ownerType = $data['owner_type'] ?? 'existing';
-        $sendEmail = $data['send_welcome_email'] ?? false;
+        $sendEmail = !isset($data['send_welcome_email']) || (bool) $data['send_welcome_email'];
 
         if ($ownerType === 'new') {
             // Gera senha temporária legível e segura (ex: Barber#8392!)
