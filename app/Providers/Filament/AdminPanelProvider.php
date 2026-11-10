@@ -58,6 +58,7 @@ class AdminPanelProvider extends PanelProvider
                 'gray' => Color::Slate,
             ])
             ->darkMode(true)
+            ->viteTheme('resources/css/filament/admin/theme.css')
             ->sidebarCollapsibleOnDesktop()
             ->tenant(Barbershop::class, slugAttribute: 'slug')
             ->tenantProfile(EditBarbershopProfile::class)
