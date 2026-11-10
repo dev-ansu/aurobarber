@@ -707,7 +707,7 @@
                 </div>
 
                 {{-- BOTÃO NOVO ENCAIXE --}}
-                <button type="button" wire:click="openQuickModal()" class="ab-btn-cta">
+                <button type="button" wire:click="mountAction('quickAppointment')" class="ab-btn-cta">
                     <svg style="width: 15px; height: 15px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
                     </svg>
@@ -775,7 +775,7 @@
 
                             <button
                                 type="button"
-                                wire:click="openQuickModal({{ $pro->id }})"
+                                wire:click="mountAction('quickAppointment', @js(['professionalId' => $pro->id]))"
                                 class="ab-col-add"
                                 title="Encaixar cliente para {{ $pro->display_name }}"
                             >
@@ -884,7 +884,7 @@
                                     <p>Sem agendamentos para este barbeiro.</p>
                                     <button
                                         type="button"
-                                        wire:click="openQuickModal({{ $pro->id }})"
+                                        wire:click="mountAction('quickAppointment', @js(['professionalId' => $pro->id]))"
                                         class="ab-empty-btn"
                                     >
                                         + Encaixar cliente
@@ -898,109 +898,7 @@
         @endif
     </div>
 
-    {{-- 4. MODAL DE NOVO ENCAIXE RÁPIDO (COM ABAS E CAMPOS EM LARGURA TOTAL) --}}
-    @if ($quickModalOpen)
-        <div class="ab-modal-mask">
-            <div class="ab-modal-window">
-                <div class="ab-modal-head">
-                    <h3>💈 Novo Encaixe no Balcão</h3>
-                    <button type="button" wire:click="$set('quickModalOpen', false)" class="ab-modal-x">&times;</button>
-                </div>
-
-                {{-- ABAS DO MODAL --}}
-                <div class="ab-modal-tabs">
-                    <button
-                        type="button"
-                        wire:click="$set('activeModalTab', 'atendimento')"
-                        class="ab-tab-item {{ $activeModalTab === 'atendimento' ? 'active' : 'inactive' }}"
-                    >
-                        ✂️ Atendimento
-                    </button>
-                    <button
-                        type="button"
-                        wire:click="$set('activeModalTab', 'cliente')"
-                        class="ab-tab-item {{ $activeModalTab === 'cliente' ? 'active' : 'inactive' }}"
-                    >
-                        👤 Dados do Cliente
-                    </button>
-                </div>
-
-                <form wire:submit.prevent="saveQuickAppointment">
-                    @if ($errors->any())
-                        <div class="ab-error-msg" role="alert">
-                            Não foi possível salvar o encaixe: {{ $errors->first() }}
-                        </div>
-                    @endif
-
-                    {{-- ABA 1: ATENDIMENTO --}}
-                    @if ($activeModalTab === 'atendimento')
-                        <div class="ab-form-stack">
-                            <div class="ab-field">
-                                <label class="ab-field-label">Barbeiro Responsável</label>
-                                <select wire:model="quickProfessionalId" class="ab-field-select">
-                                    @foreach ($professionals as $p)
-                                        <option value="{{ $p->id }}">{{ $p->display_name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('quickProfessionalId') <span class="ab-error-msg">{{ $message }}</span> @enderror
-                            </div>
-
-                            <div class="ab-field">
-                                <label class="ab-field-label">Serviço</label>
-                                <select wire:model="quickServiceId" class="ab-field-select">
-                                    @foreach ($this->services as $s)
-                                        <option value="{{ $s->id }}">{{ $s->name }} — R$ {{ number_format($s->price, 2, ',', '.') }} ({{ $s->duration_minutes }} min)</option>
-                                    @endforeach
-                                </select>
-                                @error('quickServiceId') <span class="ab-error-msg">{{ $message }}</span> @enderror
-                            </div>
-
-                            <div class="ab-field">
-                                <label class="ab-field-label">Horário de Início</label>
-                                <input type="time" wire:model="quickTime" class="ab-field-input" />
-                                @error('quickTime') <span class="ab-error-msg">{{ $message }}</span> @enderror
-                            </div>
-
-                            <div class="ab-modal-foot">
-                                <button type="button" wire:click="$set('quickModalOpen', false)" class="ab-foot-btn-sec">
-                                    Cancelar
-                                </button>
-                                <button type="button" wire:click="$set('activeModalTab', 'cliente')" class="ab-foot-btn-pri">
-                                    Avançar para Cliente ➔
-                                </button>
-                            </div>
-                        </div>
-                    @else
-                        {{-- ABA 2: DADOS DO CLIENTE --}}
-                        <div class="ab-form-stack">
-                            <div class="ab-field">
-                                <label class="ab-field-label">Nome Completo do Cliente</label>
-                                <input type="text" wire:model="quickClientName" placeholder="Ex: Lucas Gabriel" class="ab-field-input" />
-                                @error('quickClientName') <span class="ab-error-msg">{{ $message }}</span> @enderror
-                            </div>
-
-                            <div class="ab-field">
-                                <label class="ab-field-label">WhatsApp do Cliente</label>
-                                <input type="tel" wire:model="quickClientPhone" placeholder="Ex: 85999999999" class="ab-field-input" />
-                                @error('quickClientPhone') <span class="ab-error-msg">{{ $message }}</span> @enderror
-                            </div>
-
-                            <div class="ab-modal-foot">
-                                <button type="button" wire:click="$set('activeModalTab', 'atendimento')" class="ab-foot-btn-sec">
-                                    ⬅ Voltar
-                                </button>
-                                <button type="submit" class="ab-foot-btn-success">
-                                    Salvar Encaixe ✓
-                                </button>
-                            </div>
-                        </div>
-                    @endif
-                </form>
-            </div>
-        </div>
-    @endif
-
-    {{-- 5. MODAL DE CONCLUSÃO & RECEBIMENTO (CHECKOUT DE PAGAMENTO) --}}
+    {{-- 4. MODAL DE CONCLUSÃO & RECEBIMENTO (CHECKOUT DE PAGAMENTO) --}}
     @if ($checkoutModalOpen)
         <div class="ab-modal-mask">
             <div class="ab-modal-window">

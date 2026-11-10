@@ -5,8 +5,15 @@ namespace App\Filament\Pages;
 use App\Models\Appointment;
 use App\Models\Barbershop;
 use Carbon\Carbon;
+use Filament\Actions\Action;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Collection;
@@ -38,21 +45,6 @@ class DailySchedule extends Page
     }
 
     public string $selectedDate = '';
-
-    // Estado do Modal de Encaixe Rápido
-    public bool $quickModalOpen = false;
-
-    public ?int $quickProfessionalId = null;
-
-    public ?int $quickServiceId = null;
-
-    public string $quickTime = '10:00';
-
-    public string $quickClientName = '';
-
-    public string $quickClientPhone = '';
-
-    public string $activeModalTab = 'atendimento'; // atendimento | cliente
 
     // Estado do Modal de Conclusão e Recebimento
     public bool $checkoutModalOpen = false;
@@ -221,79 +213,134 @@ class DailySchedule extends Page
             ->send();
     }
 
-    public function openQuickModal(?int $professionalId = null, ?string $time = null): void
+    public function quickAppointmentAction(): Action
     {
-        $this->resetValidation();
-        $this->quickProfessionalId = $professionalId ?: $this->professionals->first()?->id;
-        $this->quickServiceId = $this->services->first()?->id;
-        $this->quickTime = $time ?: '14:00';
-        $this->quickClientName = '';
-        $this->quickClientPhone = '';
-        $this->activeModalTab = 'atendimento';
-        $this->quickModalOpen = true;
-    }
+        return Action::make('quickAppointment')
+            ->modalHeading('Novo encaixe no balcão')
+            ->modalIcon('heroicon-o-calendar-days')
+            ->modalSubmitActionLabel('Salvar encaixe')
+            ->modalWidth(Width::TwoExtraLarge)
+            ->schema([
+                Tabs::make('Encaixe')
+                    ->tabs([
+                        Tab::make('Atendimento')
+                            ->icon('heroicon-o-scissors')
+                            ->schema([
+                                Select::make('professional_id')
+                                    ->label('Barbeiro responsável')
+                                    ->options(fn (): array => $this->professionals
+                                        ->mapWithKeys(fn ($professional): array => [
+                                            $professional->id => $professional->display_name,
+                                        ])
+                                        ->all())
+                                    ->searchable()
+                                    ->required()
+                                    ->columnSpanFull(),
 
-    public function saveQuickAppointment(): void
-    {
-        $tenant = filament()->getTenant();
-        abort_unless(
-            $tenant instanceof Barbershop && auth()->user()?->canAccessTenant($tenant),
-            403,
-        );
+                                Select::make('service_id')
+                                    ->label('Serviço')
+                                    ->options(fn (): array => $this->services
+                                        ->mapWithKeys(fn ($service): array => [
+                                            $service->id => $service->name
+                                                .' — R$ '.number_format((float) $service->price, 2, ',', '.')
+                                                .' ('.$service->duration_minutes.' min)',
+                                        ])
+                                        ->all())
+                                    ->searchable()
+                                    ->required()
+                                    ->columnSpanFull(),
 
-        $this->validate([
-            'quickProfessionalId' => 'required|exists:professionals,id',
-            'quickServiceId' => 'required|exists:services,id',
-            'quickTime' => 'required|date_format:H:i',
-            'quickClientName' => 'required|string|min:2|max:255',
-            'quickClientPhone' => 'required|string|min:8|max:20',
-        ]);
+                                DateTimePicker::make('scheduled_at')
+                                    ->label('Data e horário de início')
+                                    ->seconds(false)
+                                    ->required()
+                                    ->columnSpanFull(),
+                            ]),
+                        Tab::make('Cliente')
+                            ->icon('heroicon-o-user')
+                            ->schema([
+                                TextInput::make('client_name')
+                                    ->label('Nome completo do cliente')
+                                    ->required()
+                                    ->minLength(2)
+                                    ->maxLength(255)
+                                    ->columnSpanFull(),
 
-        $service = $tenant->services()->findOrFail($this->quickServiceId);
-        $professional = $tenant->professionals()->findOrFail($this->quickProfessionalId);
+                                TextInput::make('client_phone')
+                                    ->label('WhatsApp do cliente')
+                                    ->tel()
+                                    ->required()
+                                    ->minLength(8)
+                                    ->maxLength(20)
+                                    ->placeholder('Ex: 85999999999')
+                                    ->columnSpanFull(),
+                            ]),
+                    ])
+                    ->columnSpanFull(),
+            ])
+            ->mountUsing(function (Schema $schema, Action $action): void {
+                $arguments = $action->getArguments();
+                $defaultProfessionalId = $arguments['professionalId']
+                    ?? $this->professionals->first()?->id;
+                $defaultTime = $arguments['time'] ?? '14:00';
 
-        if (
-            auth()->user()?->isRestrictedBarber()
-            && (int) $professional->getKey() !== (int) (auth()->user()?->resolveProfessionalId($tenant->id) ?? 0)
-        ) {
-            abort(403);
-        }
+                $schema->fill([
+                    'professional_id' => $defaultProfessionalId,
+                    'service_id' => $this->services->first()?->id,
+                    'scheduled_at' => Carbon::parse("{$this->selectedDate} {$defaultTime}"),
+                ]);
+            })
+            ->action(function (array $data): void {
+                $tenant = filament()->getTenant();
+                abort_unless(
+                    $tenant instanceof Barbershop && auth()->user()?->canAccessTenant($tenant),
+                    403,
+                );
 
-        $scheduledAt = Carbon::createFromFormat('Y-m-d H:i', "{$this->selectedDate} {$this->quickTime}");
-        $endsAt = $scheduledAt->copy()->addMinutes($service->duration_minutes);
+                $service = $tenant->services()->findOrFail($data['service_id']);
+                $professional = $tenant->professionals()
+                    ->where('is_active', true)
+                    ->findOrFail($data['professional_id']);
 
-        $commissionRate = $professional->commission_rate ?: 50.00;
-        $commissionAmount = round(($service->price * $commissionRate) / 100, 2);
+                if (
+                    auth()->user()?->isRestrictedBarber()
+                    && (int) $professional->getKey() !== (int) (auth()->user()?->resolveProfessionalId($tenant->id) ?? 0)
+                ) {
+                    abort(403);
+                }
 
-        $appt = Appointment::create([
-            'barbershop_id' => $tenant->id,
-            'professional_id' => $professional->id,
-            'service_id' => $service->id,
-            'client_name' => trim($this->quickClientName),
-            'client_phone' => trim($this->quickClientPhone),
-            'scheduled_at' => $scheduledAt,
-            'ends_at' => $endsAt,
-            'status' => 'confirmed',
-            'service_price' => $service->price,
-            'commission_rate' => $commissionRate,
-            'commission_amount' => $commissionAmount,
-            'payment_status' => 'pending',
-            'notes' => 'Encaixe rápido realizado via painel',
-        ]);
+                $scheduledAt = Carbon::parse($data['scheduled_at']);
+                $commissionRate = $professional->commission_rate ?: 50.00;
+                $commissionAmount = round(((float) $service->price * $commissionRate) / 100, 2);
 
-        $appt->services()->sync([
-            $service->id => [
-                'price' => $service->price,
-                'duration_minutes' => $service->duration_minutes,
-            ],
-        ]);
+                $appointment = Appointment::create([
+                    'barbershop_id' => $tenant->id,
+                    'professional_id' => $professional->id,
+                    'service_id' => $service->id,
+                    'client_name' => trim($data['client_name']),
+                    'client_phone' => trim($data['client_phone']),
+                    'scheduled_at' => $scheduledAt,
+                    'ends_at' => $scheduledAt->copy()->addMinutes($service->duration_minutes),
+                    'status' => 'confirmed',
+                    'service_price' => $service->price,
+                    'commission_rate' => $commissionRate,
+                    'commission_amount' => $commissionAmount,
+                    'payment_status' => 'pending',
+                    'notes' => 'Encaixe rápido realizado via painel',
+                ]);
 
-        $this->quickModalOpen = false;
+                $appointment->services()->sync([
+                    $service->id => [
+                        'price' => $service->price,
+                        'duration_minutes' => $service->duration_minutes,
+                    ],
+                ]);
 
-        Notification::make()
-            ->title('Encaixe agendado com sucesso para '.$professional->display_name)
-            ->success()
-            ->send();
+                Notification::make()
+                    ->title('Encaixe agendado com sucesso para '.$professional->display_name)
+                    ->success()
+                    ->send();
+            });
     }
 
     private function findAccessibleAppointment(int $appointmentId): Appointment

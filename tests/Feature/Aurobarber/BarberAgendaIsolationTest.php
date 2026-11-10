@@ -10,6 +10,7 @@ use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
@@ -115,7 +116,7 @@ test('a restricted barber sees and can only act on their own appointments', func
         ->and(AppointmentResource::getEloquentQuery()->count())->toBe(2);
 });
 
-test('a shop owner can create a quick appointment from the daily schedule', function () {
+test('a shop owner can create a quick appointment from the daily schedule using the Filament action', function () {
     $barbershop = Barbershop::create([
         'name' => 'Barbearia Teste',
         'slug' => 'barbearia-teste',
@@ -138,24 +139,35 @@ test('a shop owner can create a quick appointment from the daily schedule', func
         'barbershop_id' => $barbershop->id,
         'name' => 'Barbeiro Teste',
     ]);
-    $service = Service::create([
+    $services = collect(range(1, 5))->map(fn (int $number): Service => Service::create([
         'barbershop_id' => $barbershop->id,
-        'name' => 'Corte',
-        'price' => 40,
+        'name' => "Serviço {$number}",
+        'price' => 40 + $number,
         'duration_minutes' => 30,
-    ]);
+        'is_active' => true,
+    ]));
+    $service = $services->last();
 
     Filament::setTenant($barbershop, isQuiet: true);
     $this->actingAs($owner);
 
     $page = new DailySchedule;
     $page->selectedDate = now()->format('Y-m-d');
-    $page->openQuickModal($professional->id, '14:00');
-    $page->quickServiceId = $service->id;
-    $page->quickClientName = 'Cliente Balcão';
-    $page->quickClientPhone = '85999999999';
+    expect($page->services->pluck('id')->all())->toBe($services->pluck('id')->all());
 
-    $page->saveQuickAppointment();
+    Livewire::test(DailySchedule::class)
+        ->mountAction('quickAppointment', [
+            'professionalId' => $professional->id,
+            'time' => '14:00',
+        ])
+        ->fillForm([
+            'professional_id' => $professional->id,
+            'service_id' => $service->id,
+            'scheduled_at' => now()->setTime(14, 0)->toDateTimeString(),
+            'client_name' => 'Cliente Balcão',
+            'client_phone' => '85999999999',
+        ])
+        ->callMountedAction();
 
     $appointment = Appointment::query()->where('client_name', 'Cliente Balcão')->sole();
 
@@ -164,6 +176,5 @@ test('a shop owner can create a quick appointment from the daily schedule', func
         ->and($appointment->service_id)->toBe($service->id)
         ->and($appointment->scheduled_at->format('H:i'))->toBe('14:00')
         ->and($appointment->ends_at->format('H:i'))->toBe('14:30')
-        ->and($appointment->status)->toBe('confirmed')
-        ->and($page->quickModalOpen)->toBeFalse();
+        ->and($appointment->status)->toBe('confirmed');
 });
