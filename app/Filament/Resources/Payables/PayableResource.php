@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Payables;
 
-use App\Filament\Resources\Payables\Pages\CreatePayable;
-use App\Filament\Resources\Payables\Pages\EditPayable;
-use App\Filament\Resources\Payables\Pages\ListPayables;
+use App\Filament\Resources\Payables\Pages\ManagePayables;
 use App\Models\Payable;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -200,9 +198,7 @@ class PayableResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ListPayables::route('/'),
-            'create' => CreatePayable::route('/create'),
-            'edit' => EditPayable::route('/{record}/edit'),
+            'index' => ManagePayables::route('/'),
         ];
     }
 }

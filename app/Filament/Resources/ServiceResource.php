@@ -3,25 +3,27 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ServiceResource\Pages;
+use App\Models\Barbershop;
 use App\Models\Service;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms;
+use Filament\Resources\Resource;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
-use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class ServiceResource extends Resource
 {
     protected static ?string $model = Service::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-scissors';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-scissors';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Serviços';
+    protected static string|\UnitEnum|null $navigationGroup = 'Serviços';
 
     protected static ?string $navigationLabel = 'Catálogo de Serviços';
 
@@ -32,6 +34,19 @@ class ServiceResource extends Resource
     public static function canViewAny(): bool
     {
         return ! auth()->user()?->isRestrictedBarber();
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $tenant = filament()->getTenant();
+        $user = auth()->user();
+
+        if (! $tenant instanceof Barbershop || ! $user?->canAccessTenant($tenant)) {
+            return parent::getEloquentQuery()->whereRaw('1 = 0');
+        }
+
+        return parent::getEloquentQuery()
+            ->where('services.barbershop_id', $tenant->getKey());
     }
 
     public static function form(Schema $schema): Schema
