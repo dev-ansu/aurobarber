@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ServiceResource\Pages;
 
 use App\Filament\Resources\ServiceResource;
+use App\Models\Barbershop;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateService extends CreateRecord
@@ -11,7 +12,14 @@ class CreateService extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $data['barbershop_id'] = auth()->user()?->barbershop_id ?: 1;
+        $tenant = filament()->getTenant();
+        abort_unless(
+            $tenant instanceof Barbershop && auth()->user()?->canAccessTenant($tenant),
+            403,
+        );
+
+        $data['barbershop_id'] = $tenant->getKey();
+
         return $data;
     }
 }
