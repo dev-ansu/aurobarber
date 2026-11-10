@@ -926,6 +926,12 @@
                 </div>
 
                 <form wire:submit.prevent="saveQuickAppointment">
+                    @if ($errors->any())
+                        <div class="ab-error-msg" role="alert">
+                            Não foi possível salvar o encaixe: {{ $errors->first() }}
+                        </div>
+                    @endif
+
                     {{-- ABA 1: ATENDIMENTO --}}
                     @if ($activeModalTab === 'atendimento')
                         <div class="ab-form-stack">

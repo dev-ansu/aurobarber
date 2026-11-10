@@ -223,6 +223,7 @@ class DailySchedule extends Page
 
     public function openQuickModal(?int $professionalId = null, ?string $time = null): void
     {
+        $this->resetValidation();
         $this->quickProfessionalId = $professionalId ?: $this->professionals->first()?->id;
         $this->quickServiceId = $this->services->first()?->id;
         $this->quickTime = $time ?: '14:00';

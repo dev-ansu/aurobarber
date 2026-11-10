@@ -13,6 +13,8 @@ use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Schemas\Components\Utilities\Get;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Unique;
 
 class BarbershopResource extends Resource
@@ -125,7 +127,14 @@ class BarbershopResource extends Resource
                                     ->placeholder('Ex: roberto@minhabarbearia.com.br')
                                     ->required(fn ($get) => $get('owner_type') === 'new')
                                     ->visible(fn ($get) => $get('owner_type') === 'new')
-                                    ->unique('users', 'email')
+                                    ->helperText('Se este e-mail já está cadastrado, escolha “Vincular a Usuário Já Cadastrado” acima.')
+                                    ->rule(
+                                        Rule::unique('users', 'email'),
+                                        fn (Get $get): bool => $get('owner_type') === 'new',
+                                    )
+                                    ->validationMessages([
+                                        'unique' => 'Este e-mail já possui acesso. Selecione “Vincular a Usuário Já Cadastrado” e escolha essa conta.',
+                                    ])
                                     ->columnSpanFull(),
 
                                 Forms\Components\TextInput::make('owner_phone')
@@ -150,6 +159,7 @@ class BarbershopResource extends Resource
                                     ->preload()
                                     ->required(fn ($get) => $get('owner_type') === 'existing')
                                     ->visible(fn ($get) => $get('owner_type') === 'existing')
+                                    ->getOptionLabelFromRecordUsing(fn (User $record): string => "{$record->name} ({$record->email})")
                                     ->columnSpanFull(),
                             ]),
 

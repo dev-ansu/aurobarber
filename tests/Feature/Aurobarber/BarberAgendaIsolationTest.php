@@ -114,3 +114,56 @@ test('a restricted barber sees and can only act on their own appointments', func
         ->and($teamPage->getDailyAppointmentsProperty()->count())->toBe(2)
         ->and(AppointmentResource::getEloquentQuery()->count())->toBe(2);
 });
+
+test('a shop owner can create a quick appointment from the daily schedule', function () {
+    $barbershop = Barbershop::create([
+        'name' => 'Barbearia Teste',
+        'slug' => 'barbearia-teste',
+    ]);
+
+    $owner = User::create([
+        'name' => 'Dono Teste',
+        'email' => 'dono@example.test',
+        'password' => 'password',
+        'role' => 'owner',
+        'barbershop_id' => $barbershop->id,
+        'is_active' => true,
+    ]);
+    $owner->barbershops()->attach($barbershop->id, [
+        'role' => 'owner',
+        'is_primary' => true,
+    ]);
+
+    $professional = Professional::create([
+        'barbershop_id' => $barbershop->id,
+        'name' => 'Barbeiro Teste',
+    ]);
+    $service = Service::create([
+        'barbershop_id' => $barbershop->id,
+        'name' => 'Corte',
+        'price' => 40,
+        'duration_minutes' => 30,
+    ]);
+
+    Filament::setTenant($barbershop, isQuiet: true);
+    $this->actingAs($owner);
+
+    $page = new DailySchedule;
+    $page->selectedDate = now()->format('Y-m-d');
+    $page->openQuickModal($professional->id, '14:00');
+    $page->quickServiceId = $service->id;
+    $page->quickClientName = 'Cliente Balcão';
+    $page->quickClientPhone = '85999999999';
+
+    $page->saveQuickAppointment();
+
+    $appointment = Appointment::query()->where('client_name', 'Cliente Balcão')->sole();
+
+    expect($appointment->barbershop_id)->toBe($barbershop->id)
+        ->and($appointment->professional_id)->toBe($professional->id)
+        ->and($appointment->service_id)->toBe($service->id)
+        ->and($appointment->scheduled_at->format('H:i'))->toBe('14:00')
+        ->and($appointment->ends_at->format('H:i'))->toBe('14:30')
+        ->and($appointment->status)->toBe('confirmed')
+        ->and($page->quickModalOpen)->toBeFalse();
+});
