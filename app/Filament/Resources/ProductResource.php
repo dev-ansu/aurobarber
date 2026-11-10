@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProductResource\Pages;
+use App\Models\Barbershop;
 use App\Models\CashMovement;
 use App\Models\Product;
 use Filament\Actions\Action;
@@ -21,14 +22,15 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class ProductResource extends Resource
 {
     protected static ?string $model = Product::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-shopping-bag';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-shopping-bag';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Serviços';
+    protected static string|\UnitEnum|null $navigationGroup = 'Serviços';
 
     protected static ?string $navigationLabel = 'Produtos & Estoque (Bar)';
 
@@ -41,6 +43,19 @@ class ProductResource extends Resource
     public static function canViewAny(): bool
     {
         return ! auth()->user()?->isRestrictedBarber();
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $tenant = filament()->getTenant();
+        $user = auth()->user();
+
+        if (! $tenant instanceof Barbershop || ! $user?->canAccessTenant($tenant)) {
+            return parent::getEloquentQuery()->whereRaw('1 = 0');
+        }
+
+        return parent::getEloquentQuery()
+            ->where('products.barbershop_id', $tenant->getKey());
     }
 
     public static function form(Schema $schema): Schema
@@ -212,7 +227,7 @@ class ProductResource extends Resource
 
                         Notification::make()
                             ->title('Venda registrada no Caixa!')
-                            ->body("{$qty}x {$record->name} (R$ " . number_format($total, 2, ',', '.') . ') lançado e baixado do estoque.')
+                            ->body("{$qty}x {$record->name} (R$ ".number_format($total, 2, ',', '.').') lançado e baixado do estoque.')
                             ->success()
                             ->send();
                     }),

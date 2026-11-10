@@ -3,7 +3,9 @@
 namespace App\Filament\Resources\ProductResource\Pages;
 
 use App\Filament\Resources\ProductResource;
+use App\Models\Barbershop;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Auth\Access\AuthorizationException;
 
 class CreateProduct extends CreateRecord
 {
@@ -11,7 +13,14 @@ class CreateProduct extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $data['barbershop_id'] = filament()->getTenant()?->id ?? auth()->user()?->barbershop_id ?? 1;
+        $tenant = filament()->getTenant();
+        $user = auth()->user();
+
+        if (! $tenant instanceof Barbershop || ! $user?->canAccessTenant($tenant)) {
+            throw new AuthorizationException('Selecione uma barbearia autorizada antes de cadastrar o produto.');
+        }
+
+        $data['barbershop_id'] = $tenant->getKey();
 
         return $data;
     }
