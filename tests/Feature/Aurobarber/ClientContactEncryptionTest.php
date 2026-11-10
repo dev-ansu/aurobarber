@@ -15,7 +15,7 @@ use Spatie\Permission\Models\Permission;
 
 uses(RefreshDatabase::class);
 
-function createAppointmentWithClientContacts(Barbershop $barbershop): Appointment
+function createAppointmentWithClientContacts(Barbershop $barbershop, ?string $phone = '85999998888'): Appointment
 {
     $professional = Professional::create([
         'barbershop_id' => $barbershop->id,
@@ -34,7 +34,7 @@ function createAppointmentWithClientContacts(Barbershop $barbershop): Appointmen
         'professional_id' => $professional->id,
         'service_id' => $service->id,
         'client_name' => 'Cliente Teste',
-        'client_phone' => '85999998888',
+        'client_phone' => $phone,
         'client_email' => 'cliente@example.test',
         'scheduled_at' => now()->addDay(),
         'ends_at' => now()->addDay()->addMinutes(30),
@@ -43,6 +43,22 @@ function createAppointmentWithClientContacts(Barbershop $barbershop): Appointmen
         'commission_amount' => 20,
     ]);
 }
+
+test('appointments can be created without storing a client phone number', function () {
+    $barbershop = Barbershop::create([
+        'name' => 'Barbearia Teste',
+        'slug' => 'barbearia-teste',
+    ]);
+
+    $appointment = createAppointmentWithClientContacts($barbershop, null);
+    $storedAppointment = DB::table('appointments')
+        ->where('id', $appointment->id)
+        ->first();
+
+    expect($appointment->client_phone)->toBeNull()
+        ->and($storedAppointment->client_phone)->toBeNull()
+        ->and($storedAppointment->client_phone_hash)->toBeNull();
+});
 
 test('client and appointment contacts are encrypted at rest and remain readable through models', function () {
     $barbershop = Barbershop::create([
