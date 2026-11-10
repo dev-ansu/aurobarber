@@ -30,3 +30,20 @@ test('a deleted barbershop slug can be reused while active slugs stay unique', f
         'slug' => 'teste',
     ]);
 });
+
+test('the slug reuse migration can be rolled back', function () {
+    Barbershop::create([
+        'name' => 'Barbearia Teste',
+        'slug' => 'teste',
+    ]);
+
+    $migration = require database_path('migrations/2026_11_09_230000_allow_reuse_deleted_barbershop_slugs.php');
+    $migration->down();
+
+    $this->expectException(QueryException::class);
+
+    Barbershop::create([
+        'name' => 'Outra Barbearia Teste',
+        'slug' => 'teste',
+    ]);
+});

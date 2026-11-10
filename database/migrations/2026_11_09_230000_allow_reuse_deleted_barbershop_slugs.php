@@ -23,7 +23,7 @@ return new class extends Migration
         $this->ensureSupportedDriver();
 
         Schema::table('barbershops', function (Blueprint $table): void {
-            $table->dropUnique('barbershops_slug_unique');
+            $table->dropIndex('barbershops_slug_unique');
             $table->unique('slug');
         });
     }
