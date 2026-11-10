@@ -19,6 +19,14 @@ class CreateAppointment extends CreateRecord
             403,
         );
 
+        if (auth()->user()?->isRestrictedBarber()) {
+            $professionalId = auth()->user()->resolveProfessionalId($tenant->id);
+            abort_unless(
+                $professionalId !== null && (int) $data['professional_id'] === $professionalId,
+                403,
+            );
+        }
+
         $data['barbershop_id'] = $tenant->getKey();
 
         // Calcula comissão e horário de término automaticamente

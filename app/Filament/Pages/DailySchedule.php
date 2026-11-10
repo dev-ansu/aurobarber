@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Collection;
 
 class DailySchedule extends Page
@@ -23,6 +24,13 @@ class DailySchedule extends Page
     protected static ?int $navigationSort = 1;
 
     protected string $view = 'filament.pages.daily-schedule';
+
+    public function getTitle(): string|Htmlable
+    {
+        return auth()->user()?->isRestrictedBarber()
+            ? 'Minha Agenda Diária'
+            : 'Agenda Diária da Equipe';
+    }
 
     public function getMaxContentWidth(): Width|string|null
     {
@@ -163,7 +171,7 @@ class DailySchedule extends Page
 
     public function updateStatus(int $appointmentId, string $status): void
     {
-        $appt = Appointment::findOrFail($appointmentId);
+        $appt = $this->findAccessibleAppointment($appointmentId);
         $appt->status = $status;
 
         if ($status === 'completed' && $appt->payment_status === 'pending') {
@@ -180,7 +188,7 @@ class DailySchedule extends Page
 
     public function openCheckoutModal(int $appointmentId): void
     {
-        $appt = Appointment::findOrFail($appointmentId);
+        $appt = $this->findAccessibleAppointment($appointmentId);
         $this->checkoutAppointmentId = $appt->id;
         $this->checkoutAmount = (float) $appt->service_price;
         $this->checkoutPaymentMethod = $appt->payment_method ?: 'pix';
@@ -195,7 +203,7 @@ class DailySchedule extends Page
             return;
         }
 
-        $appt = Appointment::findOrFail($this->checkoutAppointmentId);
+        $appt = $this->findAccessibleAppointment($this->checkoutAppointmentId);
         $appt->status = 'completed';
         $appt->payment_status = 'paid';
         $appt->payment_method = $this->checkoutPaymentMethod;
@@ -285,5 +293,23 @@ class DailySchedule extends Page
             ->title('Encaixe agendado com sucesso para '.$professional->display_name)
             ->success()
             ->send();
+    }
+
+    private function findAccessibleAppointment(int $appointmentId): Appointment
+    {
+        $tenant = filament()->getTenant();
+        $user = auth()->user();
+
+        abort_unless(
+            $tenant instanceof Barbershop && $user?->canAccessTenant($tenant),
+            403,
+        );
+
+        return $tenant->appointments()
+            ->when(
+                $user->isRestrictedBarber(),
+                fn ($query) => $query->where('professional_id', $user->resolveProfessionalId($tenant->id) ?? 0),
+            )
+            ->findOrFail($appointmentId);
     }
 }

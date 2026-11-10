@@ -61,7 +61,19 @@ class AppointmentResource extends Resource
                             ->schema([
                                 Forms\Components\Select::make('professional_id')
                                     ->label('Barbeiro / Profissional')
-                                    ->relationship('professional', 'name')
+                                    ->relationship(
+                                        'professional',
+                                        'name',
+                                        modifyQueryUsing: fn (Builder $query): Builder => $query
+                                            ->where('barbershop_id', filament()->getTenant()?->id ?? 0)
+                                            ->when(
+                                                auth()->user()?->isRestrictedBarber(),
+                                                fn (Builder $query): Builder => $query->where(
+                                                    'id',
+                                                    auth()->user()->resolveProfessionalId() ?? 0,
+                                                ),
+                                            ),
+                                    )
                                     ->default(fn () => auth()->user()?->isRestrictedBarber() ? auth()->user()->resolveProfessionalId() : null)
                                     ->disabled(fn (): bool => (bool) auth()->user()?->isRestrictedBarber())
                                     ->dehydrated()
@@ -72,7 +84,12 @@ class AppointmentResource extends Resource
 
                                 Forms\Components\Select::make('service_id')
                                     ->label('Serviço')
-                                    ->relationship('service', 'name')
+                                    ->relationship(
+                                        'service',
+                                        'name',
+                                        modifyQueryUsing: fn (Builder $query): Builder => $query
+                                            ->where('barbershop_id', filament()->getTenant()?->id ?? 0),
+                                    )
                                     ->required()
                                     ->searchable()
                                     ->preload()

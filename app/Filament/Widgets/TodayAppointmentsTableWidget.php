@@ -75,7 +75,9 @@ class TodayAppointmentsTableWidget extends BaseWidget
             ])
             ->headerActions([
                 Action::make('openSchedule')
-                    ->label('Abrir Agenda Diária da Equipe ➔')
+                    ->label(fn (): string => auth()->user()?->isRestrictedBarber()
+                        ? 'Abrir Minha Agenda Diária ➔'
+                        : 'Abrir Agenda Diária da Equipe ➔')
                     ->url(fn (): string => filament()->getTenant() ? url('/admin/' . filament()->getTenant()->slug . '/daily-schedule') : url('/admin'))
                     ->color('primary'),
             ])
