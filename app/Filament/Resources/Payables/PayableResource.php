@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Payables;
 
-use App\Filament\Resources\Payables\Pages\ManagePayables;
+use App\Filament\Resources\Payables\Pages\CreatePayable;
+use App\Filament\Resources\Payables\Pages\EditPayable;
+use App\Filament\Resources\Payables\Pages\ListPayables;
 use App\Models\Payable;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -22,8 +24,6 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Carbon;
 use UnitEnum;
 
 class PayableResource extends Resource
@@ -48,7 +48,7 @@ class PayableResource extends Resource
             && ! auth()->user()?->isRestrictedBarber();
     }
 
-    public static function getEloquentQuery(): Builder
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
         $tenantId = Filament::getTenant()?->getKey();
 
@@ -87,7 +87,6 @@ class PayableResource extends Resource
                         ->numeric()
                         ->prefix('R$')
                         ->minValue(0.01)
-                        ->maxValue(99999999.99)
                         ->required(),
                     DatePicker::make('due_date')
                         ->label('Vencimento')
@@ -98,7 +97,7 @@ class PayableResource extends Resource
                         ->rows(3)
                         ->columnSpanFull(),
                 ])
-                ->columns(2),
+                ->columnSpanFull(),
         ]);
     }
 
@@ -167,7 +166,6 @@ class PayableResource extends Resource
                         DatePicker::make('payment_date')
                             ->label('Data do pagamento')
                             ->default(today())
-                            ->maxDate(today())
                             ->required(),
                         Select::make('payment_method')
                             ->label('Forma de pagamento')
@@ -183,26 +181,12 @@ class PayableResource extends Resource
                     ])
                     ->action(function (Payable $record, array $data): void {
                         $record->markPaid(
-                            Carbon::parse($data['payment_date']),
+                            \Illuminate\Support\Carbon::parse($data['payment_date']),
                             $data['payment_method'] ?? null,
                         );
 
                         Notification::make()
                             ->title('Pagamento registrado')
-                            ->success()
-                            ->send();
-                    }),
-                Action::make('cancel')
-                    ->label('Cancelar conta')
-                    ->icon('heroicon-o-x-circle')
-                    ->color('gray')
-                    ->visible(fn (Payable $record): bool => $record->status === 'pending')
-                    ->requiresConfirmation()
-                    ->action(function (Payable $record): void {
-                        $record->cancel();
-
-                        Notification::make()
-                            ->title('Conta cancelada')
                             ->success()
                             ->send();
                     }),
@@ -216,7 +200,9 @@ class PayableResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ManagePayables::route('/'),
+            'index' => ListPayables::route('/'),
+            'create' => CreatePayable::route('/create'),
+            'edit' => EditPayable::route('/{record}/edit'),
         ];
     }
 }
