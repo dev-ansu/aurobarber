@@ -5,6 +5,7 @@ namespace App\Filament\Resources\AppointmentResource\Pages;
 use App\Filament\Resources\AppointmentResource;
 use App\Models\Barbershop;
 use App\Services\SensitiveClientDataAccess;
+use Carbon\Carbon;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
@@ -43,7 +44,18 @@ class EditAppointment extends EditRecord
             );
         }
 
-        $tenant->services()->findOrFail($data['service_id']);
+        $service = $tenant->services()->findOrFail($data['service_id']);
+        $professional = $tenant->professionals()->findOrFail($data['professional_id']);
+
+        $data['barbershop_id'] = $tenant->getKey();
+        $rate = $service->custom_commission_rate ?: ($professional->commission_rate ?: 50.00);
+        $data['commission_rate'] = $rate;
+        $data['commission_amount'] = ($data['service_price'] * $rate) / 100;
+
+        if (! empty($data['scheduled_at'])) {
+            $duration = $service->duration_minutes ?: 30;
+            $data['ends_at'] = Carbon::parse($data['scheduled_at'])->addMinutes($duration);
+        }
 
         return $data;
     }

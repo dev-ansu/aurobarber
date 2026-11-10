@@ -4,7 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\AppointmentResource\Pages;
 use App\Models\Appointment;
-use App\Models\CashMovement;
+use App\Models\Barbershop;
 use App\Models\Product;
 use App\Models\Service;
 use App\Services\SensitiveClientData;
@@ -22,6 +22,8 @@ use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class AppointmentResource extends Resource
 {
@@ -40,9 +42,16 @@ class AppointmentResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery();
+        $tenant = filament()->getTenant();
         $user = auth()->user();
 
-        if ($user && $user->isRestrictedBarber()) {
+        if (! $tenant instanceof Barbershop || ! $user?->canAccessTenant($tenant)) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        $query->where('appointments.barbershop_id', $tenant->getKey());
+
+        if ($user->isRestrictedBarber()) {
             $proId = $user->resolveProfessionalId() ?? 0;
             $query->where('professional_id', $proId);
         }
@@ -335,48 +344,76 @@ class AppointmentResource extends Resource
                             ->columnSpanFull(),
                     ])
                     ->action(function (Appointment $record, array $data): void {
-                        $productIds = (array) ($data['consumed_product_ids'] ?? []);
-                        $productsTotal = 0.0;
+                        $grandTotal = DB::transaction(function () use ($record, $data): float {
+                            $appointment = Appointment::query()
+                                ->where('barbershop_id', filament()->getTenant()?->getKey() ?? 0)
+                                ->whereKey($record->getKey())
+                                ->lockForUpdate()
+                                ->firstOrFail();
 
-                        if (! empty($productIds)) {
-                            $products = Product::whereIn('id', $productIds)->get();
-                            foreach ($products as $prod) {
-                                $productsTotal += (float) $prod->price;
-                                $record->products()->attach($prod->id, [
-                                    'quantity' => 1,
-                                    'unit_price' => $prod->price,
-                                    'total_price' => $prod->price,
+                            if ($appointment->status === 'completed' || $appointment->is_blocked_slot) {
+                                throw ValidationException::withMessages([
+                                    'payment_method' => 'Este agendamento não pode ser finalizado.',
                                 ]);
-                                $prod->decrement('stock_quantity', 1);
                             }
-                        }
 
-                        $commRate = (float) ($record->professional?->commission_rate ?? 50.0);
-                        $commAmount = round(((float) $record->service_price * $commRate) / 100, 2);
+                            $productIds = (array) ($data['consumed_product_ids'] ?? []);
+                            $normalizedProductIds = array_values(array_unique(array_filter(
+                                $productIds,
+                                fn ($id): bool => is_scalar($id) && ctype_digit((string) $id),
+                            )));
 
-                        $record->update([
-                            'status' => 'completed',
-                            'payment_status' => 'paid',
-                            'payment_method' => $data['payment_method'] ?? 'pix',
-                            'paid_at' => now(),
-                            'products_total' => (float) $record->products_total + $productsTotal,
-                            'commission_rate' => $commRate,
-                            'commission_amount' => $commAmount,
-                            'commission_status' => 'pending',
-                        ]);
+                            if (count($normalizedProductIds) !== count($productIds)) {
+                                throw ValidationException::withMessages([
+                                    'consumed_product_ids' => 'A seleção de produtos é inválida.',
+                                ]);
+                            }
 
-                        $grandTotal = (float) $record->service_price + (float) $record->products_total;
+                            $products = collect();
+                            if ($normalizedProductIds !== []) {
+                                $products = Product::query()
+                                    ->where('barbershop_id', $appointment->barbershop_id)
+                                    ->where('is_active', true)
+                                    ->whereIn('id', $normalizedProductIds)
+                                    ->orderBy('id')
+                                    ->lockForUpdate()
+                                    ->get();
 
-                        CashMovement::create([
-                            'barbershop_id' => $record->barbershop_id,
-                            'appointment_id' => $record->id,
-                            'type' => 'in',
-                            'category' => 'Atendimento',
-                            'description' => "Atendimento #{$record->id} - {$record->client_name} ({$record->services_summary})",
-                            'amount' => $grandTotal,
-                            'payment_method' => $data['payment_method'] ?? 'pix',
-                            'occurred_at' => now(),
-                        ]);
+                                if ($products->count() !== count($normalizedProductIds)
+                                    || $products->contains(fn (Product $product): bool => $product->stock_quantity < 1)) {
+                                    throw ValidationException::withMessages([
+                                        'consumed_product_ids' => 'Um ou mais produtos não pertencem a esta barbearia ou estão sem estoque.',
+                                    ]);
+                                }
+                            }
+
+                            $productsTotal = 0.0;
+                            foreach ($products as $product) {
+                                $productsTotal += (float) $product->price;
+                                $appointment->products()->attach($product->id, [
+                                    'quantity' => 1,
+                                    'unit_price' => $product->price,
+                                    'total_price' => $product->price,
+                                ]);
+                                $product->decrement('stock_quantity', 1);
+                            }
+
+                            $commRate = (float) ($appointment->professional?->commission_rate ?? 50.0);
+                            $commAmount = round(((float) $appointment->service_price * $commRate) / 100, 2);
+
+                            $appointment->update([
+                                'status' => 'completed',
+                                'payment_status' => 'paid',
+                                'payment_method' => $data['payment_method'] ?? 'pix',
+                                'paid_at' => now(),
+                                'products_total' => (float) $appointment->products_total + $productsTotal,
+                                'commission_rate' => $commRate,
+                                'commission_amount' => $commAmount,
+                                'commission_status' => 'pending',
+                            ]);
+
+                            return (float) $appointment->service_price + (float) $appointment->products_total;
+                        });
 
                         Notification::make()
                             ->title('Atendimento concluído e lançado no Caixa!')
