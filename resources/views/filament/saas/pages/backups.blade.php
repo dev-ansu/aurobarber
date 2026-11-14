@@ -7,157 +7,191 @@
             ? round($totalBytes / 1024, 1) . ' KB' 
             : ($totalBytes < 1073741824 ? round($totalBytes / 1048576, 2) . ' MB' : round($totalBytes / 1073741824, 2) . ' GB');
         $latest = $backups->first();
+        $globalCount = $backups->filter(fn($b) => $b['is_global'])->count();
+        $tenantCount = $backups->filter(fn($b) => !$b['is_global'])->count();
     @endphp
 
-    <!-- Cards de Resumo -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div class="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-900 p-5 shadow-xs">
-            <div class="flex items-center gap-3 mb-2">
-                <div class="h-10 w-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
-                    <x-filament::icon icon="heroicon-o-circle-stack" class="w-5 h-5" />
+    <div class="space-y-6">
+
+        {{-- 1. HEADER DO QUADRO GERAL DE BACKUPS --}}
+        <div class="relative overflow-hidden rounded-3xl border border-slate-800 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 p-6 sm:p-8 shadow-2xl">
+            <div class="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-amber-500/10 blur-3xl pointer-events-none"></div>
+
+            <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="space-y-1.5">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold tracking-wide">
+                        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                        <span>Segurança & Resiliência dos Dados</span>
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight">Quadro Geral de Backups & Restauração</h2>
+                    <p class="text-xs sm:text-sm text-slate-400 max-w-2xl">
+                        Dumps em formato binário nativo PostgreSQL comprimidos em ZIP. Toda restauração cria automaticamente uma cópia pré-restauração por segurança.
+                    </p>
                 </div>
-                <div>
-                    <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">Total de Backups</span>
-                    <h3 class="text-xl font-bold text-gray-950 dark:text-white">{{ $totalCount }} arquivo(s)</h3>
+
+                <div class="shrink-0 flex items-center justify-center h-16 w-16 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-inner">
+                    <x-filament::icon icon="heroicon-o-server-stack" class="w-8 h-8" />
                 </div>
             </div>
-            <p class="text-xs text-gray-500 dark:text-gray-400">Espaço em disco: <span class="font-bold text-gray-800 dark:text-gray-200">{{ $totalFormatted }}</span></p>
         </div>
 
-        <div class="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-900 p-5 shadow-xs">
-            <div class="flex items-center gap-3 mb-2">
-                <div class="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
-                    <x-filament::icon icon="heroicon-o-shield-check" class="w-5 h-5" />
+        {{-- 2. CARDS DE KPIS --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {{-- Card 1: Total de Backups --}}
+            <div class="rounded-3xl border border-slate-800 bg-slate-950/90 p-5 shadow-xl flex items-center justify-between">
+                <div class="space-y-1">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total de Backups</span>
+                    <div class="text-2xl sm:text-3xl font-black text-white font-mono">{{ $totalCount }} <span class="text-xs font-normal text-slate-400">arquivos</span></div>
+                    <p class="text-xs text-slate-400">Espaço em disco: <span class="font-bold text-slate-200">{{ $totalFormatted }}</span></p>
                 </div>
-                <div>
-                    <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">Segurança Pré-Restauração</span>
-                    <h3 class="text-xl font-bold text-gray-950 dark:text-white">Automática</h3>
+                <div class="h-12 w-12 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center border border-amber-500/20">
+                    <x-filament::icon icon="heroicon-o-circle-stack" class="w-6 h-6" />
                 </div>
             </div>
-            <p class="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Cópia de segurança criada antes de qualquer restauração</p>
-        </div>
 
-        <div class="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-900 p-5 shadow-xs">
-            <div class="flex items-center gap-3 mb-2">
-                <div class="h-10 w-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
-                    <x-filament::icon icon="heroicon-o-clock" class="w-5 h-5" />
+            {{-- Card 2: Segurança Pré-Restauração --}}
+            <div class="rounded-3xl border border-slate-800 bg-slate-950/90 p-5 shadow-xl flex items-center justify-between">
+                <div class="space-y-1">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-400">Garantia Pré-Restauração</span>
+                    <div class="text-2xl sm:text-3xl font-black text-emerald-400">Ativa</div>
+                    <p class="text-xs text-slate-400">Backup preventivo gerado antes do restore</p>
                 </div>
-                <div>
-                    <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">Último Backup</span>
-                    <h3 class="text-sm font-bold text-gray-950 dark:text-white">
-                        {{ $latest ? $latest['created_at_formatted'] : 'Nenhum ainda' }}
-                    </h3>
+                <div class="h-12 w-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
+                    <x-filament::icon icon="heroicon-o-shield-check" class="w-6 h-6" />
                 </div>
             </div>
-            <p class="text-xs text-gray-500 dark:text-gray-400">
-                {{ $latest ? $latest['filename'] : 'Clique em Gerar Novo Backup' }}
-            </p>
-        </div>
-    </div>
 
-    <!-- Filtros de Visualização -->
-    <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
-        <div class="inline-flex rounded-xl p-1 bg-gray-100 dark:bg-gray-800 text-xs font-medium">
-            <button 
-                wire:click="$set('filterScope', 'all')"
-                type="button"
-                class="px-3 py-1.5 rounded-lg transition {{ $filterScope === 'all' ? 'bg-white dark:bg-gray-900 shadow-xs font-bold text-gray-950 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white' }}">
-                Todos os Backups ({{ $backups->count() }})
-            </button>
-            <button 
-                wire:click="$set('filterScope', 'global')"
-                type="button"
-                class="px-3 py-1.5 rounded-lg transition {{ $filterScope === 'global' ? 'bg-white dark:bg-gray-900 shadow-xs font-bold text-gray-950 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white' }}">
-                🌐 Base Completa (Global)
-            </button>
-            <button 
-                wire:click="$set('filterScope', 'tenants')"
-                type="button"
-                class="px-3 py-1.5 rounded-lg transition {{ $filterScope === 'tenants' ? 'bg-white dark:bg-gray-900 shadow-xs font-bold text-gray-950 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white' }}">
-                💈 Por Barbearia
-            </button>
-        </div>
-    </div>
-
-    <!-- Tabela de Backups -->
-    <div class="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-gray-900 overflow-hidden shadow-xs">
-        @if($backups->isEmpty())
-            <div class="p-12 text-center">
-                <div class="h-16 w-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-400">
-                    <x-filament::icon icon="heroicon-o-archive-box" class="w-8 h-8" />
+            {{-- Card 3: Último Backup --}}
+            <div class="rounded-3xl border border-slate-800 bg-slate-950/90 p-5 shadow-xl flex items-center justify-between">
+                <div class="space-y-1 min-w-0 pr-2">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Último Arquivo Gerado</span>
+                    <div class="text-base sm:text-lg font-bold text-white truncate">
+                        {{ $latest ? $latest['created_at_formatted'] : 'Nenhum backup' }}
+                    </div>
+                    <p class="text-xs text-slate-400 font-mono truncate">
+                        {{ $latest ? $latest['filename'] : 'Clique em Gerar Novo Backup' }}
+                    </p>
                 </div>
-                <h4 class="text-base font-bold text-gray-900 dark:text-white mb-1">Nenhum backup encontrado</h4>
-                <p class="text-xs text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-5">
-                    Utilize o botão acima para gerar o primeiro backup das barbearias.
-                </p>
+                <div class="h-12 w-12 rounded-2xl bg-sky-500/10 text-sky-400 flex items-center justify-center border border-sky-500/20 shrink-0">
+                    <x-filament::icon icon="heroicon-o-clock" class="w-6 h-6" />
+                </div>
             </div>
-        @else
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-xs">
-                    <thead>
-                        <tr class="bg-gray-50 dark:bg-gray-800/80 text-gray-600 dark:text-gray-300 border-b border-gray-200 dark:border-gray-800 font-bold uppercase tracking-wider text-[11px]">
-                            <th class="px-4 py-3">Tipo</th>
-                            <th class="px-4 py-3">Barbearia / Escopo</th>
-                            <th class="px-4 py-3">Nome do Arquivo</th>
-                            <th class="px-4 py-3">Tamanho</th>
-                            <th class="px-4 py-3">Criado em</th>
-                            <th class="px-4 py-3 text-right">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
-                        @foreach($backups as $item)
-                            <tr class="hover:bg-gray-50/70 dark:hover:bg-gray-800/40 transition">
-                                <td class="px-4 py-3.5">
-                                    @if($item['is_global'])
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                                            <span>GLOBAL</span>
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                            <span>BARBEARIA</span>
-                                        </span>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-3.5 font-bold text-gray-900 dark:text-white">
-                                    {{ $item['barbershop_name'] }}
-                                    @if(!$item['is_global'])
-                                        <span class="block text-[10px] font-mono text-gray-400 font-normal">slug: /{{ $item['scope'] }}</span>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-3.5 font-mono text-[11px] text-gray-600 dark:text-gray-300">
-                                    {{ $item['filename'] }}
-                                </td>
-                                <td class="px-4 py-3.5 font-bold text-gray-700 dark:text-gray-200">
-                                    {{ $item['size_formatted'] }}
-                                </td>
-                                <td class="px-4 py-3.5 text-gray-600 dark:text-gray-400 font-medium">
-                                    {{ $item['created_at_formatted'] }}
-                                </td>
-                                <td class="px-4 py-3.5 text-right whitespace-nowrap">
-                                    <div class="inline-flex items-center gap-2">
-                                        <button
-                                            wire:click="restoreBackup(@js($item['filename']))"
-                                            wire:confirm="Tem certeza de que deseja restaurar este backup? Uma cópia de segurança preventiva será gerada automaticamente antes da restauração."
-                                            type="button"
-                                            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-100 dark:bg-amber-500/10 hover:bg-amber-200 dark:hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 font-semibold text-xs transition">
-                                            <x-filament::icon icon="heroicon-m-arrow-uturn-left" class="w-3.5 h-3.5" />
-                                            <span>Restaurar</span>
-                                        </button>
-                                        <button
-                                            wire:click="deleteBackup(@js($item['filename']))"
-                                            wire:confirm="Excluir este arquivo de backup permanentemente?"
-                                            type="button"
-                                            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-100 dark:bg-red-500/10 hover:bg-red-200 dark:hover:bg-red-500/20 text-red-800 dark:text-red-300 font-semibold text-xs transition">
-                                            <x-filament::icon icon="heroicon-m-trash" class="w-3.5 h-3.5" />
-                                            <span>Excluir</span>
-                                        </button>
-                                    </div>
-                                </td>
+        </div>
+
+        {{-- 3. FILTROS DE VISUALIZAÇÃO --}}
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <div class="inline-flex rounded-2xl p-1 bg-slate-900 border border-slate-800 text-xs font-medium">
+                <button 
+                    wire:click="$set('filterScope', 'all')"
+                    type="button"
+                    class="px-4 py-2 rounded-xl transition cursor-pointer {{ $filterScope === 'all' ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'text-slate-400 hover:text-white' }}">
+                    Todos os Backups ({{ $totalCount }})
+                </button>
+                <button 
+                    wire:click="$set('filterScope', 'global')"
+                    type="button"
+                    class="px-4 py-2 rounded-xl transition cursor-pointer {{ $filterScope === 'global' ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'text-slate-400 hover:text-white' }}">
+                    🌐 Base Completa ({{ $globalCount }})
+                </button>
+                <button 
+                    wire:click="$set('filterScope', 'tenants')"
+                    type="button"
+                    class="px-4 py-2 rounded-xl transition cursor-pointer {{ $filterScope === 'tenants' ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'text-slate-400 hover:text-white' }}">
+                    💈 Por Barbearia ({{ $tenantCount }})
+                </button>
+            </div>
+
+            <div class="text-xs text-slate-400 flex items-center gap-1.5">
+                <x-filament::icon icon="heroicon-o-information-circle" class="w-4 h-4 text-amber-400" />
+                <span>Formato nativo <code>PostgreSQL Custom Dump (-Fc)</code> com compressão zlib.</span>
+            </div>
+        </div>
+
+        {{-- 4. TABELA DE BACKUPS --}}
+        <div class="rounded-3xl border border-slate-800 bg-slate-950/90 overflow-hidden shadow-2xl">
+            @if($backups->isEmpty())
+                <div class="p-12 text-center">
+                    <div class="h-16 w-16 mx-auto mb-4 rounded-2xl bg-slate-900 flex items-center justify-center text-slate-400 border border-slate-800">
+                        <x-filament::icon icon="heroicon-o-archive-box" class="w-8 h-8" />
+                    </div>
+                    <h4 class="text-base font-bold text-white mb-1">Nenhum backup encontrado neste filtro</h4>
+                    <p class="text-xs text-slate-400 max-w-md mx-auto mb-5">
+                        Utilize o botão "+ Gerar Novo Backup" no topo da página para criar o primeiro dump.
+                    </p>
+                </div>
+            @else
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-900/80 text-slate-300 border-b border-slate-800 uppercase tracking-wider text-[11px] font-bold">
+                                <th class="px-5 py-4">Tipo</th>
+                                <th class="px-5 py-4">Barbearia / Escopo</th>
+                                <th class="px-5 py-4">Nome do Arquivo</th>
+                                <th class="px-5 py-4">Tamanho</th>
+                                <th class="px-5 py-4">Criado em</th>
+                                <th class="px-5 py-4 text-right">Ações</th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        @endif
+                        </thead>
+                        <tbody class="divide-y divide-slate-800/60">
+                            @foreach($backups as $item)
+                                <tr class="hover:bg-slate-900/40 transition">
+                                    <td class="px-5 py-4 whitespace-nowrap">
+                                        @if($item['is_global'])
+                                            <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-black bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                                                <span>🌐 GLOBAL</span>
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                                                <span>💈 BARBEARIA</span>
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="px-5 py-4">
+                                        <div class="font-bold text-white text-sm">
+                                            {{ $item['barbershop_name'] }}
+                                        </div>
+                                        @if(!$item['is_global'])
+                                            <span class="block text-[11px] font-mono text-slate-400 mt-0.5">slug: /{{ $item['scope'] }}</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-5 py-4 font-mono text-xs text-slate-300">
+                                        <span class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800">
+                                            {{ $item['filename'] }}
+                                        </span>
+                                    </td>
+                                    <td class="px-5 py-4 font-bold text-slate-200 whitespace-nowrap">
+                                        {{ $item['size_formatted'] }}
+                                    </td>
+                                    <td class="px-5 py-4 text-slate-400 font-medium whitespace-nowrap">
+                                        {{ $item['created_at_formatted'] }}
+                                    </td>
+                                    <td class="px-5 py-4 text-right whitespace-nowrap">
+                                        <div class="inline-flex items-center gap-2">
+                                            <button
+                                                wire:click="restoreBackup(@js($item['filename']))"
+                                                wire:confirm="Tem certeza de que deseja restaurar este backup? Uma cópia de segurança preventiva será gerada automaticamente antes da restauração."
+                                                type="button"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold text-xs transition cursor-pointer active:scale-95">
+                                                <x-filament::icon icon="heroicon-m-arrow-uturn-left" class="w-3.5 h-3.5" />
+                                                <span>Restaurar</span>
+                                            </button>
+                                            <button
+                                                wire:click="deleteBackup(@js($item['filename']))"
+                                                wire:confirm="Excluir este arquivo de backup permanentemente do disco da VPS?"
+                                                type="button"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-xs transition cursor-pointer active:scale-95">
+                                                <x-filament::icon icon="heroicon-m-trash" class="w-3.5 h-3.5" />
+                                                <span>Excluir</span>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
+
     </div>
 </x-filament-panels::page>
