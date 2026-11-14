@@ -149,6 +149,7 @@ class AdminPanelProvider extends PanelProvider
                 \App\Http\Middleware\EnsurePasswordIsChanged::class,
             ])
             ->tenantMiddleware([
+                \App\Http\Middleware\ResolveTenantSchema::class,
                 \App\Http\Middleware\EnsureBarbershopLicenseIsValid::class,
             ], isPersistent: true);
     }

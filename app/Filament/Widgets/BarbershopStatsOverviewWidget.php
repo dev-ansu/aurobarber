@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Appointment;
+use App\Models\ProductSale;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -37,6 +38,12 @@ class BarbershopStatsOverviewWidget extends BaseWidget
             $todayCompleted = $todayAppts->where('status', 'completed')->count();
             $todayInProgress = $todayAppts->where('status', 'in_progress')->count();
             $todayCommission = (float) $todayAppts->where('status', 'completed')->sum('commission_amount');
+            $todayBalcaoComm = (float) ProductSale::where('barbershop_id', $tenant->id)
+                ->where('professional_id', $proId)
+                ->whereNull('appointment_id')
+                ->whereDate('created_at', $today)
+                ->sum('commission_amount');
+            $todayCommission += $todayBalcaoComm;
 
             $monthAppts = Appointment::where('barbershop_id', $tenant->id)
                 ->where('professional_id', $proId)
@@ -46,11 +53,25 @@ class BarbershopStatsOverviewWidget extends BaseWidget
                 ->get();
 
             $monthCommission = (float) $monthAppts->sum('commission_amount');
+            $monthBalcaoComm = (float) ProductSale::where('barbershop_id', $tenant->id)
+                ->where('professional_id', $proId)
+                ->whereNull('appointment_id')
+                ->whereDate('created_at', '>=', $startOfMonth)
+                ->whereDate('created_at', '<=', $endOfMonth)
+                ->sum('commission_amount');
+            $monthCommission += $monthBalcaoComm;
+
             $pendingCommission = (float) Appointment::where('barbershop_id', $tenant->id)
                 ->where('professional_id', $proId)
                 ->where('status', 'completed')
                 ->where(fn ($q) => $q->whereNull('commission_status')->orWhere('commission_status', 'pending'))
                 ->sum('commission_amount');
+            $pendingBalcaoComm = (float) ProductSale::where('barbershop_id', $tenant->id)
+                ->where('professional_id', $proId)
+                ->whereNull('appointment_id')
+                ->where('commission_status', 'pending')
+                ->sum('commission_amount');
+            $pendingCommission += $pendingBalcaoComm;
 
             return [
                 Stat::make('Minha Comissão Hoje', 'R$ ' . number_format($todayCommission, 2, ',', '.'))

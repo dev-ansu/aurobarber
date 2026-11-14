@@ -68,6 +68,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->web(prepend: [
             EnsureLivewireChildrenMemoExists::class,
+            \App\Http\Middleware\ResolveTenantSchema::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

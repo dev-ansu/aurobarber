@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Appointment;
 use App\Models\CommissionPayout;
+use App\Models\ProductSale;
 use App\Models\Professional;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
@@ -145,21 +146,69 @@ class CommissionsPage extends Page
         return $query->get();
     }
 
+    public function getProductSalesProperty(): Collection
+    {
+        $tenant = filament()->getTenant();
+        if (!$tenant) {
+            return collect();
+        }
+
+        $query = ProductSale::where('barbershop_id', $tenant->id)
+            ->whereDate('created_at', '>=', $this->startDate)
+            ->whereDate('created_at', '<=', $this->endDate)
+            ->with(['product', 'professional', 'commissionPayout'])
+            ->orderBy('created_at', 'desc');
+
+        if (auth()->user()?->isRestrictedBarber()) {
+            $proId = auth()->user()->resolveProfessionalId($tenant->id) ?? 0;
+            $query->where('professional_id', $proId);
+        } elseif ($this->selectedProfessionalId) {
+            $query->where('professional_id', $this->selectedProfessionalId);
+        } else {
+            $query->whereNotNull('professional_id');
+        }
+
+        if ($this->statusFilter === 'pending') {
+            $query->where('commission_status', 'pending');
+        } elseif ($this->statusFilter === 'paid') {
+            $query->where('commission_status', 'paid');
+        }
+
+        return $query->get();
+    }
+
     public function getSummaryStatsProperty(): array
     {
         $appts = $this->appointments;
+        $prodSales = $this->productSales;
 
-        $totalGross = (float) $appts->sum('service_price');
-        $totalCommission = (float) $appts->sum('commission_amount');
+        $servicesGross = (float) $appts->sum('service_price');
+        $servicesCommission = 0.0;
+        foreach ($appts as $a) {
+            $serviceComm = (float) $a->commission_amount - (float) $a->products_commission_amount;
+            $servicesCommission += max(0, $serviceComm);
+        }
+
+        $productsGross = (float) $prodSales->sum('total_price');
+        $productsCommission = (float) $prodSales->sum('commission_amount');
+
+        $totalGross = $servicesGross + $productsGross;
+        $totalCommission = $servicesCommission + $productsCommission;
         $barbershopCut = $totalGross - $totalCommission;
         $count = $appts->count();
+        $productsCount = (int) $prodSales->sum('quantity');
 
         return [
             'count' => $count,
+            'products_count' => $productsCount,
+            'services_gross' => $servicesGross,
+            'services_commission' => $servicesCommission,
+            'products_gross' => $productsGross,
+            'products_commission' => $productsCommission,
             'total_gross' => $totalGross,
             'total_commission' => $totalCommission,
             'barbershop_cut' => $barbershopCut,
-            'avg_ticket' => $count > 0 ? $totalGross / $count : 0,
+            'avg_ticket' => $count > 0 ? $servicesGross / $count : 0,
         ];
     }
 
@@ -197,10 +246,12 @@ class CommissionsPage extends Page
             return;
         }
 
-        $pendingCount = $this->appointments->where('commission_status', '!=', 'paid')->count();
-        if ($pendingCount === 0) {
+        $pendingApptsCount = $this->appointments->where('commission_status', '!=', 'paid')->count();
+        $pendingProdSalesCount = $this->productSales->where('commission_status', '!=', 'paid')->count();
+
+        if ($pendingApptsCount === 0 && $pendingProdSalesCount === 0) {
             Notification::make()
-                ->title('Não há comissões em aberto para liquidar no período selecionado.')
+                ->title('Não há comissões em aberto (cortes ou produtos) para liquidar no período selecionado.')
                 ->warning()
                 ->send();
             return;
@@ -221,14 +272,26 @@ class CommissionsPage extends Page
         }
 
         $pendingAppts = $this->appointments->where('commission_status', '!=', 'paid');
-        if ($pendingAppts->isEmpty()) {
+        $pendingProdSales = $this->productSales->where('commission_status', '!=', 'paid');
+
+        if ($pendingAppts->isEmpty() && $pendingProdSales->isEmpty()) {
             $this->payoutModalOpen = false;
             return;
         }
 
-        DB::transaction(function () use ($tenant, $prof, $pendingAppts) {
-            $totalGross = (float) $pendingAppts->sum('service_price');
-            $totalCommission = (float) $pendingAppts->sum('commission_amount');
+        DB::transaction(function () use ($tenant, $prof, $pendingAppts, $pendingProdSales) {
+            $servicesGross = (float) $pendingAppts->sum('service_price');
+            $servicesCommission = 0.0;
+            foreach ($pendingAppts as $a) {
+                $serviceComm = (float) $a->commission_amount - (float) $a->products_commission_amount;
+                $servicesCommission += max(0, $serviceComm);
+            }
+
+            $productsGross = (float) $pendingProdSales->sum('total_price');
+            $productsCommission = (float) $pendingProdSales->sum('commission_amount');
+
+            $totalGross = $servicesGross + $productsGross;
+            $totalCommission = $servicesCommission + $productsCommission;
             $barbershopCut = $totalGross - $totalCommission;
 
             $payout = CommissionPayout::create([
@@ -237,6 +300,11 @@ class CommissionsPage extends Page
                 'period_start' => $this->startDate,
                 'period_end' => $this->endDate,
                 'appointments_count' => $pendingAppts->count(),
+                'services_gross' => $servicesGross,
+                'services_commission' => $servicesCommission,
+                'products_gross' => $productsGross,
+                'products_commission' => $productsCommission,
+                'products_count' => (int) $pendingProdSales->sum('quantity'),
                 'total_gross' => $totalGross,
                 'total_commission' => $totalCommission,
                 'barbershop_cut' => $barbershopCut,
@@ -245,25 +313,35 @@ class CommissionsPage extends Page
                 'paid_at' => now(),
             ]);
 
-            Appointment::whereIn('id', $pendingAppts->pluck('id'))->update([
-                'commission_status' => 'paid',
-                'commission_payout_id' => $payout->id,
-                'commission_paid_at' => now(),
-            ]);
+            if ($pendingAppts->isNotEmpty()) {
+                Appointment::whereIn('id', $pendingAppts->pluck('id'))->update([
+                    'commission_status' => 'paid',
+                    'commission_payout_id' => $payout->id,
+                    'commission_paid_at' => now(),
+                ]);
+            }
+
+            if ($pendingProdSales->isNotEmpty()) {
+                ProductSale::whereIn('id', $pendingProdSales->pluck('id'))->update([
+                    'commission_status' => 'paid',
+                    'commission_payout_id' => $payout->id,
+                    'commission_paid_at' => now(),
+                ]);
+            }
         });
 
         $this->payoutModalOpen = false;
 
         Notification::make()
             ->title('Comissão liquidada com sucesso!')
-            ->body('Recibo gerado e atendimentos marcados como pagos.')
+            ->body('Recibo gerado e comissões de serviços e produtos marcadas como pagas.')
             ->success()
             ->send();
     }
 
     public function openPrintPayoutModal(int $payoutId): void
     {
-        $this->selectedPayoutToPrint = CommissionPayout::with(['professional', 'barbershop', 'appointments.service'])->findOrFail($payoutId);
+        $this->selectedPayoutToPrint = CommissionPayout::with(['professional', 'barbershop', 'appointments.service', 'productSales.product'])->findOrFail($payoutId);
         $this->printPayoutModalOpen = true;
     }
 }

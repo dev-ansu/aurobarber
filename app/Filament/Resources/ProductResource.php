@@ -6,6 +6,8 @@ use App\Filament\Resources\ProductResource\Pages;
 use App\Models\Barbershop;
 use App\Models\CashMovement;
 use App\Models\Product;
+use App\Models\ProductSale;
+use App\Models\Professional;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -194,6 +196,20 @@ class ProductResource extends Resource
                                             ->required()
                                             ->columnSpanFull(),
 
+                                        Select::make('professional_id')
+                                            ->label('Barbeiro / Vendedor (Gera Comissão)')
+                                            ->placeholder('Venda da própria barbearia (Sem comissão)')
+                                            ->options(fn (Product $record) => Professional::where('barbershop_id', $record->barbershop_id)->where('is_active', true)->pluck('name', 'id'))
+                                            ->default(fn () => auth()->user()?->isRestrictedBarber() ? auth()->user()->resolveProfessionalId() : null)
+                                            ->searchable()
+                                            ->helperText(fn (Product $record) => "Comissão configurada no produto: {$record->commission_rate}%")
+                                            ->columnSpanFull(),
+
+                                        TextInput::make('client_name')
+                                            ->label('Nome do Cliente (Opcional)')
+                                            ->placeholder('Ex: Carlos Eduardo')
+                                            ->columnSpanFull(),
+
                                         Select::make('payment_method')
                                             ->label('Forma de Pagamento')
                                             ->options([
@@ -212,22 +228,61 @@ class ProductResource extends Resource
                     ->action(function (Product $record, array $data): void {
                         $qty = max(1, (int) ($data['quantity'] ?? 1));
                         $total = (float) $record->price * $qty;
+                        $proId = !empty($data['professional_id']) ? (int) $data['professional_id'] : null;
+
+                        $commRate = 0.0;
+                        $commAmount = 0.0;
+                        $proName = null;
+
+                        if ($proId) {
+                            $pro = Professional::find($proId);
+                            if ($pro) {
+                                $proName = $pro->display_name;
+                                // Use product commission rate; fallback to professional's commission rate if product rate is 0
+                                $commRate = (float) $record->commission_rate;
+                                if ($commRate <= 0) {
+                                    $commRate = (float) $pro->commission_rate;
+                                }
+                                $commAmount = round(($total * $commRate) / 100, 2);
+                            }
+                        }
 
                         $record->decrement('stock_quantity', $qty);
+
+                        ProductSale::create([
+                            'barbershop_id' => $record->barbershop_id,
+                            'product_id' => $record->id,
+                            'professional_id' => $proId,
+                            'quantity' => $qty,
+                            'unit_price' => $record->price,
+                            'total_price' => $total,
+                            'cost_price' => $record->cost_price,
+                            'commission_rate' => $commRate,
+                            'commission_amount' => $commAmount,
+                            'commission_status' => $proId ? 'pending' : 'none',
+                            'payment_method' => $data['payment_method'] ?? 'pix',
+                            'client_name' => $data['client_name'] ?? null,
+                            'notes' => $proName ? "Venda realizada pelo barbeiro {$proName}" : 'Venda direta balcão',
+                        ]);
 
                         CashMovement::create([
                             'barbershop_id' => $record->barbershop_id,
                             'type' => 'in',
                             'category' => 'Venda de Produto',
-                            'description' => "Venda avulsa: {$qty}x {$record->name}",
+                            'description' => "Venda de produto: {$qty}x {$record->name}" . ($proName ? " (Barbeiro: {$proName})" : ''),
                             'amount' => $total,
                             'payment_method' => $data['payment_method'] ?? 'pix',
                             'occurred_at' => now(),
                         ]);
 
+                        $msg = "{$qty}x {$record->name} (R$ " . number_format($total, 2, ',', '.') . ") lançado no Caixa e baixado do estoque.";
+                        if ($proName && $commAmount > 0) {
+                            $msg .= " Comissão de R$ " . number_format($commAmount, 2, ',', '.') . " ({$commRate}%) gerada para {$proName}.";
+                        }
+
                         Notification::make()
-                            ->title('Venda registrada no Caixa!')
-                            ->body("{$qty}x {$record->name} (R$ ".number_format($total, 2, ',', '.').') lançado e baixado do estoque.')
+                            ->title('Venda de Produto registrada!')
+                            ->body($msg)
                             ->success()
                             ->send();
                     }),

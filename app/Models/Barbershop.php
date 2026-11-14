@@ -18,6 +18,8 @@ class Barbershop extends Model
         'parent_id',
         'name',
         'slug',
+        'schema_name',
+        'custom_domain',
         'headline',
         'description',
         'logo_url',

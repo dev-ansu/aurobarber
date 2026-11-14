@@ -6,6 +6,7 @@ use App\Filament\Resources\AppointmentResource\Pages;
 use App\Models\Appointment;
 use App\Models\Barbershop;
 use App\Models\Product;
+use App\Models\ProductSale;
 use App\Models\Service;
 use App\Services\SensitiveClientData;
 use App\Services\SensitiveClientDataAccess;
@@ -388,18 +389,48 @@ class AppointmentResource extends Resource
                             }
 
                             $productsTotal = 0.0;
+                            $productsCommissionTotal = 0.0;
+
                             foreach ($products as $product) {
-                                $productsTotal += (float) $product->price;
+                                $itemPrice = (float) $product->price;
+                                $productsTotal += $itemPrice;
+
+                                // Product commission rate (or fallback to professional rate if product is 0)
+                                $prodCommRate = (float) $product->commission_rate;
+                                if ($prodCommRate <= 0 && $appointment->professional) {
+                                    $prodCommRate = (float) ($appointment->professional->commission_rate ?? 0);
+                                }
+                                $prodCommAmount = round(($itemPrice * $prodCommRate) / 100, 2);
+                                $productsCommissionTotal += $prodCommAmount;
+
                                 $appointment->products()->attach($product->id, [
                                     'quantity' => 1,
                                     'unit_price' => $product->price,
                                     'total_price' => $product->price,
                                 ]);
                                 $product->decrement('stock_quantity', 1);
+
+                                ProductSale::create([
+                                    'barbershop_id' => $appointment->barbershop_id,
+                                    'product_id' => $product->id,
+                                    'professional_id' => $appointment->professional_id,
+                                    'appointment_id' => $appointment->id,
+                                    'quantity' => 1,
+                                    'unit_price' => $product->price,
+                                    'total_price' => $product->price,
+                                    'cost_price' => $product->cost_price,
+                                    'commission_rate' => $prodCommRate,
+                                    'commission_amount' => $prodCommAmount,
+                                    'commission_status' => 'pending',
+                                    'payment_method' => $data['payment_method'] ?? 'pix',
+                                    'client_name' => $appointment->client_name,
+                                    'notes' => 'Produto consumido/vendido no atendimento #' . $appointment->id,
+                                ]);
                             }
 
                             $commRate = (float) ($appointment->professional?->commission_rate ?? 50.0);
-                            $commAmount = round(((float) $appointment->service_price * $commRate) / 100, 2);
+                            $serviceCommAmount = round(((float) $appointment->service_price * $commRate) / 100, 2);
+                            $totalCommAmount = $serviceCommAmount + $productsCommissionTotal;
 
                             $appointment->update([
                                 'status' => 'completed',
@@ -407,8 +438,9 @@ class AppointmentResource extends Resource
                                 'payment_method' => $data['payment_method'] ?? 'pix',
                                 'paid_at' => now(),
                                 'products_total' => (float) $appointment->products_total + $productsTotal,
+                                'products_commission_amount' => (float) $appointment->products_commission_amount + $productsCommissionTotal,
                                 'commission_rate' => $commRate,
-                                'commission_amount' => $commAmount,
+                                'commission_amount' => $totalCommAmount,
                                 'commission_status' => 'pending',
                             ]);
 

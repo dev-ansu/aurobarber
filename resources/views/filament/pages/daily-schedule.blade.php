@@ -920,9 +920,62 @@
 
                 <div class="ab-form-stack">
                     <div class="ab-field">
-                        <label class="ab-field-label">Valor Cobrado (R$)</label>
-                        <input type="number" step="0.01" wire:model="checkoutAmount" class="ab-field-input" style="font-size: 16px; font-weight: 900; color: #fbbf24;" />
+                        <label class="ab-field-label">Valor do Corte / Serviços (R$)</label>
+                        <input type="number" step="0.01" wire:model.live="checkoutAmount" class="ab-field-input" style="font-size: 16px; font-weight: 900; color: #fbbf24;" />
                     </div>
+
+                    {{-- VENDA DE PRODUTOS NO ATENDIMENTO --}}
+                    <div class="ab-field" style="background: #090d16; border: 1px dashed #334155; border-radius: 14px; padding: 14px;">
+                        <label class="ab-field-label" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span>🧴 Vender Produto ao Cliente (Gera Comissão)</span>
+                            <span style="font-size: 11px; color: #10b981; font-weight: 800;">Estoque Integrado</span>
+                        </label>
+
+                        <div style="display: flex; gap: 8px;">
+                            <select wire:model="selectedProductIdToAdd" class="ab-field-input" style="flex: 1; font-size: 12px;">
+                                <option value="">-- Selecione um produto para adicionar --</option>
+                                @foreach ($this->availableProducts as $prod)
+                                    <option value="{{ $prod->id }}">
+                                        {{ $prod->name }} - R$ {{ number_format($prod->price, 2, ',', '.') }} ({{ $prod->stock_quantity }} un. em estoque - Comis: {{ number_format($prod->commission_rate, 0) }}%)
+                                    </option>
+                                @endforeach
+                            </select>
+                            <button type="button" wire:click="addProductToCheckout" style="background: #3b82f6; color: #ffffff; border: none; border-radius: 10px; padding: 0 14px; font-size: 12px; font-weight: 800; cursor: pointer;">
+                                + Adicionar
+                            </button>
+                        </div>
+
+                        @if (count($checkoutProducts) > 0)
+                            <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 6px;">
+                                @foreach ($checkoutProducts as $idx => $item)
+                                    <div style="display: flex; justify-content: space-between; align-items: center; background: #020617; border: 1px solid #1e293b; border-radius: 8px; padding: 8px 12px; font-size: 12px;">
+                                        <div>
+                                            <strong style="color: #ffffff;">{{ $item['name'] }}</strong>
+                                            <span style="color: #94a3b8; margin-left: 6px;">({{ $item['quantity'] }}x R$ {{ number_format($item['price'], 2, ',', '.') }})</span>
+                                            <span style="color: #10b981; font-size: 11px; margin-left: 4px;">· Comis: {{ number_format($item['commission_rate'], 0) }}%</span>
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <span style="font-weight: 800; color: #fbbf24;">R$ {{ number_format($item['price'] * $item['quantity'], 2, ',', '.') }}</span>
+                                            <button type="button" wire:click="removeProductFromCheckout({{ $idx }})" style="color: #ef4444; background: none; border: none; font-size: 16px; cursor: pointer; line-height: 1;">&times;</button>
+                                        </div>
+                                    </div>
+                                @endforeach
+
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; font-size: 13px; border-top: 1px solid #1e293b;">
+                                    <span style="color: #cbd5e1; font-weight: 700;">Subtotal em Produtos:</span>
+                                    <strong style="color: #10b981;">R$ {{ number_format($this->checkoutProductsTotal, 2, ',', '.') }}</strong>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- TOTAL CONSOLIDADO --}}
+                    @if (count($checkoutProducts) > 0)
+                        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 12px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: #ffffff; font-weight: 800; font-size: 13px;">TOTAL A COBRAR DO CLIENTE:</span>
+                            <span style="color: #34d399; font-size: 18px; font-weight: 900;">R$ {{ number_format($this->checkoutGrandTotal, 2, ',', '.') }}</span>
+                        </div>
+                    @endif
 
                     <div class="ab-field">
                         <label class="ab-field-label">Forma de Pagamento</label>

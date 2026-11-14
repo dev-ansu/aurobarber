@@ -2,6 +2,7 @@
     @php
         $stats = $this->summaryStats;
         $appts = $this->appointments;
+        $prodSales = $this->productSales;
         $payouts = $this->payoutsHistory;
         $selectedProf = $this->selectedProfessional;
     @endphp
@@ -451,18 +452,14 @@
             <div class="cp-stat-box">
                 <span class="cp-stat-label">{{ auth()->user()?->isRestrictedBarber() ? 'Minha Produção Bruta' : 'Produção Bruta' }}</span>
                 <span class="cp-stat-val">R$ {{ number_format($stats['total_gross'], 2, ',', '.') }}</span>
-                <span class="cp-stat-sub">{{ $stats['count'] }} corte(s) concluído(s)</span>
+                <span class="cp-stat-sub">{{ $stats['count'] }} corte(s) + {{ $stats['products_count'] }} produto(s)</span>
             </div>
 
             <div class="cp-stat-box">
-                <span class="cp-stat-label">{{ auth()->user()?->isRestrictedBarber() ? 'Minha Comissão' : 'Comissão do Barbeiro' }}</span>
+                <span class="cp-stat-label">{{ auth()->user()?->isRestrictedBarber() ? 'Minha Comissão Total' : 'Comissão do Barbeiro' }}</span>
                 <span class="cp-stat-val cp-stat-val-amber">R$ {{ number_format($stats['total_commission'], 2, ',', '.') }}</span>
                 <span class="cp-stat-sub">
-                    @if ($selectedProf)
-                        Taxa de {{ number_format($selectedProf->commission_rate, 0) }}% cadastrada
-                    @else
-                        Total a pagar
-                    @endif
+                    Cortes: R$ {{ number_format($stats['services_commission'], 2, ',', '.') }} | Produtos: R$ {{ number_format($stats['products_commission'], 2, ',', '.') }}
                 </span>
             </div>
 
@@ -481,9 +478,9 @@
             @endif
 
             <div class="cp-stat-box">
-                <span class="cp-stat-label">Ticket Médio</span>
-                <span class="cp-stat-val">R$ {{ number_format($stats['avg_ticket'], 2, ',', '.') }}</span>
-                <span class="cp-stat-sub">Média por atendimento</span>
+                <span class="cp-stat-label">Venda de Produtos</span>
+                <span class="cp-stat-val">R$ {{ number_format($stats['products_gross'], 2, ',', '.') }}</span>
+                <span class="cp-stat-sub">{{ $stats['products_count'] }} item(ns) vendidos</span>
             </div>
         </div>
 
@@ -491,6 +488,9 @@
         <div class="cp-tabs-bar">
             <button type="button" wire:click="$set('activeTab', 'appointments')" class="cp-tab-link {{ $activeTab === 'appointments' ? 'active' : 'inactive' }}">
                 ✂️ Atendimentos do Período ({{ $appts->count() }})
+            </button>
+            <button type="button" wire:click="$set('activeTab', 'products')" class="cp-tab-link {{ $activeTab === 'products' ? 'active' : 'inactive' }}">
+                🧴 Produtos Vendidos ({{ $prodSales->count() }})
             </button>
             <button type="button" wire:click="$set('activeTab', 'history')" class="cp-tab-link {{ $activeTab === 'history' ? 'active' : 'inactive' }}">
                 📜 Histórico de Fechamentos / Recibos ({{ $payouts->count() }})
@@ -561,6 +561,69 @@
                     </table>
                 @endif
             </div>
+        @elseif ($activeTab === 'products')
+            {{-- ABA DE PRODUTOS VENDIDOS PELO BARBEIRO --}}
+            <div class="cp-table-container">
+                @if ($prodSales->isEmpty())
+                    <div class="cp-empty">
+                        <span style="font-size: 32px;">🧴</span>
+                        <p style="font-weight: 700; color: #cbd5e1;">Nenhuma venda de produto encontrada para o barbeiro no período selecionado.</p>
+                        <span style="font-size: 12px;">Vendas registradas no balcão ou durante o corte com comissão atribuída aparecerão aqui.</span>
+                    </div>
+                @else
+                    <table class="cp-table">
+                        <thead>
+                            <tr>
+                                <th>Data / Hora</th>
+                                <th>Barbeiro</th>
+                                <th>Produto Vendido</th>
+                                <th>Cliente</th>
+                                <th>Valor Total</th>
+                                <th>% Comis.</th>
+                                <th>Comissão (R$)</th>
+                                <th>Status Comissão</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($prodSales as $ps)
+                                <tr>
+                                    <td>
+                                        <div style="font-weight: 800; color: #ffffff;">{{ $ps->created_at->format('d/m/Y') }}</div>
+                                        <div style="font-size: 11px; color: #64748b;">{{ $ps->created_at->format('H:i') }}</div>
+                                    </td>
+                                    <td>
+                                        <span style="font-weight: 700; color: #ffffff;">{{ $ps->professional?->display_name }}</span>
+                                    </td>
+                                    <td>
+                                        <span style="font-weight: 800; color: #38bdf8;">{{ $ps->quantity }}x {{ $ps->product?->name ?? 'Produto' }}</span>
+                                        <div style="font-size: 11px; color: #94a3b8;">Unitário: R$ {{ number_format($ps->unit_price, 2, ',', '.') }}</div>
+                                    </td>
+                                    <td>
+                                        <span style="color: #cbd5e1;">{{ $ps->client_name ?: ($ps->appointment?->client_name ?: 'Balcão') }}</span>
+                                        <span style="display: block; font-size: 10px; color: #94a3b8; text-transform: uppercase;">{{ $ps->payment_method_label }}</span>
+                                    </td>
+                                    <td style="font-weight: 800; color: #ffffff;">
+                                        R$ {{ number_format($ps->total_price, 2, ',', '.') }}
+                                    </td>
+                                    <td style="color: #94a3b8;">
+                                        {{ number_format($ps->commission_rate, 0) }}%
+                                    </td>
+                                    <td style="font-weight: 900; color: #fbbf24;">
+                                        R$ {{ number_format($ps->commission_amount, 2, ',', '.') }}
+                                    </td>
+                                    <td>
+                                        @if ($ps->commission_status === 'paid')
+                                            <span class="cp-badge-paid">✓ Pago (#{{ $ps->commission_payout_id }})</span>
+                                        @else
+                                            <span class="cp-badge-pending">⏳ Em Aberto</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
+            </div>
         @else
             {{-- 5. ABA 2: HISTÓRICO DE RECIBOS / FECHAMENTOS --}}
             <div class="cp-table-container">
@@ -578,8 +641,9 @@
                                 <th>Data Pagamento</th>
                                 <th>Barbeiro</th>
                                 <th>Período Apurado</th>
-                                <th>Atendimentos</th>
-                                <th>Produção Bruta</th>
+                                <th>Produção</th>
+                                <th>Cortes</th>
+                                <th>Produtos</th>
                                 <th>Comissão Paga</th>
                                 <th>Método</th>
                                 <th style="text-align: right;">Ação</th>
@@ -600,11 +664,14 @@
                                     <td>
                                         <span style="font-size: 12px; color: #94a3b8;">{{ $p->period_start->format('d/m/Y') }} até {{ $p->period_end->format('d/m/Y') }}</span>
                                     </td>
-                                    <td style="font-weight: 700; color: #ffffff;">
+                                    <td style="color: #cbd5e1; font-weight: 700;">
+                                        R$ {{ number_format($p->total_gross, 2, ',', '.') }}
+                                    </td>
+                                    <td style="font-size: 12px; color: #94a3b8;">
                                         {{ $p->appointments_count }} corte(s)
                                     </td>
-                                    <td style="color: #94a3b8;">
-                                        R$ {{ number_format($p->total_gross, 2, ',', '.') }}
+                                    <td style="font-size: 12px; color: #38bdf8;">
+                                        {{ $p->products_count }} item(ns)
                                     </td>
                                     <td style="font-weight: 900; color: #34d399;">
                                         R$ {{ number_format($p->total_commission, 2, ',', '.') }}
@@ -651,16 +718,24 @@
                         <span>{{ \Carbon\Carbon::parse($startDate)->format('d/m/Y') }} até {{ \Carbon\Carbon::parse($endDate)->format('d/m/Y') }}</span>
                     </div>
                     <div class="cp-summary-row">
-                        <span style="color: #94a3b8;">Atendimentos em Aberto:</span>
-                        <strong style="color: #ffffff;">{{ $appts->where('commission_status', '!=', 'paid')->count() }} corte(s)</strong>
+                        <span style="color: #94a3b8;">Cortes / Serviços em Aberto:</span>
+                        <strong style="color: #ffffff;">{{ $appts->where('commission_status', '!=', 'paid')->count() }} corte(s) (R$ {{ number_format($appts->where('commission_status', '!=', 'paid')->sum('service_price'), 2, ',', '.') }})</strong>
                     </div>
                     <div class="cp-summary-row">
-                        <span style="color: #94a3b8;">Faturamento Bruto:</span>
-                        <span>R$ {{ number_format($appts->where('commission_status', '!=', 'paid')->sum('service_price'), 2, ',', '.') }}</span>
+                        <span style="color: #94a3b8;">Produtos Vendidos em Aberto:</span>
+                        <strong style="color: #38bdf8;">{{ $prodSales->where('commission_status', '!=', 'paid')->sum('quantity') }} un. (R$ {{ number_format($prodSales->where('commission_status', '!=', 'paid')->sum('total_price'), 2, ',', '.') }})</strong>
+                    </div>
+                    <div class="cp-summary-row">
+                        <span style="color: #94a3b8;">Comissão de Cortes:</span>
+                        <span style="color: #cbd5e1;">R$ {{ number_format($stats['services_commission'], 2, ',', '.') }}</span>
+                    </div>
+                    <div class="cp-summary-row">
+                        <span style="color: #94a3b8;">Comissão de Produtos:</span>
+                        <span style="color: #38bdf8;">R$ {{ number_format($stats['products_commission'], 2, ',', '.') }}</span>
                     </div>
                     <div class="cp-summary-row highlight">
-                        <span style="color: #fbbf24;">Total da Comissão a Pagar:</span>
-                        <strong style="color: #34d399; font-size: 18px;">R$ {{ number_format($appts->where('commission_status', '!=', 'paid')->sum('commission_amount'), 2, ',', '.') }}</strong>
+                        <span style="color: #fbbf24;">Total Geral a Pagar ao Barbeiro:</span>
+                        <strong style="color: #34d399; font-size: 18px;">R$ {{ number_format($stats['total_commission'], 2, ',', '.') }}</strong>
                     </div>
                 </div>
 
@@ -693,7 +768,7 @@
     {{-- MODAL / CANHOTO DE IMPRESSÃO DO RECIBO DE COMISSÃO --}}
     @if ($printPayoutModalOpen && $selectedPayoutToPrint)
         <div class="cp-modal-mask no-print">
-            <div class="cp-modal-window" style="max-width: 500px;">
+            <div class="cp-modal-window" style="max-width: 520px;">
                 <div class="cp-modal-head">
                     <h3>📑 Recibo de Pagamento de Comissão</h3>
                     <button type="button" wire:click="$set('printPayoutModalOpen', false)" class="cp-modal-x">&times;</button>
@@ -710,16 +785,37 @@
                     <div style="margin-bottom: 12px; border-bottom: 1px dashed #000; padding-bottom: 8px;">
                         <div><strong>PROFISSIONAL:</strong> {{ $selectedPayoutToPrint->professional?->name }} ({{ $selectedPayoutToPrint->professional?->display_name }})</div>
                         <div><strong>PERÍODO:</strong> {{ $selectedPayoutToPrint->period_start->format('d/m/Y') }} a {{ $selectedPayoutToPrint->period_end->format('d/m/Y') }}</div>
-                        <div><strong>TOTAL DE CORTES:</strong> {{ $selectedPayoutToPrint->appointments_count }} atendimento(s)</div>
                         <div><strong>MÉTODO DE PAGAMENTO:</strong> {{ $selectedPayoutToPrint->payment_method_label }}</div>
                     </div>
 
                     <div style="margin-bottom: 12px; border-bottom: 1px dashed #000; padding-bottom: 8px;">
                         <div style="display: flex; justify-content: space-between;">
-                            <span>PRODUÇÃO BRUTA:</span> <span>R$ {{ number_format($selectedPayoutToPrint->total_gross, 2, ',', '.') }}</span>
+                            <span>SERVIÇOS / CORTES ({{ $selectedPayoutToPrint->appointments_count }} atendimentos):</span>
+                            <span>R$ {{ number_format($selectedPayoutToPrint->services_gross ?: $selectedPayoutToPrint->total_gross, 2, ',', '.') }}</span>
                         </div>
-                        <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 900; margin-top: 4px;">
-                            <span>VALOR LÍQUIDO PAGO:</span> <span style="font-size: 16px;">R$ {{ number_format($selectedPayoutToPrint->total_commission, 2, ',', '.') }}</span>
+                        <div style="display: flex; justify-content: space-between; color: #333; font-size: 11px;">
+                            <span>» Comissão sobre Serviços:</span>
+                            <span>R$ {{ number_format($selectedPayoutToPrint->services_commission ?: $selectedPayoutToPrint->total_commission, 2, ',', '.') }}</span>
+                        </div>
+
+                        @if ($selectedPayoutToPrint->products_gross > 0)
+                            <div style="display: flex; justify-content: space-between; margin-top: 6px;">
+                                <span>PRODUTOS VENDIDOS ({{ $selectedPayoutToPrint->products_count }} itens):</span>
+                                <span>R$ {{ number_format($selectedPayoutToPrint->products_gross, 2, ',', '.') }}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; color: #333; font-size: 11px;">
+                                <span>» Comissão sobre Produtos:</span>
+                                <span>R$ {{ number_format($selectedPayoutToPrint->products_commission, 2, ',', '.') }}</span>
+                            </div>
+                        @endif
+
+                        <div style="display: flex; justify-content: space-between; font-weight: bold; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 4px;">
+                            <span>TOTAL PRODUÇÃO BRUTA:</span>
+                            <span>R$ {{ number_format($selectedPayoutToPrint->total_gross, 2, ',', '.') }}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 900; margin-top: 4px; border-top: 1px solid #000; padding-top: 4px;">
+                            <span>VALOR LÍQUIDO PAGO AO BARBEIRO:</span>
+                            <span style="font-size: 16px;">R$ {{ number_format($selectedPayoutToPrint->total_commission, 2, ',', '.') }}</span>
                         </div>
                     </div>
 
@@ -732,9 +828,9 @@
                     {{-- CANHOTO JURÍDICO DE QUITAÇÃO --}}
                     <div style="margin-top: 20px; border: 1px solid #000; padding: 10px; border-radius: 6px; font-size: 10px; text-align: justify;">
                         <p style="margin: 0;">
-                            Declaro que recebi da barbearia acima a quantia líquida de <strong>R$ {{ number_format($selectedPayoutToPrint->total_commission, 2, ',', '.') }}</strong>, referente ao repasse de comissões pelos serviços de barbearia prestados no período discriminado, dando plena e rasa quitação.
+                            Declaro que recebi da barbearia acima a quantia líquida de <strong>R$ {{ number_format($selectedPayoutToPrint->total_commission, 2, ',', '.') }}</strong>, referente ao repasse de comissões por serviços prestados e produtos comercializados no período discriminado, dando plena e total quitação.
                         </p>
-                        <div style="margin-top: 30px; text-align: center; border-top: 1px solid #000; padding-top: 4px;">
+                        <div style="margin-top: 28px; text-align: center; border-top: 1px solid #000; padding-top: 4px;">
                             Assinatura do Profissional: <strong>{{ $selectedPayoutToPrint->professional?->display_name }}</strong>
                         </div>
                     </div>
@@ -743,6 +839,14 @@
                 <div class="cp-modal-actions no-print">
                     <button type="button" wire:click="$set('printPayoutModalOpen', false)" class="cp-btn-cancel">
                         Fechar
+                    </button>
+                    <button type="button" onclick="window.print()" class="cp-btn-confirm">
+                        Imprimir Recibo 🖨️
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
                     </button>
                     <button type="button" onclick="window.print()" class="cp-btn-confirm">
                         Imprimir Recibo 🖨️

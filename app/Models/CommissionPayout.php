@@ -17,6 +17,11 @@ class CommissionPayout extends Model
         'period_start',
         'period_end',
         'appointments_count',
+        'services_gross',
+        'services_commission',
+        'products_gross',
+        'products_commission',
+        'products_count',
         'total_gross',
         'total_commission',
         'barbershop_cut',
@@ -28,6 +33,11 @@ class CommissionPayout extends Model
     protected $casts = [
         'period_start' => 'date',
         'period_end' => 'date',
+        'services_gross' => 'decimal:2',
+        'services_commission' => 'decimal:2',
+        'products_gross' => 'decimal:2',
+        'products_commission' => 'decimal:2',
+        'products_count' => 'integer',
         'total_gross' => 'decimal:2',
         'total_commission' => 'decimal:2',
         'barbershop_cut' => 'decimal:2',
@@ -47,6 +57,11 @@ class CommissionPayout extends Model
     public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class);
+    }
+
+    public function productSales(): HasMany
+    {
+        return $this->hasMany(ProductSale::class);
     }
 
     public function getPaymentMethodLabelAttribute(): string
