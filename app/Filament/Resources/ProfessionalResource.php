@@ -14,6 +14,7 @@ use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class ProfessionalResource extends Resource
 {
@@ -28,6 +29,17 @@ class ProfessionalResource extends Resource
     protected static ?string $modelLabel = 'Barbeiro';
 
     protected static ?string $pluralModelLabel = 'Barbeiros';
+
+    public static function getEloquentQuery(): Builder
+    {
+        $tenant = filament()->getTenant();
+        if (! $tenant) {
+            return parent::getEloquentQuery()->whereRaw('1 = 0');
+        }
+
+        return parent::getEloquentQuery()
+            ->where('professionals.barbershop_id', $tenant->getKey());
+    }
 
     public static function canViewAny(): bool
     {

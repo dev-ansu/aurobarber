@@ -43,6 +43,17 @@ class BarbershopClientResource extends Resource
 
     protected static ?string $tenantRelationshipName = 'clients';
 
+    public static function getEloquentQuery(): Builder
+    {
+        $tenant = filament()->getTenant();
+        if (! $tenant) {
+            return parent::getEloquentQuery()->whereRaw('1 = 0');
+        }
+
+        return parent::getEloquentQuery()
+            ->where('barbershop_clients.barbershop_id', $tenant->getKey());
+    }
+
     public static function canViewAny(): bool
     {
         return ! auth()->user()?->isRestrictedBarber();

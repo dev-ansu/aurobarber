@@ -42,3 +42,16 @@ test('creating a professional uses the active tenant instead of the user fallbac
 
     expect($professional->barbershop_id)->toBe($barbershop->id);
 });
+
+test('professional catalog only returns professionals for the authorized active tenant', function () {
+    $tenant1 = Barbershop::create(['name' => 'Barbearia 1', 'slug' => 'barbearia-1']);
+    $tenant2 = Barbershop::create(['name' => 'Barbearia 2', 'slug' => 'barbearia-2']);
+
+    $pro1 = Professional::create(['barbershop_id' => $tenant1->id, 'name' => 'Barbeiro 1']);
+    $pro2 = Professional::create(['barbershop_id' => $tenant2->id, 'name' => 'Barbeiro 2']);
+
+    Filament::setTenant($tenant1, isQuiet: true);
+
+    expect(\App\Filament\Resources\ProfessionalResource::getEloquentQuery()->pluck('id')->all())
+        ->toBe([$pro1->id]);
+});
