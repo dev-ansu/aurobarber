@@ -502,8 +502,8 @@ class LocalBackupManager
 
     private function isAllowedFilename(string $filename): bool
     {
-        // Keep existing Aurosoft-named archives restorable while new backups use the AuroBarber prefix.
-        return preg_match('/^(?:aurobarber|aurosoft)-(?:backup|pre-restore)-\d{8}-\d{6}\.zip$/', $filename) === 1;
+        // Aceita backups completos e backups cirúrgicos de tenants (schemas)
+        return preg_match('/^(?:aurobarber|aurosoft)(?:-tenant-[a-zA-Z0-9_]+)?-(?:backup|pre-restore)-\d{8}-\d{6}\.zip$/', $filename) === 1;
     }
 
     private function archivePath(string $filename): string
