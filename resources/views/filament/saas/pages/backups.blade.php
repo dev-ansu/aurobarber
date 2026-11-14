@@ -11,176 +11,176 @@
         $tenantCount = $backups->filter(fn($b) => !$b['is_global'])->count();
     @endphp
 
-    <div class="space-y-6">
+    <div style="display: flex; flex-direction: column; gap: 24px;">
 
         {{-- 1. HEADER DO QUADRO GERAL DE BACKUPS --}}
-        <div class="relative overflow-hidden rounded-3xl border border-slate-800 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 p-6 sm:p-8 shadow-2xl">
-            <div class="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-amber-500/10 blur-3xl pointer-events-none"></div>
-
-            <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div class="space-y-1.5">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold tracking-wide">
-                        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                        <span>Segurança & Resiliência dos Dados</span>
-                    </div>
-                    <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight">Quadro Geral de Backups & Restauração</h2>
-                    <p class="text-xs sm:text-sm text-slate-400 max-w-2xl">
-                        Dumps em formato binário nativo PostgreSQL comprimidos em ZIP. Toda restauração cria automaticamente uma cópia pré-restauração por segurança.
-                    </p>
+        <div style="background: linear-gradient(135deg, #0b1120 0%, #1e293b 100%); border: 1px solid #334155; border-radius: 20px; padding: 24px 28px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <div style="display: flex; flex-direction: column; gap: 6px; max-width: 720px;">
+                <div style="display: inline-flex; align-items: center; gap: 8px; width: fit-content; padding: 4px 12px; border-radius: 9999px; background: rgba(251, 191, 36, 0.12); border: 1px solid rgba(251, 191, 36, 0.3); color: #fbbf24; font-size: 11px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;">
+                    <span style="width: 8px; height: 8px; border-radius: 9999px; background: #fbbf24; display: inline-block;"></span>
+                    <span>Segurança & Resiliência dos Dados</span>
                 </div>
+                <h2 style="font-size: 22px; font-weight: 900; color: #ffffff; margin: 4px 0 0 0;">Quadro Geral de Backups & Restauração</h2>
+                <p style="font-size: 13px; color: #94a3b8; margin: 0; line-height: 1.4;">
+                    Dumps em formato binário nativo PostgreSQL comprimidos em ZIP. Toda restauração cria automaticamente uma cópia pré-restauração por segurança.
+                </p>
+            </div>
 
-                <div class="shrink-0 flex items-center justify-center h-16 w-16 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-inner">
-                    <x-filament::icon icon="heroicon-o-server-stack" class="w-8 h-8" />
-                </div>
+            <div style="display: flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: 18px; background: rgba(251, 191, 36, 0.12); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.25);">
+                <x-filament::icon icon="heroicon-o-server-stack" style="width: 32px; height: 32px;" />
             </div>
         </div>
 
         {{-- 2. CARDS DE KPIS --}}
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
             {{-- Card 1: Total de Backups --}}
-            <div class="rounded-3xl border border-slate-800 bg-slate-950/90 p-5 shadow-xl flex items-center justify-between">
-                <div class="space-y-1">
-                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total de Backups</span>
-                    <div class="text-2xl sm:text-3xl font-black text-white font-mono">{{ $totalCount }} <span class="text-xs font-normal text-slate-400">arquivos</span></div>
-                    <p class="text-xs text-slate-400">Espaço em disco: <span class="font-bold text-slate-200">{{ $totalFormatted }}</span></p>
+            <div style="background: #0b1120; border: 1px solid #1e293b; border-radius: 18px; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.05em;">Total de Backups</span>
+                    <div style="font-size: 28px; font-weight: 900; color: #ffffff; font-family: monospace;">{{ $totalCount }} <span style="font-size: 12px; font-weight: 400; color: #94a3b8;">arquivos</span></div>
+                    <span style="font-size: 12px; color: #64748b;">Espaço em disco: <strong style="color: #cbd5e1;">{{ $totalFormatted }}</strong></span>
                 </div>
-                <div class="h-12 w-12 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center border border-amber-500/20">
-                    <x-filament::icon icon="heroicon-o-circle-stack" class="w-6 h-6" />
+                <div style="width: 48px; height: 48px; border-radius: 14px; background: rgba(251, 191, 36, 0.1); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.25); display: flex; align-items: center; justify-content: center;">
+                    <x-filament::icon icon="heroicon-o-circle-stack" style="width: 24px; height: 24px;" />
                 </div>
             </div>
 
             {{-- Card 2: Segurança Pré-Restauração --}}
-            <div class="rounded-3xl border border-slate-800 bg-slate-950/90 p-5 shadow-xl flex items-center justify-between">
-                <div class="space-y-1">
-                    <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-400">Garantia Pré-Restauração</span>
-                    <div class="text-2xl sm:text-3xl font-black text-emerald-400">Ativa</div>
-                    <p class="text-xs text-slate-400">Backup preventivo gerado antes do restore</p>
+            <div style="background: #0b1120; border: 1px solid #1e293b; border-radius: 18px; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #10b981; letter-spacing: 0.05em;">Garantia Pré-Restauração</span>
+                    <div style="font-size: 28px; font-weight: 900; color: #10b981;">Ativa</div>
+                    <span style="font-size: 12px; color: #64748b;">Cópia preventiva gerada antes do restore</span>
                 </div>
-                <div class="h-12 w-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
-                    <x-filament::icon icon="heroicon-o-shield-check" class="w-6 h-6" />
+                <div style="width: 48px; height: 48px; border-radius: 14px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.25); display: flex; align-items: center; justify-content: center;">
+                    <x-filament::icon icon="heroicon-o-shield-check" style="width: 24px; height: 24px;" />
                 </div>
             </div>
 
             {{-- Card 3: Último Backup --}}
-            <div class="rounded-3xl border border-slate-800 bg-slate-950/90 p-5 shadow-xl flex items-center justify-between">
-                <div class="space-y-1 min-w-0 pr-2">
-                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Último Arquivo Gerado</span>
-                    <div class="text-base sm:text-lg font-bold text-white truncate">
+            <div style="background: #0b1120; border: 1px solid #1e293b; border-radius: 18px; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0;">
+                    <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #38bdf8; letter-spacing: 0.05em;">Último Arquivo Gerado</span>
+                    <div style="font-size: 16px; font-weight: 800; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                         {{ $latest ? $latest['created_at_formatted'] : 'Nenhum backup' }}
                     </div>
-                    <p class="text-xs text-slate-400 font-mono truncate">
+                    <span style="font-size: 11px; color: #64748b; font-family: monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">
                         {{ $latest ? $latest['filename'] : 'Clique em Gerar Novo Backup' }}
-                    </p>
+                    </span>
                 </div>
-                <div class="h-12 w-12 rounded-2xl bg-sky-500/10 text-sky-400 flex items-center justify-center border border-sky-500/20 shrink-0">
-                    <x-filament::icon icon="heroicon-o-clock" class="w-6 h-6" />
+                <div style="width: 48px; height: 48px; border-radius: 14px; background: rgba(56, 189, 248, 0.1); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.25); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <x-filament::icon icon="heroicon-o-clock" style="width: 24px; height: 24px;" />
                 </div>
             </div>
         </div>
 
         {{-- 3. FILTROS DE VISUALIZAÇÃO --}}
-        <div class="flex flex-wrap items-center justify-between gap-4">
-            <div class="inline-flex rounded-2xl p-1 bg-slate-900 border border-slate-800 text-xs font-medium">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+            <div style="display: inline-flex; background: #0f172a; border: 1px solid #1e293b; border-radius: 14px; padding: 4px; gap: 4px;">
                 <button 
                     wire:click="$set('filterScope', 'all')"
                     type="button"
-                    class="px-4 py-2 rounded-xl transition cursor-pointer {{ $filterScope === 'all' ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'text-slate-400 hover:text-white' }}">
+                    style="padding: 8px 16px; border-radius: 10px; font-size: 12px; font-weight: 800; cursor: pointer; border: none; transition: all 0.2s; {{ $filterScope === 'all' ? 'background: #d97706; color: #ffffff; box-shadow: 0 2px 8px rgba(217, 119, 6, 0.4);' : 'background: transparent; color: #94a3b8;' }}">
                     Todos os Backups ({{ $totalCount }})
                 </button>
                 <button 
                     wire:click="$set('filterScope', 'global')"
                     type="button"
-                    class="px-4 py-2 rounded-xl transition cursor-pointer {{ $filterScope === 'global' ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'text-slate-400 hover:text-white' }}">
+                    style="padding: 8px 16px; border-radius: 10px; font-size: 12px; font-weight: 800; cursor: pointer; border: none; transition: all 0.2s; {{ $filterScope === 'global' ? 'background: #d97706; color: #ffffff; box-shadow: 0 2px 8px rgba(217, 119, 6, 0.4);' : 'background: transparent; color: #94a3b8;' }}">
                     🌐 Base Completa ({{ $globalCount }})
                 </button>
                 <button 
                     wire:click="$set('filterScope', 'tenants')"
                     type="button"
-                    class="px-4 py-2 rounded-xl transition cursor-pointer {{ $filterScope === 'tenants' ? 'bg-amber-500 text-slate-950 font-black shadow-md' : 'text-slate-400 hover:text-white' }}">
+                    style="padding: 8px 16px; border-radius: 10px; font-size: 12px; font-weight: 800; cursor: pointer; border: none; transition: all 0.2s; {{ $filterScope === 'tenants' ? 'background: #d97706; color: #ffffff; box-shadow: 0 2px 8px rgba(217, 119, 6, 0.4);' : 'background: transparent; color: #94a3b8;' }}">
                     💈 Por Barbearia ({{ $tenantCount }})
                 </button>
             </div>
 
-            <div class="text-xs text-slate-400 flex items-center gap-1.5">
-                <x-filament::icon icon="heroicon-o-information-circle" class="w-4 h-4 text-amber-400" />
-                <span>Formato nativo <code>PostgreSQL Custom Dump (-Fc)</code> com compressão zlib.</span>
+            <div style="font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 6px;">
+                <x-filament::icon icon="heroicon-o-information-circle" style="width: 16px; height: 16px; color: #fbbf24;" />
+                <span>Formato nativo <code style="background: #1e293b; padding: 2px 6px; border-radius: 6px; color: #cbd5e1; font-family: monospace;">PostgreSQL Custom Dump (-Fc)</code> com compressão zlib.</span>
             </div>
         </div>
 
         {{-- 4. TABELA DE BACKUPS --}}
-        <div class="rounded-3xl border border-slate-800 bg-slate-950/90 overflow-hidden shadow-2xl">
+        <div style="background: #0b1120; border: 1px solid #1e293b; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
             @if($backups->isEmpty())
-                <div class="p-12 text-center">
-                    <div class="h-16 w-16 mx-auto mb-4 rounded-2xl bg-slate-900 flex items-center justify-center text-slate-400 border border-slate-800">
-                        <x-filament::icon icon="heroicon-o-archive-box" class="w-8 h-8" />
+                <div style="padding: 48px 24px; text-align: center;">
+                    <div style="width: 64px; height: 64px; margin: 0 auto 16px auto; border-radius: 18px; background: #0f172a; display: flex; align-items: center; justify-content: center; color: #64748b; border: 1px solid #1e293b;">
+                        <x-filament::icon icon="heroicon-o-archive-box" style="width: 32px; height: 32px;" />
                     </div>
-                    <h4 class="text-base font-bold text-white mb-1">Nenhum backup encontrado neste filtro</h4>
-                    <p class="text-xs text-slate-400 max-w-md mx-auto mb-5">
+                    <h4 style="font-size: 16px; font-weight: 800; color: #ffffff; margin: 0 0 6px 0;">Nenhum backup encontrado neste filtro</h4>
+                    <p style="font-size: 13px; color: #94a3b8; max-width: 420px; margin: 0 auto;">
                         Utilize o botão "+ Gerar Novo Backup" no topo da página para criar o primeiro dump.
                     </p>
                 </div>
             @else
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-xs">
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; color: #cbd5e1;">
                         <thead>
-                            <tr class="bg-slate-900/80 text-slate-300 border-b border-slate-800 uppercase tracking-wider text-[11px] font-bold">
-                                <th class="px-5 py-4">Tipo</th>
-                                <th class="px-5 py-4">Barbearia / Escopo</th>
-                                <th class="px-5 py-4">Nome do Arquivo</th>
-                                <th class="px-5 py-4">Tamanho</th>
-                                <th class="px-5 py-4">Criado em</th>
-                                <th class="px-5 py-4 text-right">Ações</th>
+                            <tr style="border-bottom: 1px solid #1e293b; background: rgba(15, 23, 42, 0.7); color: #94a3b8; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">
+                                <th style="padding: 14px 20px; white-space: nowrap;">Tipo</th>
+                                <th style="padding: 14px 20px; white-space: nowrap;">Barbearia / Escopo</th>
+                                <th style="padding: 14px 20px; white-space: nowrap;">Nome do Arquivo</th>
+                                <th style="padding: 14px 20px; white-space: nowrap;">Tamanho</th>
+                                <th style="padding: 14px 20px; white-space: nowrap;">Criado em</th>
+                                <th style="padding: 14px 20px; text-align: right; white-space: nowrap;">Ações</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-800/60">
+                        <tbody>
                             @foreach($backups as $item)
-                                <tr class="hover:bg-slate-900/40 transition">
-                                    <td class="px-5 py-4 whitespace-nowrap">
+                                <tr style="border-bottom: 1px solid #1e293b;">
+                                    <td style="padding: 16px 20px; white-space: nowrap;">
                                         @if($item['is_global'])
-                                            <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-black bg-amber-500/10 text-amber-400 border border-amber-500/30">
-                                                <span>🌐 GLOBAL</span>
+                                            <span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 9999px; font-size: 10px; font-weight: 800; background: rgba(251, 191, 36, 0.12); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3);">
+                                                🌐 GLOBAL
                                             </span>
                                         @else
-                                            <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                                                <span>💈 BARBEARIA</span>
+                                            <span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 9999px; font-size: 10px; font-weight: 800; background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">
+                                                💈 BARBEARIA
                                             </span>
                                         @endif
                                     </td>
-                                    <td class="px-5 py-4">
-                                        <div class="font-bold text-white text-sm">
+                                    <td style="padding: 16px 20px;">
+                                        <div style="font-weight: 800; color: #ffffff; font-size: 14px;">
                                             {{ $item['barbershop_name'] }}
                                         </div>
                                         @if(!$item['is_global'])
-                                            <span class="block text-[11px] font-mono text-slate-400 mt-0.5">slug: /{{ $item['scope'] }}</span>
+                                            <span style="display: block; font-size: 11px; font-family: monospace; color: #94a3b8; margin-top: 2px;">slug: /{{ $item['scope'] }}</span>
                                         @endif
                                     </td>
-                                    <td class="px-5 py-4 font-mono text-xs text-slate-300">
-                                        <span class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800">
+                                    <td style="padding: 16px 20px; font-family: monospace; font-size: 12px; color: #cbd5e1;">
+                                        <span style="padding: 4px 8px; border-radius: 8px; background: #0f172a; border: 1px solid #1e293b; display: inline-block;">
                                             {{ $item['filename'] }}
                                         </span>
                                     </td>
-                                    <td class="px-5 py-4 font-bold text-slate-200 whitespace-nowrap">
+                                    <td style="padding: 16px 20px; font-weight: 800; color: #f1f5f9; white-space: nowrap;">
                                         {{ $item['size_formatted'] }}
                                     </td>
-                                    <td class="px-5 py-4 text-slate-400 font-medium whitespace-nowrap">
+                                    <td style="padding: 16px 20px; color: #94a3b8; font-weight: 500; white-space: nowrap;">
                                         {{ $item['created_at_formatted'] }}
                                     </td>
-                                    <td class="px-5 py-4 text-right whitespace-nowrap">
-                                        <div class="inline-flex items-center gap-2">
+                                    <td style="padding: 16px 20px; text-align: right; white-space: nowrap;">
+                                        <div style="display: inline-flex; align-items: center; gap: 8px;">
                                             <button
                                                 wire:click="restoreBackup(@js($item['filename']))"
                                                 wire:confirm="Tem certeza de que deseja restaurar este backup? Uma cópia de segurança preventiva será gerada automaticamente antes da restauração."
                                                 type="button"
-                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold text-xs transition cursor-pointer active:scale-95">
-                                                <x-filament::icon icon="heroicon-m-arrow-uturn-left" class="w-3.5 h-3.5" />
+                                                style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 10px; background: rgba(251, 191, 36, 0.12); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.35); font-weight: 800; font-size: 12px; cursor: pointer; transition: all 0.2s;"
+                                                onmouseover="this.style.background='rgba(251, 191, 36, 0.25)'"
+                                                onmouseout="this.style.background='rgba(251, 191, 36, 0.12)'">
+                                                <x-filament::icon icon="heroicon-m-arrow-uturn-left" style="width: 14px; height: 14px;" />
                                                 <span>Restaurar</span>
                                             </button>
                                             <button
                                                 wire:click="deleteBackup(@js($item['filename']))"
                                                 wire:confirm="Excluir este arquivo de backup permanentemente do disco da VPS?"
                                                 type="button"
-                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-xs transition cursor-pointer active:scale-95">
-                                                <x-filament::icon icon="heroicon-m-trash" class="w-3.5 h-3.5" />
+                                                style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 10px; background: rgba(239, 68, 68, 0.12); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.35); font-weight: 800; font-size: 12px; cursor: pointer; transition: all 0.2s;"
+                                                onmouseover="this.style.background='rgba(239, 68, 68, 0.25)'"
+                                                onmouseout="this.style.background='rgba(239, 68, 68, 0.12)'">
+                                                <x-filament::icon icon="heroicon-m-trash" style="width: 14px; height: 14px;" />
                                                 <span>Excluir</span>
                                             </button>
                                         </div>
