@@ -847,12 +847,4 @@
             </div>
         </div>
     @endif
-                    </button>
-                    <button type="button" onclick="window.print()" class="cp-btn-confirm">
-                        Imprimir Recibo 🖨️
-                    </button>
-                </div>
-            </div>
-        </div>
-    @endif
 </x-filament-panels::page>
