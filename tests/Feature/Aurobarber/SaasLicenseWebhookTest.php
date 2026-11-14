@@ -187,4 +187,22 @@ class SaasLicenseWebhookTest extends TestCase
                 ],
             ]);
     }
+
+    public function test_can_clear_landing_cache_via_webhook(): void
+    {
+        \Illuminate\Support\Facades\Cache::put('aurobarber_landing_cms', ['dummy' => true]);
+        $this->assertTrue(\Illuminate\Support\Facades\Cache::has('aurobarber_landing_cms'));
+
+        $response = $this->withHeader('X-Auro-Secret', $this->secret)
+            ->postJson('/api/v1/saas/license-webhook', [
+                'action' => 'clear_landing_cache',
+            ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+            ]);
+
+        $this->assertFalse(\Illuminate\Support\Facades\Cache::has('aurobarber_landing_cms'));
+    }
 }

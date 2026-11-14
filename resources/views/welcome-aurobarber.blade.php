@@ -23,14 +23,45 @@
     } catch (\Throwable $e) {
     }
     $commercialWhatsapp = $masterPhone ?: env('AUROSOFT_COMMERCIAL_WHATSAPP', '5585999999999');
+
+    // Integração CMS Dinâmica com o Painel SaaS Master
+    $cmsData = null;
+    try {
+        $cmsData = \Illuminate\Support\Facades\Cache::remember('aurobarber_landing_cms', 1800, function () {
+            $masterUrl = config('saas.master_url', env('SAAS_MASTER_URL', 'https://master.aurosoft.com.br'));
+            $res = \Illuminate\Support\Facades\Http::timeout(3)->get("{$masterUrl}/api/v1/saas/landing/aurobarber");
+            return $res->successful() ? $res->json() : null;
+        });
+    } catch (\Throwable $e) {
+        $cmsData = null;
+    }
+    $cmsPage = $cmsData['page'] ?? null;
+    $cmsPlans = !empty($cmsData['plans']) ? collect($cmsData['plans']) : null;
+
+    $heroBlock = null;
+    if (!empty($cmsPage['content']) && is_array($cmsPage['content'])) {
+        foreach ($cmsPage['content'] as $block) {
+            if (($block['type'] ?? '') === 'hero') {
+                $heroBlock = $block['data'] ?? null;
+                break;
+            }
+        }
+    }
+    $heroBadge = $heroBlock['badge_text'] ?? 'O Sistema Operacional Completo para Barbearias de Alto Padrão';
+    $heroTitlePrefix = $heroBlock['title_prefix'] ?? 'Transforme sua barbearia em uma máquina de';
+    $heroTitleHighlight = $heroBlock['title_highlight'] ?? 'agenda cheia, comanda lucrativa';
+    $heroTitleSuffix = $heroBlock['title_suffix'] ?? 'e gestão no piloto automático.';
+    $heroSubtitle = $heroBlock['subtitle'] ?? 'Link exclusivo <strong>White-Label</strong> para seu cliente agendar em 30 segundos sem baixar nada, <strong>comanda com estoque de bar e cosméticos</strong>, <strong>cartão fidelidade automático</strong> e <strong>visão restrita individual</strong> no celular de cada barbeiro.';
+    $pageTitle = !empty($cmsPage['title']) ? $cmsPage['title'] : 'AuroBarber • Sistema de Gestão, Agendamento Online & Fidelização para Barbearias';
+    $pageDescription = !empty($cmsPage['meta_description']) ? $cmsPage['meta_description'] : 'Transforme sua barbearia com agendamento online em 30 segundos, comanda de bar e produtos, cálculo automático de comissões, visão restrita do barbeiro e cartão fidelidade.';
 @endphp
 <!DOCTYPE html>
 <html lang="pt-BR" class="dark scroll-smooth">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AuroBarber • Sistema de Gestão, Agendamento Online & Fidelização para Barbearias</title>
-    <meta name="description" content="Transforme sua barbearia com agendamento online em 30 segundos, comanda de bar e produtos, cálculo automático de comissões, visão restrita do barbeiro e cartão fidelidade.">
+    <title>{{ $pageTitle }}</title>
+    <meta name="description" content="{{ $pageDescription }}">
     <meta name="keywords" content="sistema para barbearia, agendamento online barbearia, controle de comissao barbeiro, software gestao barbearia, comanda barbearia, cartao fidelidade barbearia, aurobarber">
     <meta name="author" content="Aurosoft Tecnologia">
     <link rel="canonical" href="https://barber.aurosoft.com.br">
@@ -219,17 +250,17 @@
                     {{-- Badge de Inovação --}}
                     <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold tracking-wide shadow-inner">
                         <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                        <span>O Sistema Operacional Completo para Barbearias de Alto Padrão</span>
+                        <span>{{ $heroBadge }}</span>
                     </div>
 
                     {{-- Headline Principal --}}
                     <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.12]">
-                        Transforme sua barbearia em uma máquina de <span class="text-gradient-gold">agenda cheia, comanda lucrativa</span> e gestão no piloto automático.
+                        {{ $heroTitlePrefix }} <span class="text-gradient-gold">{{ $heroTitleHighlight }}</span> {{ $heroTitleSuffix }}
                     </h1>
 
                     {{-- Subheadline --}}
                     <p class="text-base sm:text-lg lg:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed font-normal">
-                        Link exclusivo <strong>White-Label</strong> para seu cliente agendar em 30 segundos sem baixar nada, <strong>comanda com estoque de bar e cosméticos</strong>, <strong>cartão fidelidade automático</strong> e <strong>visão restrita individual</strong> no celular de cada barbeiro.
+                        {!! $heroSubtitle !!}
                     </p>
 
                     {{-- CTAs Principais --}}

@@ -45,6 +45,7 @@ class SaasWebhookController extends Controller
             'backup_tenant' => $this->backupTenant($request),
             'list_backups' => $this->listBackups($request),
             'restore_backup' => $this->restoreBackup($request),
+            'clear_landing_cache' => $this->clearLandingCache(),
             default => response()->json([
                 'success' => false,
                 'message' => "Ação desconhecida: '{$action}'.",
@@ -455,5 +456,18 @@ class SaasWebhookController extends Controller
                 'message' => 'Falha ao restaurar backup: ' . $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    /**
+     * 10. Invalida o cache da landing page sincronizada com o CMS do SaaS Master.
+     */
+    protected function clearLandingCache(): JsonResponse
+    {
+        \Illuminate\Support\Facades\Cache::forget('aurobarber_landing_cms');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cache da landing page do Aurobarber limpo com sucesso.',
+        ]);
     }
 }
