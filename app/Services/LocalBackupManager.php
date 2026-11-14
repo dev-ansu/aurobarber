@@ -26,7 +26,7 @@ class LocalBackupManager
             ])->values()->all();
     }
 
-    public function create(bool $safetyCopy = false): string
+    public function create(bool $safetyCopy = false, ?string $schema = null): string
     {
         $connection = $this->pgsqlConnection();
         $base = storage_path('app/private/backups');
@@ -36,9 +36,10 @@ class LocalBackupManager
 
         try {
             $dump = $work.'/database.dump';
-            $this->runPgDump($connection, $dump);
+            $this->runPgDump($connection, $dump, $schema);
 
-            $filename = 'aurobarber-'.($safetyCopy ? 'pre-restore-' : 'backup-').now()->format('Ymd-His').'.zip';
+            $prefix = $schema ? "aurobarber-tenant-{$schema}-" : 'aurobarber-';
+            $filename = $prefix.($safetyCopy ? 'pre-restore-' : 'backup-').now()->format('Ymd-His').'.zip';
             $archivePath = $base.'/'.$filename;
             $zip = new ZipArchive;
 
@@ -50,7 +51,8 @@ class LocalBackupManager
                 'application' => config('app.name'),
                 'created_at' => now()->toIso8601String(),
                 'database_driver' => 'pgsql',
-                'scope' => 'application',
+                'scope' => $schema ? "tenant:{$schema}" : 'application',
+                'schema' => $schema,
                 'tenant_model' => 'barbershops',
                 'format' => 1,
             ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR))) {
@@ -295,9 +297,25 @@ class LocalBackupManager
         ];
     }
 
-    private function runPgDump(array $connection, string $output): void
+    private function runPgDump(array $connection, string $output, ?string $schema = null): void
     {
-        $command = [$this->resolveBinary('pg_dump'), '--format=custom', '--no-owner', '--no-privileges', '--host='.$connection['host'], '--port='.$connection['port'], '--username='.$connection['username'], '--file='.$output, $connection['database']];
+        $command = [
+            $this->resolveBinary('pg_dump'),
+            '--format=custom',
+            '--no-owner',
+            '--no-privileges',
+            '--host='.$connection['host'],
+            '--port='.$connection['port'],
+            '--username='.$connection['username'],
+            '--file='.$output,
+        ];
+
+        if ($schema !== null && $schema !== '') {
+            $command[] = '--schema='.$schema;
+        }
+
+        $command[] = $connection['database'];
+
         $this->runProcess($command, $connection['password']);
     }
 
