@@ -80,6 +80,7 @@ class SaasPanelProvider extends PanelProvider
             ])
             ->pages([
                 SaasDashboard::class,
+                \App\Filament\Saas\Pages\SaasBackups::class,
                 SaasSupportSettings::class,
                 ForcePasswordChange::class,
             ])

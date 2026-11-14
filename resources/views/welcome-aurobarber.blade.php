@@ -23,45 +23,14 @@
     } catch (\Throwable $e) {
     }
     $commercialWhatsapp = $masterPhone ?: env('AUROSOFT_COMMERCIAL_WHATSAPP', '5585999999999');
-
-    // Integração CMS Dinâmica com o Painel SaaS Master
-    $cmsData = null;
-    try {
-        $cmsData = \Illuminate\Support\Facades\Cache::remember('aurobarber_landing_cms', 1800, function () {
-            $masterUrl = config('saas.master_url', env('SAAS_MASTER_URL', 'https://master.aurosoft.com.br'));
-            $res = \Illuminate\Support\Facades\Http::timeout(3)->get("{$masterUrl}/api/v1/saas/landing/aurobarber");
-            return $res->successful() ? $res->json() : null;
-        });
-    } catch (\Throwable $e) {
-        $cmsData = null;
-    }
-    $cmsPage = $cmsData['page'] ?? null;
-    $cmsPlans = !empty($cmsData['plans']) ? collect($cmsData['plans']) : null;
-
-    $heroBlock = null;
-    if (!empty($cmsPage['content']) && is_array($cmsPage['content'])) {
-        foreach ($cmsPage['content'] as $block) {
-            if (($block['type'] ?? '') === 'hero') {
-                $heroBlock = $block['data'] ?? null;
-                break;
-            }
-        }
-    }
-    $heroBadge = $heroBlock['badge_text'] ?? 'O Sistema Operacional Completo para Barbearias de Alto Padrão';
-    $heroTitlePrefix = $heroBlock['title_prefix'] ?? 'Transforme sua barbearia em uma máquina de';
-    $heroTitleHighlight = $heroBlock['title_highlight'] ?? 'agenda cheia, comanda lucrativa';
-    $heroTitleSuffix = $heroBlock['title_suffix'] ?? 'e gestão no piloto automático.';
-    $heroSubtitle = $heroBlock['subtitle'] ?? 'Link exclusivo <strong>White-Label</strong> para seu cliente agendar em 30 segundos sem baixar nada, <strong>comanda com estoque de bar e cosméticos</strong>, <strong>cartão fidelidade automático</strong> e <strong>visão restrita individual</strong> no celular de cada barbeiro.';
-    $pageTitle = !empty($cmsPage['title']) ? $cmsPage['title'] : 'AuroBarber • Sistema de Gestão, Agendamento Online & Fidelização para Barbearias';
-    $pageDescription = !empty($cmsPage['meta_description']) ? $cmsPage['meta_description'] : 'Transforme sua barbearia com agendamento online em 30 segundos, comanda de bar e produtos, cálculo automático de comissões, visão restrita do barbeiro e cartão fidelidade.';
 @endphp
 <!DOCTYPE html>
 <html lang="pt-BR" class="dark scroll-smooth">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $pageTitle }}</title>
-    <meta name="description" content="{{ $pageDescription }}">
+    <title>AuroBarber • Sistema de Gestão, Agendamento Online & Fidelização para Barbearias</title>
+    <meta name="description" content="Transforme sua barbearia com agendamento online em 30 segundos, comanda de bar e produtos, cálculo automático de comissões, visão restrita do barbeiro e cartão fidelidade.">
     <meta name="keywords" content="sistema para barbearia, agendamento online barbearia, controle de comissao barbeiro, software gestao barbearia, comanda barbearia, cartao fidelidade barbearia, aurobarber">
     <meta name="author" content="Aurosoft Tecnologia">
     <link rel="canonical" href="https://barber.aurosoft.com.br">
@@ -250,17 +219,17 @@
                     {{-- Badge de Inovação --}}
                     <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold tracking-wide shadow-inner">
                         <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                        <span>{{ $heroBadge }}</span>
+                        <span>O Sistema Operacional Completo para Barbearias de Alto Padrão</span>
                     </div>
 
                     {{-- Headline Principal --}}
                     <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.12]">
-                        {{ $heroTitlePrefix }} <span class="text-gradient-gold">{{ $heroTitleHighlight }}</span> {{ $heroTitleSuffix }}
+                        Transforme sua barbearia em uma máquina de <span class="text-gradient-gold">agenda cheia, comanda lucrativa</span> e gestão no piloto automático.
                     </h1>
 
                     {{-- Subheadline --}}
                     <p class="text-base sm:text-lg lg:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed font-normal">
-                        {!! $heroSubtitle !!}
+                        Link exclusivo <strong>White-Label</strong> para seu cliente agendar em 30 segundos sem baixar nada, <strong>comanda com estoque de bar e cosméticos</strong>, <strong>cartão fidelidade automático</strong> e <strong>visão restrita individual</strong> no celular de cada barbeiro.
                     </p>
 
                     {{-- CTAs Principais --}}
@@ -1051,75 +1020,78 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto items-stretch">
-                    {{-- Plano 1: Solo / Starter --}}
+                    {{-- Plano 1: Mensal --}}
                     <div class="rounded-3xl border border-slate-800 bg-slate-950/90 p-7 flex flex-col justify-between">
                         <div class="space-y-4">
-                            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Barbeiro Autônomo / Studio</span>
-                            <h3 class="text-xl font-black text-white">Plano Studio</h3>
+                            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Sem Fidelidade</span>
+                            <h3 class="text-xl font-black text-white">Plano Mensal</h3>
                             <div class="flex items-baseline gap-1">
-                                <span class="text-3xl font-black text-white font-mono">R$ 59,90</span>
+                                <span class="text-3xl font-black text-white font-mono">R$ 89,90</span>
                                 <span class="text-xs text-slate-400">/mês</span>
                             </div>
-                            <p class="text-xs text-slate-400">Ideal para barbeiros individuais ou estúdios com até 2 profissionais.</p>
+                            <p class="text-xs text-slate-400">Flexibilidade mês a mês. Todos os recursos liberados para toda a barbearia.</p>
                             <ul class="space-y-2.5 text-xs text-slate-300 pt-3 border-t border-slate-800">
-                                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> Até 2 Barbeiros na Agenda</li>
+                                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> <strong>Barbeiros & Cadeiras Ilimitados</strong></li>
                                 <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> Agendamentos Online Ilimitados</li>
                                 <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> Página White-Label + App PWA</li>
-                                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> Cartão Fidelidade & Lembretes WhatsApp</li>
-                                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> Fechamento de Caixa Diário</li>
+                                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> Comanda de Bar, Bebidas & Cosméticos</li>
+                                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> Comissões + Recibo Jurídico</li>
+                                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> Visão Restrita do Barbeiro no Celular</li>
+                                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> Cartão Fidelidade Digital Automático</li>
                             </ul>
                         </div>
-                        <button type="button" @click="leadBarbers = '1 a 2 cadeiras (Plano Studio)'; leadModalOpen = true" class="mt-8 w-full py-3.5 rounded-xl border border-slate-700 bg-slate-900 hover:bg-slate-800 text-white font-black text-xs transition cursor-pointer">
-                            Começar com Plano Studio
+                        <button type="button" @click="leadBarbers = 'Plano Mensal (R$ 89,90/mês)'; leadModalOpen = true" class="mt-8 w-full py-3.5 rounded-xl border border-slate-700 bg-slate-900 hover:bg-slate-800 text-white font-black text-xs transition cursor-pointer">
+                            Começar com Plano Mensal
                         </button>
                     </div>
 
-                    {{-- Plano 2: Profissional / Equipe (Destaque) --}}
+                    {{-- Plano 2: Semestral (Destaque) --}}
                     <div class="rounded-3xl border-2 border-amber-500 bg-slate-950 p-7 flex flex-col justify-between shadow-2xl shadow-amber-500/10 relative">
                         <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 font-black text-[10px] uppercase tracking-wider shadow">
                             Mais Escolhido
                         </div>
                         <div class="space-y-4">
-                            <span class="text-[11px] font-bold uppercase tracking-wider text-amber-400">Barbearia com Equipe</span>
-                            <h3 class="text-xl font-black text-white">Plano Profissional PRO</h3>
+                            <span class="text-[11px] font-bold uppercase tracking-wider text-amber-400">Economia no Semestre</span>
+                            <h3 class="text-xl font-black text-white">Plano Semestral</h3>
                             <div class="flex items-baseline gap-1">
-                                <span class="text-3xl font-black text-amber-400 font-mono">R$ 97,00</span>
+                                <span class="text-3xl font-black text-amber-400 font-mono">R$ 79,90</span>
                                 <span class="text-xs text-slate-400">/mês</span>
                             </div>
-                            <p class="text-xs text-slate-300">O pacote completo para barbearias em crescimento com equipe comissionada.</p>
+                            <p class="text-xs text-slate-300">R$ 479,40 a cada 6 meses. O plano favorito dos donos de barbearia.</p>
                             <ul class="space-y-2.5 text-xs text-slate-200 pt-3 border-t border-slate-800">
-                                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> <strong>Até 10 Barbeiros</strong> com Login Individual</li>
+                                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> <strong>Barbeiros & Cadeiras Ilimitados</strong></li>
+                                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> <strong>Todos os Recursos do Sistema Liberados</strong></li>
                                 <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> <strong>Visão Restrita do Barbeiro</strong> no Celular</li>
-                                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> <strong>Cálculo de Comissões + Recibo Jurídico</strong></li>
-                                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> <strong>Comanda de Bar, Bebidas & Estoque</strong></li>
-                                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> <strong>CRM Clientes Sumidos & Avaliação 5★</strong></li>
+                                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> <strong>Comanda de Bar & Fechamento de Caixa</strong></li>
+                                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> <strong>Suporte Prioritário no WhatsApp</strong></li>
+                                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> <strong>Treinamento Inicial da Equipe</strong></li>
                             </ul>
                         </div>
-                        <button type="button" @click="leadBarbers = '3 a 10 cadeiras (Plano PRO)'; leadModalOpen = true" class="mt-8 w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:brightness-110 text-slate-950 font-black text-xs transition shadow-lg shadow-amber-500/20 cursor-pointer">
-                            Contratar Plano Profissional PRO ➔
+                        <button type="button" @click="leadBarbers = 'Plano Semestral (R$ 79,90/mês)'; leadModalOpen = true" class="mt-8 w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:brightness-110 text-slate-950 font-black text-xs transition shadow-lg shadow-amber-500/20 cursor-pointer">
+                            Contratar Plano Semestral ➔
                         </button>
                     </div>
 
-                    {{-- Plano 3: Rede / Multi-Unidades --}}
+                    {{-- Plano 3: Anual (Melhor Valor) --}}
                     <div class="rounded-3xl border border-slate-800 bg-slate-950/90 p-7 flex flex-col justify-between">
                         <div class="space-y-4">
-                            <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-400">Franquias & Grandes Equipes</span>
-                            <h3 class="text-xl font-black text-white">Plano Elite & Redes</h3>
+                            <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-400">Melhor Custo-Benefício</span>
+                            <h3 class="text-xl font-black text-white">Plano Anual</h3>
                             <div class="flex items-baseline gap-1">
-                                <span class="text-3xl font-black text-white font-mono">R$ 167,00</span>
+                                <span class="text-3xl font-black text-white font-mono">R$ 69,90</span>
                                 <span class="text-xs text-slate-400">/mês</span>
                             </div>
-                            <p class="text-xs text-slate-400">Para grandes barbearias ou donos com mais de uma unidade/filial.</p>
+                            <p class="text-xs text-slate-400">R$ 838,80 por ano. Você ganha 2 meses grátis e assessoria completa.</p>
                             <ul class="space-y-2.5 text-xs text-slate-300 pt-3 border-t border-slate-800">
-                                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> <strong>Barbeiros Ilimitados</strong></li>
-                                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> <strong>Gestão Multi-Unidades</strong> no Mesmo Login</li>
-                                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> Cargos Customizados (Recepção, Gerente)</li>
-                                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> Implantação Assistida + Suporte VIP</li>
-                                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> Segurança 2FA Corporativa</li>
+                                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> <strong>Barbeiros & Cadeiras Ilimitados</strong></li>
+                                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> <strong>2 Meses Grátis</strong> inclusos</li>
+                                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> <strong>Todos os Recursos 100% Liberados</strong></li>
+                                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> QR Code de Balcão & Banners Digitais</li>
+                                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> Suporte VIP Direto no WhatsApp</li>
                             </ul>
                         </div>
-                        <button type="button" @click="leadBarbers = 'Rede / Multi-Unidades (Plano Elite)'; leadModalOpen = true" class="mt-8 w-full py-3.5 rounded-xl border border-slate-700 bg-slate-900 hover:bg-slate-800 text-white font-black text-xs transition cursor-pointer">
-                            Falar com Consultor Elite
+                        <button type="button" @click="leadBarbers = 'Plano Anual (R$ 69,90/mês)'; leadModalOpen = true" class="mt-8 w-full py-3.5 rounded-xl border border-slate-700 bg-slate-900 hover:bg-slate-800 text-white font-black text-xs transition cursor-pointer">
+                            Garantir Plano Anual com Desconto
                         </button>
                     </div>
                 </div>
@@ -1475,14 +1447,14 @@
                     </div>
 
                     <div class="space-y-1.5 w-full">
-                        <label class="text-xs font-bold text-slate-300 block">Quantos barbeiros atendem na unidade?</label>
+                        <label class="text-xs font-bold text-slate-300 block">Qual plano deseja contratar?</label>
                         <select
                             x-model="leadBarbers"
                             class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-xs text-white focus:border-amber-400 focus:outline-none"
                         >
-                            <option value="1 a 2 cadeiras (Plano Studio)">1 a 2 cadeiras (Plano Studio - R$ 59,90)</option>
-                            <option value="3 a 10 cadeiras (Plano PRO)">3 a 10 cadeiras (Plano PRO - R$ 97,00)</option>
-                            <option value="Rede / Multi-Unidades (Plano Elite)">Mais de 10 cadeiras ou Multi-Unidades (Plano Elite - R$ 167,00)</option>
+                            <option value="Plano Mensal (R$ 89,90/mês - Sem fidelidade)">Plano Mensal (R$ 89,90/mês - Sem fidelidade)</option>
+                            <option value="Plano Semestral (R$ 79,90/mês - Economia)">Plano Semestral (R$ 79,90/mês - Economia)</option>
+                            <option value="Plano Anual (R$ 69,90/mês - 2 Meses Grátis)">Plano Anual (R$ 69,90/mês - 2 Meses Grátis)</option>
                         </select>
                     </div>
 

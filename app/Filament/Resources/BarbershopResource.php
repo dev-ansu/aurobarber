@@ -416,6 +416,27 @@ class BarbershopResource extends Resource
                         }
                     }),
 
+                Action::make('backup_barbershop')
+                    ->label('Backup')
+                    ->icon('heroicon-m-arrow-down-tray')
+                    ->color('info')
+                    ->action(function (Barbershop $record, \App\Services\LocalBackupManager $backupManager): void {
+                        try {
+                            $filename = $backupManager->create(false, "tenant_{$record->slug}");
+                            \Filament\Notifications\Notification::make()
+                                ->title('Backup gerado com sucesso!')
+                                ->body("Arquivo: {$filename}")
+                                ->success()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Erro ao gerar backup')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+
                 EditAction::make(),
             ]);
     }
