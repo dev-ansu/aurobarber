@@ -33,7 +33,7 @@ class SaasWebhookController extends Controller
      */
     public function handle(Request $request): JsonResponse
     {
-        $action = (string) $request->input('action', $request->input('event'));
+        $action = (string) ($request->input('action') ?? $request->input('event') ?? $request->query('action'));
 
         return match ($action) {
             'provision' => $this->provision($request),
@@ -313,8 +313,8 @@ class SaasWebhookController extends Controller
             $clientsCount = BarbershopClient::where('barbershop_id', $barbershop->id)->count();
             $appointmentsCount = Appointment::where('barbershop_id', $barbershop->id)->count();
             $appointmentsThisMonth = Appointment::where('barbershop_id', $barbershop->id)
-                ->whereMonth('start_time', now()->month)
-                ->whereYear('start_time', now()->year)
+                ->whereMonth('scheduled_at', now()->month)
+                ->whereYear('scheduled_at', now()->year)
                 ->count();
 
             return response()->json([
@@ -340,8 +340,8 @@ class SaasWebhookController extends Controller
         $totalBarbershops = Barbershop::count();
         $activeBarbershops = Barbershop::where('is_active', true)->count();
         $totalProfessionals = Professional::count();
-        $totalAppointmentsMonth = Appointment::whereMonth('start_time', now()->month)
-            ->whereYear('start_time', now()->year)
+        $totalAppointmentsMonth = Appointment::whereMonth('scheduled_at', now()->month)
+            ->whereYear('scheduled_at', now()->year)
             ->count();
 
         return response()->json([
