@@ -299,6 +299,13 @@ class RoleResource extends Resource
         return Role::class;
     }
 
+    #[Override]
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getEloquentQuery()
+            ->whereNotIn('name', ['super_admin', 'master_admin']);
+    }
+
     public static function getSlug(?Panel $panel = null): string
     {
         return Utils::getResourceSlug();

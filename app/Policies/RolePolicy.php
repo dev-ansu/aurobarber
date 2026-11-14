@@ -19,6 +19,10 @@ class RolePolicy
 
     public function view(AuthUser $authUser, Role $role): bool
     {
+        if (in_array($role->name, ['super_admin', 'master_admin'], true)) {
+            return false;
+        }
+
         return $authUser->can('View:Role');
     }
 
@@ -29,11 +33,19 @@ class RolePolicy
 
     public function update(AuthUser $authUser, Role $role): bool
     {
+        if (in_array($role->name, ['super_admin', 'master_admin'], true)) {
+            return false;
+        }
+
         return $authUser->can('Update:Role');
     }
 
     public function delete(AuthUser $authUser, Role $role): bool
     {
+        if (in_array($role->name, ['super_admin', 'master_admin', 'barbershop_owner'], true)) {
+            return false;
+        }
+
         return $authUser->can('Delete:Role');
     }
 
