@@ -1,66 +1,102 @@
 <?php
 
+declare(strict_types=1);
+
 return [
-    'section' => 'Módulos e Entidades do Aurosoft',
-    'resources' => 'Cadastros e Operações (Resources)',
-    'widgets' => 'Cards e Indicadores do Dashboard',
-    'pages' => 'Páginas e Telas Especiais',
-    'custom' => 'Ações Específicas e Relatórios',
+    /*
+    |--------------------------------------------------------------------------
+    | Seções e Abas do Gerenciador de Cargos e Permissões
+    |--------------------------------------------------------------------------
+    */
+    'section' => 'Módulos e Recursos da Barbearia',
+    'resources' => 'Tabelas e Cadastros Principais',
+    'widgets' => 'Cards e Indicadores do Painel Inicial',
+    'pages' => 'Telas Especiais e Rotinas de Gestão',
+    'custom' => 'Permissões Especiais de Segurança',
 
-    'field.select_all.name' => 'Selecionar todas as permissões',
-    'field.select_all.message' => 'Habilita acesso irrestrito a todos os recursos, páginas e relatórios selecionados.',
+    /*
+    |--------------------------------------------------------------------------
+    | Campos de Formulário e Mensagens
+    |--------------------------------------------------------------------------
+    */
+    'field.name' => 'Identificador Técnico do Cargo',
+    'field.guard_name' => 'Guard de Autenticação',
+    'field.permissions' => 'Permissões do Cargo',
+    'field.select_all.name' => 'Marcar todas as permissões',
+    'field.select_all.message' => 'Habilita acesso irrestrito a todos os recursos, páginas e relatórios selecionados abaixo.',
+    'forbidden' => 'Você não tem permissão para acessar esta área.',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Navegação do Painel
+    |--------------------------------------------------------------------------
+    */
+    'nav.group' => 'Equipe',
+    'nav.role.label' => 'Cargos & Permissões',
+    'nav.role.icon' => 'heroicon-o-shield-check',
+    'resource.label.role' => 'Cargo & Permissões',
+    'resource.label.roles' => 'Cargos & Permissões',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Ações de Recursos (O que o usuário pode fazer nas tabelas)
+    |--------------------------------------------------------------------------
+    */
+    'view_any' => 'Listar e Ver Tabela (Acesso ao Menu)',
+    'view' => 'Visualizar Ficha Completa (Ver Detalhes)',
+    'create' => 'Cadastrar / Adicionar Novo',
+    'update' => 'Editar / Alterar Dados Existentes',
+    'delete' => 'Excluir Registro (Enviar para Lixeira)',
+    'delete_any' => 'Excluir Vários em Lote',
+    'force_delete' => 'Exclusão Permanente (Sem Recuperação)',
+    'force_delete_any' => 'Exclusão Permanente em Lote',
+    'restore' => 'Restaurar Item da Lixeira',
+    'restore_any' => 'Restaurar Itens em Lote',
+    'replicate' => 'Duplicar / Clonar Registro',
+    'reorder' => 'Reordenar Posição / Prioridade',
+
+    // Compatibilidade com chaves aninhadas do pacote
     'resource_permission_prefixes_labels' => [
-        'view_any' => 'Acessar Menu & Listar (Ver tabela)',
-        'view' => 'Visualizar Detalhes (Abrir ficha)',
-        'create' => 'Cadastrar Novo',
-        'update' => 'Editar / Alterar Dados',
-        'delete' => 'Excluir Registro',
+        'view' => 'Visualizar Ficha Completa (Ver Detalhes)',
+        'view_any' => 'Listar e Ver Tabela (Acesso ao Menu)',
+        'create' => 'Cadastrar / Adicionar Novo',
+        'update' => 'Editar / Alterar Dados Existentes',
+        'delete' => 'Excluir Registro (Enviar para Lixeira)',
         'delete_any' => 'Excluir Vários em Lote',
-        'force_delete' => 'Exclusão Permanente (Sem lixeira)',
+        'force_delete' => 'Exclusão Permanente (Sem Recuperação)',
         'force_delete_any' => 'Exclusão Permanente em Lote',
-        'restore' => 'Restaurar da Lixeira',
-        'restore_any' => 'Restaurar Vários da Lixeira',
-        'reorder' => 'Reordenar Ordem / Sequência',
-        'replicate' => 'Duplicar / Clonar',
-        'toggleStatus' => 'Ativar / Desativar Status',
+        'restore' => 'Restaurar Item da Lixeira',
+        'restore_any' => 'Restaurar Itens em Lote',
+        'replicate' => 'Duplicar / Clonar Registro',
+        'reorder' => 'Reordenar Posição / Prioridade',
     ],
 
-    'page' => [
-        'ClassroomLiveMonitor' => 'Monitor de Laboratório (Ao Vivo) — Monitorar telas dos alunos e responder a chamados de ajuda',
-        'LmsStudio' => 'Estúdio LMS — Criar e organizar cursos, módulos, lições e passos multimídia',
-        'SchoolAppointmentsCalendar' => 'Agenda & Calendário da Escola — Gestão visual de compromissos, reposições e atendimentos',
-        'UserGuide' => 'Guia do Usuário & Tutoriais — Manual interativo de operação da escola',
-        'CommercialLeadsKanban' => 'Funil de Vendas (Kanban) — Gestão visual de interessados e matrículas',
-        'CommercialOverview' => 'Painel Comercial — Indicadores de captação e conversão de vendas',
-        'SalesBySellerReport' => 'Relatório de Vendas por Vendedor — Acompanhamento de comissões da equipe comercial',
-        'StudentAbsencesReport' => 'Relatório de Faltas — Alertas de infrequência e retenção de alunos',
-        'StudentContactsReport' => 'Relatório de Contatos dos Alunos — Telefones e e-mails para cobrança e avisos',
-        'CommercialReport' => 'Relatório de Desempenho Comercial — Métricas globais de vendas',
-        'ContractCancellationReport' => 'Relatório de Cancelamentos — Motivos de rescisão e taxa de evasão',
-        'PedagogicalFollowUpReport' => 'Acompanhamento Pedagógico — Desempenho e ritmo de aulas dos alunos',
-        'DreReport' => 'DRE Gerencial — Demonstrativo financeiro de receitas e despesas',
-        'OverdueInstallmentReport' => 'Relatório de Inadimplência — Relação de parcelas e mensalidades vencidas',
-        'CompletionReports' => 'Relatório de Conclusão — Alunos concluintes aptos para certificado',
-        'PaymentMethodReport' => 'Recebimentos por Forma — Relatório analítico por Pix, cartão, dinheiro e boleto',
-        'OuroModernoCourseStatusReport' => 'Situação dos Cursos Ouro Moderno — Auditoria de integração com LMS externo',
-        'OuroModernoStudentLogsReport' => 'Logs de Atividade Ouro Moderno — Histórico de lições e notas no LMS externo',
-        'OuroModernoTranscript' => 'Boletim Escolar Ouro Moderno — Consulta de notas para conferência',
-        'OuroModernoLmsStudents' => 'Alunos no LMS Ouro Moderno — Sincronização de matrículas ativas',
-        'OuroModernoIntegrationSettings' => 'Configurações Ouro Moderno — URL e token da API da Ouro Moderno',
-        'PixSettings' => 'Configurações de Pix — Chaves Pix da escola para cobrança no carnê',
-        'ScheduleBoard' => 'Quadro de Horários — Matriz semanal de ocupação das salas e máquinas',
-        'BackupManagement' => 'Gestão de Backups — Criação e restauração de cópias de segurança',
-        'StudentAttendanceKiosk' => 'Totem de Presença — Terminal de autoatendimento para registro de ponto',
-    ],
+    /*
+    |--------------------------------------------------------------------------
+    | Telas Especiais (Pages da Barbearia) - Descrições para Leigos
+    |--------------------------------------------------------------------------
+    */
+    'view_daily_schedule' => 'Agenda Diária da Equipe — Grade visual de horários marcados, cadeiras dos barbeiros e encaixes do dia',
+    'view_cash_register_page' => 'Frente de Caixa Diário — Abertura do caixa da recepção, lançamentos de recebimentos e fechamento do dia',
+    'view_commissions_page' => 'Fechamento de Comissões — Extrato e acerto de comissões por barbeiro (cortes e venda de produtos)',
+    'view_cash_flow_forecast' => 'Previsão de Fluxo de Caixa — Projeção financeira de faturamento e contas a pagar nos próximos dias',
+    'view_reports_page' => 'Relatórios Gerenciais — Estatísticas de faturamento, ticket médio e serviços mais lucrativos',
+    'view_force_password_change' => 'Redefinição Obrigatória de Senha — Tela de alteração no primeiro login do colaborador',
 
-    'widget' => [
-        'DashboardStatsOverview' => 'Cards Resumo do Dashboard — Indicadores principais de alunos, caixa e matrículas',
-        'AttendanceRateChart' => 'Gráfico de Frequência — Percentual de presença e faltas dos alunos',
-        'BirthdaysTableWidget' => 'Aniversariantes do Mês — Lista rápida de aniversariantes para ações de engajamento',
-        'OverdueReceivablesChart' => 'Gráfico de Inadimplência — Mensalidades em atraso segmentadas por faixas de dias',
-        'ReceiptsByPaymentMethodChart' => 'Gráfico de Recebimentos — Distribuição de faturamento por forma de pagamento',
-        'ContractsByStatusChart' => 'Gráfico de Contratos por Situação — Ativos, suspensos, cancelados e finalizados',
-        'SchoolGoalsProgressWidget' => 'Termômetro de Metas da Escola — Acompanhamento visual das metas da equipe',
-    ],
+    /*
+    |--------------------------------------------------------------------------
+    | Indicadores do Painel Inicial (Widgets) - Descrições para Leigos
+    |--------------------------------------------------------------------------
+    */
+    'view_barbershop_stats_overview_widget' => 'Resumo Geral do Dia/Mês — Cards no topo do painel com faturamento, clientes e atendimentos',
+    'view_payables_overview_widget' => 'Alerta de Contas a Pagar — Avisos de contas atrasadas e boletos a vencer em 7 dias',
+    'view_revenue_trend_chart_widget' => 'Gráfico de Faturamento — Evolução diária das receitas da barbearia nos últimos 7 dias',
+    'view_today_appointments_table_widget' => 'Agendamentos de Hoje — Tabela rápida na página inicial com os próximos clientes agendados',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Permissões Customizadas de Segurança - Descrições para Leigos
+    |--------------------------------------------------------------------------
+    */
+    'view_sensitive_client_data' => 'Visualizar Telefones e Dados Sensíveis de Clientes — Permite ver o WhatsApp/telefone completo dos clientes (recomenda-se desmarcar para barbeiros para proteger a carteira da barbearia)',
 ];

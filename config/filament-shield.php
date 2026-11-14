@@ -3,7 +3,7 @@
 declare(strict_types=1);
 use App\Filament\Pages\TenantLicenseBlockedPage;
 use App\Filament\Resources\BarbershopResource;
-use BezhanSalleh\FilamentShield\Resources\Roles\RoleResource;
+use App\Filament\Resources\Roles\RoleResource;
 use Filament\Pages\Dashboard;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
@@ -170,8 +170,8 @@ return [
     */
 
     'localization' => [
-        'enabled' => false,
-        'key' => 'filament-shield::filament-shield.resource_permission_prefixes_labels',
+        'enabled' => true,
+        'key' => 'filament-shield',
     ],
 
     /*

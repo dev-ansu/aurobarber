@@ -5,34 +5,31 @@ declare(strict_types=1);
 return [
     /*
     |--------------------------------------------------------------------------
-    | Table Columns
+    | Colunas de Tabela
     |--------------------------------------------------------------------------
     */
-
-    'column.name' => 'Nome',
+    'column.name' => 'Cargo / Função',
     'column.guard_name' => 'Guard',
     'column.roles' => 'Funções',
-    'column.permissions' => 'Permissões',
+    'column.permissions' => 'Permissões Ativas',
     'column.updated_at' => 'Alterado em',
 
     /*
     |--------------------------------------------------------------------------
-    | Form Fields
+    | Campos de Formulário
     |--------------------------------------------------------------------------
     */
-
-    'field.name' => 'Nome',
+    'field.name' => 'Identificador Técnico do Cargo',
     'field.guard_name' => 'Guard',
     'field.permissions' => 'Permissões',
-    'field.select_all.name' => 'Selecionar todos',
-    'field.select_all.message' => 'Habilitar todas as permissões para essa função',
+    'field.select_all.name' => 'Marcar todas as permissões',
+    'field.select_all.message' => 'Habilita acesso irrestrito a todos os recursos selecionados abaixo.',
 
     /*
     |--------------------------------------------------------------------------
-    | Navigation & Resource
+    | Navegação e Recursos
     |--------------------------------------------------------------------------
     */
-
     'nav.group' => 'Equipe',
     'nav.role.label' => 'Cargos & Permissões',
     'nav.role.icon' => 'heroicon-o-shield-check',
@@ -41,44 +38,40 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Section & Tabs
+    | Seções e Abas
     |--------------------------------------------------------------------------
     */
-    'section' => 'Entidades',
-    'resources' => 'Recursos',
-    'widgets' => 'Widgets',
-    'pages' => 'Páginas',
-    'custom' => 'Permissões customizadas',
+    'section' => 'Módulos e Recursos da Barbearia',
+    'resources' => 'Tabelas e Cadastros Principais',
+    'widgets' => 'Cards e Indicadores do Painel Inicial',
+    'pages' => 'Telas Especiais e Rotinas de Gestão',
+    'custom' => 'Permissões Especiais de Segurança',
 
     /*
     |--------------------------------------------------------------------------
-    | Messages
+    | Mensagens
     |--------------------------------------------------------------------------
     */
-
-    'forbidden' => 'Você não tem permissão para acessar',
+    'forbidden' => 'Você não tem permissão para acessar esta área.',
 
     /*
     |--------------------------------------------------------------------------
-    | Resource Permissions' Labels
+    | Rótulos de Permissões de Recursos (Para Leigos)
     |--------------------------------------------------------------------------
     */
-
     'resource_permission_prefixes_labels' => [
-        'view' => 'Visualizar ficha detalhada',
-        'view_any' => 'Listar e ver registros na tabela',
-        'create' => 'Cadastrar novo registro',
-        'update' => 'Editar e alterar dados',
-        'delete' => 'Excluir registro',
-        'delete_any' => 'Excluir registros em lote',
-        'force_delete' => 'Exclusão permanente (destrutiva)',
-        'force_delete_any' => 'Exclusão permanente em lote',
-        'restore' => 'Restaurar item excluído',
-        'restore_any' => 'Restaurar itens em lote',
-        'replicate' => 'Duplicar registro',
-        'reorder' => 'Reordenar ordem/posição',
-        'toggleStatus' => 'Ativar / Desativar status',
-        'reactivate' => 'Reativar contrato trancado/concluído',
-        'adjustFinancial' => 'Ajustar financeiro do contrato',
+        'view' => 'Visualizar Ficha Completa (Ver Detalhes)',
+        'view_any' => 'Listar e Ver Tabela (Acesso ao Menu)',
+        'create' => 'Cadastrar / Adicionar Novo',
+        'update' => 'Editar / Alterar Dados Existentes',
+        'delete' => 'Excluir Registro (Enviar para Lixeira)',
+        'delete_any' => 'Excluir Vários em Lote',
+        'force_delete' => 'Exclusão Permanente (Sem Recuperação)',
+        'force_delete_any' => 'Exclusão Permanente em Lote',
+        'restore' => 'Restaurar Item da Lixeira',
+        'restore_any' => 'Restaurar Itens em Lote',
+        'replicate' => 'Duplicar / Clonar Registro',
+        'reorder' => 'Reordenar Posição / Prioridade',
+        'toggleStatus' => 'Ativar / Desativar Status',
     ],
 ];
