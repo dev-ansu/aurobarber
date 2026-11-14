@@ -25,9 +25,14 @@ class SaasBackups extends Page
 
     protected static ?int $navigationSort = 3;
 
-    protected static string $routePath = '/backups';
+    protected static ?string $slug = 'backups';
 
     protected string $view = 'filament.saas.pages.backups';
+
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->role === 'master_admin';
+    }
 
     public string $filterScope = 'all'; // 'all', 'global', 'tenants'
 
