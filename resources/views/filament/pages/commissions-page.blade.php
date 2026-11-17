@@ -437,7 +437,7 @@
 
                 {{-- BOTÃO LIQUIDAR COMISSÃO (Apenas Dono / Gestor) --}}
                 @if ($selectedProf && !auth()->user()?->isRestrictedBarber())
-                    <button type="button" wire:click="openPayoutModal" class="cp-btn-liquidate">
+                    <button type="button" wire:click="mountAction('payoutCommission')" class="cp-btn-liquidate">
                         <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
@@ -698,72 +698,6 @@
             </div>
         @endif
     </div>
-
-    {{-- MODAL DE LIQUIDAÇÃO / PAGAMENTO DE COMISSÃO --}}
-    @if ($payoutModalOpen)
-        <div class="cp-modal-mask">
-            <div class="cp-modal-window">
-                <div class="cp-modal-head">
-                    <h3>💰 Fechamento & Pagamento de Comissão</h3>
-                    <button type="button" wire:click="$set('payoutModalOpen', false)" class="cp-modal-x">&times;</button>
-                </div>
-
-                <div class="cp-modal-summary-box">
-                    <div class="cp-summary-row">
-                        <span style="color: #94a3b8;">Profissional:</span>
-                        <strong style="color: #ffffff;">{{ $selectedProf?->display_name }}</strong>
-                    </div>
-                    <div class="cp-summary-row">
-                        <span style="color: #94a3b8;">Período Apurado:</span>
-                        <span>{{ \Carbon\Carbon::parse($startDate)->format('d/m/Y') }} até {{ \Carbon\Carbon::parse($endDate)->format('d/m/Y') }}</span>
-                    </div>
-                    <div class="cp-summary-row">
-                        <span style="color: #94a3b8;">Cortes / Serviços em Aberto:</span>
-                        <strong style="color: #ffffff;">{{ $appts->where('commission_status', '!=', 'paid')->count() }} corte(s) (R$ {{ number_format($appts->where('commission_status', '!=', 'paid')->sum('service_price'), 2, ',', '.') }})</strong>
-                    </div>
-                    <div class="cp-summary-row">
-                        <span style="color: #94a3b8;">Produtos Vendidos em Aberto:</span>
-                        <strong style="color: #38bdf8;">{{ $prodSales->where('commission_status', '!=', 'paid')->sum('quantity') }} un. (R$ {{ number_format($prodSales->where('commission_status', '!=', 'paid')->sum('total_price'), 2, ',', '.') }})</strong>
-                    </div>
-                    <div class="cp-summary-row">
-                        <span style="color: #94a3b8;">Comissão de Cortes:</span>
-                        <span style="color: #cbd5e1;">R$ {{ number_format($stats['services_commission'], 2, ',', '.') }}</span>
-                    </div>
-                    <div class="cp-summary-row">
-                        <span style="color: #94a3b8;">Comissão de Produtos:</span>
-                        <span style="color: #38bdf8;">R$ {{ number_format($stats['products_commission'], 2, ',', '.') }}</span>
-                    </div>
-                    <div class="cp-summary-row highlight">
-                        <span style="color: #fbbf24;">Total Geral a Pagar ao Barbeiro:</span>
-                        <strong style="color: #34d399; font-size: 18px;">R$ {{ number_format($stats['total_commission'], 2, ',', '.') }}</strong>
-                    </div>
-                </div>
-
-                <div class="cp-field">
-                    <label>Forma de Pagamento da Comissão</label>
-                    <select wire:model="payoutMethod" class="cp-select" style="width: 100%;">
-                        <option value="pix">PIX (Transferência Instantânea)</option>
-                        <option value="dinheiro">Dinheiro (Em Espécie)</option>
-                        <option value="transferencia">Transferência Bancária / TED</option>
-                    </select>
-                </div>
-
-                <div class="cp-field">
-                    <label>Observações / Comprovante (Opcional)</label>
-                    <input type="text" wire:model="payoutNotes" placeholder="Ex: Pago via chave PIX do barbeiro" class="cp-input" style="width: 100%;" />
-                </div>
-
-                <div class="cp-modal-actions">
-                    <button type="button" wire:click="$set('payoutModalOpen', false)" class="cp-btn-cancel">
-                        Cancelar
-                    </button>
-                    <button type="button" wire:click="confirmPayout" class="cp-btn-confirm">
-                        Confirmar Pagamento e Liquidar Recibo ✓
-                    </button>
-                </div>
-            </div>
-        </div>
-    @endif
 
     {{-- MODAL / CANHOTO DE IMPRESSÃO DO RECIBO DE COMISSÃO --}}
     @if ($printPayoutModalOpen && $selectedPayoutToPrint)

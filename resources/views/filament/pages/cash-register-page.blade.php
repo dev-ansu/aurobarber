@@ -434,7 +434,7 @@
             </div>
 
             <div style="display: flex; align-items: center; gap: 10px;">
-                <button type="button" wire:click="openMovementModal('outflow')" class="cr-btn-cta cr-btn-move">
+                <button type="button" wire:click="mountAction('registerMovement', @js(['type' => 'outflow']))" class="cr-btn-cta cr-btn-move">
                     <span>💸 Sangria / Suprimento</span>
                 </button>
 
@@ -576,13 +576,13 @@
                 </h3>
 
                 <div style="display: flex; gap: 6px;">
-                    <button type="button" wire:click="openMovementModal('opening')" class="cr-btn-nav" style="height: 30px; font-size: 11px; padding: 0 10px;">
+                    <button type="button" wire:click="mountAction('registerMovement', @js(['type' => 'opening']))" class="cr-btn-nav" style="height: 30px; font-size: 11px; padding: 0 10px;">
                         + Fundo Inicial
                     </button>
-                    <button type="button" wire:click="openMovementModal('inflow')" class="cr-btn-nav" style="height: 30px; font-size: 11px; padding: 0 10px;">
+                    <button type="button" wire:click="mountAction('registerMovement', @js(['type' => 'inflow']))" class="cr-btn-nav" style="height: 30px; font-size: 11px; padding: 0 10px;">
                         + Suprimento
                     </button>
-                    <button type="button" wire:click="openMovementModal('outflow')" class="cr-btn-nav" style="height: 30px; font-size: 11px; padding: 0 10px; color: #fb7185; border-color: rgba(244, 63, 94, 0.3);">
+                    <button type="button" wire:click="mountAction('registerMovement', @js(['type' => 'outflow']))" class="cr-btn-nav" style="height: 30px; font-size: 11px; padding: 0 10px; color: #fb7185; border-color: rgba(244, 63, 94, 0.3);">
                         - Sangria (Retirada)
                     </button>
                 </div>
@@ -653,50 +653,6 @@
             </div>
         </div>
     </div>
-
-    {{-- MODAL DE MOVIMENTAÇÃO (SANGRIA / SUPRIMENTO / ABERTURA) --}}
-    @if ($movementModalOpen)
-        <div class="cr-modal-mask">
-            <div class="cr-modal-window">
-                <div class="cr-modal-head">
-                    <h3>💸 Nova Movimentação de Caixa</h3>
-                    <button type="button" wire:click="$set('movementModalOpen', false)" class="cr-modal-x">&times;</button>
-                </div>
-
-                <form wire:submit.prevent="saveMovement" style="display: flex; flex-direction: column; gap: 14px;">
-                    <div class="cr-field">
-                        <label>Tipo de Movimentação</label>
-                        <select wire:model="movementType" class="cr-select">
-                            <option value="opening">Fundo de Troco (Abertura de Caixa)</option>
-                            <option value="inflow">Suprimento (Entrada de Dinheiro)</option>
-                            <option value="outflow">Sangria (Retirada de Dinheiro da Gaveta)</option>
-                        </select>
-                    </div>
-
-                    <div class="cr-field">
-                        <label>Valor (R$)</label>
-                        <input type="number" step="0.01" wire:model="movementAmount" placeholder="0.00" class="cr-input" style="font-size: 16px; font-weight: 900; color: #fbbf24;" required />
-                        @error('movementAmount') <span style="color: #fb7185; font-size: 11px;">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div class="cr-field">
-                        <label>Motivo / Descrição</label>
-                        <input type="text" wire:model="movementDescription" placeholder="Ex: Compra de café, troco inicial..." class="cr-input" required />
-                        @error('movementDescription') <span style="color: #fb7185; font-size: 11px;">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div class="cr-modal-actions">
-                        <button type="button" wire:click="$set('movementModalOpen', false)" class="cr-btn-cancel">
-                            Cancelar
-                        </button>
-                        <button type="submit" class="cr-btn-confirm">
-                            Salvar Movimentação ✓
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    @endif
 
     {{-- MODAL / CUPOM DE IMPRESSÃO DO FECHAMENTO (80mm) --}}
     @if ($printModalOpen)

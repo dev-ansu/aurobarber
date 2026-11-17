@@ -4,8 +4,12 @@ namespace App\Filament\Pages;
 
 use App\Models\Appointment;
 use App\Models\CashMovement;
+use Filament\Actions\Action;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use Illuminate\Support\Collection;
 
@@ -125,6 +129,75 @@ class CashRegisterPage extends Page
             'sangrias' => $sangrias,
             'saldo_dinheiro_gaveta' => $saldoDinheiroGaveta,
         ];
+    }
+
+    public function registerMovementAction(): Action
+    {
+        return Action::make('registerMovement')
+            ->modalHeading('Nova Movimentação de Caixa')
+            ->modalIcon('heroicon-o-currency-dollar')
+            ->modalSubmitActionLabel('Salvar Movimentação')
+            ->modalWidth(Width::Medium)
+            ->schema([
+                Select::make('type')
+                    ->label('Tipo de Movimentação')
+                    ->options([
+                        'opening' => 'Fundo de Troco (Abertura de Caixa)',
+                        'inflow' => 'Suprimento (Entrada de Dinheiro)',
+                        'outflow' => 'Sangria (Retirada de Dinheiro da Gaveta)',
+                    ])
+                    ->required()
+                    ->default('outflow'),
+
+                TextInput::make('amount')
+                    ->label('Valor (R$)')
+                    ->prefix('R$')
+                    ->numeric()
+                    ->minValue(0.01)
+                    ->required(),
+
+                TextInput::make('description')
+                    ->label('Motivo / Descrição')
+                    ->placeholder('Ex: Compra de café, troco inicial...')
+                    ->required()
+                    ->maxLength(255),
+            ])
+            ->mountUsing(function (Schema $schema, Action $action): void {
+                $arguments = $action->getArguments();
+                $type = $arguments['type'] ?? 'outflow';
+                $defaultDesc = match ($type) {
+                    'opening' => 'Fundo de troco inicial do caixa',
+                    'inflow' => 'Aporte / Troco adicional',
+                    'outflow' => 'Retirada / Despesa avulsa',
+                    default => '',
+                };
+
+                $schema->fill([
+                    'type' => $type,
+                    'amount' => null,
+                    'description' => $defaultDesc,
+                ]);
+            })
+            ->action(function (array $data): void {
+                $tenant = filament()->getTenant();
+                if (! $tenant) {
+                    return;
+                }
+
+                CashMovement::create([
+                    'barbershop_id' => $tenant->id,
+                    'user_id' => auth()->id(),
+                    'type' => $data['type'],
+                    'amount' => (float) $data['amount'],
+                    'description' => trim($data['description']),
+                    'date' => $this->selectedDate,
+                ]);
+
+                Notification::make()
+                    ->title('Movimentação de caixa registrada!')
+                    ->success()
+                    ->send();
+            });
     }
 
     public function openMovementModal(string $type = 'outflow'): void

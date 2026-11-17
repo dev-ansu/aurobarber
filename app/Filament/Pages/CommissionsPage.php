@@ -7,11 +7,16 @@ use App\Models\CommissionPayout;
 use App\Models\ProductSale;
 use App\Models\Professional;
 use Carbon\Carbon;
+use Filament\Actions\Action;
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\HtmlString;
 
 class CommissionsPage extends Page
 {
@@ -231,6 +236,135 @@ class CommissionsPage extends Page
         }
 
         return $query->get();
+    }
+
+    public function payoutCommissionAction(): Action
+    {
+        return Action::make('payoutCommission')
+            ->modalHeading('Liquidar Comissões do Barbeiro')
+            ->modalIcon('heroicon-o-banknotes')
+            ->modalSubmitActionLabel('Confirmar Pagamento ao Barbeiro')
+            ->modalWidth(Width::Large)
+            ->schema([
+                Placeholder::make('summary')
+                    ->label('Resumo da Liquidação')
+                    ->content(function () {
+                        $prof = $this->selectedProfessional;
+                        $appts = $this->appointments->where('commission_status', '!=', 'paid');
+                        $prodSales = $this->productSales->where('commission_status', '!=', 'paid');
+
+                        $servicesCommission = 0.0;
+                        foreach ($appts as $a) {
+                            $serviceComm = (float) $a->commission_amount - (float) $a->products_commission_amount;
+                            $servicesCommission += max(0, $serviceComm);
+                        }
+                        $productsCommission = (float) $prodSales->sum('commission_amount');
+                        $totalCommission = $servicesCommission + $productsCommission;
+
+                        return new HtmlString(
+                            '<div style="font-size: 13px; line-height: 1.6; color: #cbd5e1; background: #0f172a; padding: 12px 16px; border-radius: 12px; border: 1px solid #1e293b;">'
+                            .'<div><strong>Profissional:</strong> ' . e($prof?->name ?? '—') . '</div>'
+                            .'<div><strong>Comissão de Cortes:</strong> R$ ' . number_format($servicesCommission, 2, ',', '.') . ' (' . $appts->count() . ' atendimentos)</div>'
+                            .'<div><strong>Comissão de Produtos:</strong> R$ ' . number_format($productsCommission, 2, ',', '.') . ' (' . (int) $prodSales->sum('quantity') . ' un.)</div>'
+                            .'<div style="font-size: 15px; margin-top: 6px; padding-top: 6px; border-top: 1px solid #334155;"><strong style="color: #34d399;">Total Líquido a Pagar: R$ ' . number_format($totalCommission, 2, ',', '.') . '</strong></div>'
+                            .'</div>'
+                        );
+                    })
+                    ->columnSpanFull(),
+
+                Select::make('payment_method')
+                    ->label('Forma de Pagamento')
+                    ->options([
+                        'pix' => '📱 PIX',
+                        'dinheiro' => '💵 Dinheiro',
+                        'transferencia' => '🏦 Transferência Bancária',
+                    ])
+                    ->default('pix')
+                    ->required()
+                    ->columnSpanFull(),
+
+                TextInput::make('notes')
+                    ->label('Observações (Opcional)')
+                    ->placeholder('Ex: Pago via chave PIX celular')
+                    ->maxLength(255)
+                    ->columnSpanFull(),
+            ])
+            ->action(function (array $data): void {
+                $tenant = filament()->getTenant();
+                $prof = $this->selectedProfessional;
+
+                if (! $tenant || ! $prof) {
+                    return;
+                }
+
+                $pendingAppts = $this->appointments->where('commission_status', '!=', 'paid');
+                $pendingProdSales = $this->productSales->where('commission_status', '!=', 'paid');
+
+                if ($pendingAppts->isEmpty() && $pendingProdSales->isEmpty()) {
+                    Notification::make()
+                        ->title('Não há comissões pendentes para este profissional.')
+                        ->warning()
+                        ->send();
+                    return;
+                }
+
+                DB::transaction(function () use ($tenant, $prof, $pendingAppts, $pendingProdSales, $data) {
+                    $servicesGross = (float) $pendingAppts->sum('service_price');
+                    $servicesCommission = 0.0;
+                    foreach ($pendingAppts as $a) {
+                        $serviceComm = (float) $a->commission_amount - (float) $a->products_commission_amount;
+                        $servicesCommission += max(0, $serviceComm);
+                    }
+
+                    $productsGross = (float) $pendingProdSales->sum('total_price');
+                    $productsCommission = (float) $pendingProdSales->sum('commission_amount');
+
+                    $totalGross = $servicesGross + $productsGross;
+                    $totalCommission = $servicesCommission + $productsCommission;
+                    $barbershopCut = $totalGross - $totalCommission;
+
+                    $payout = CommissionPayout::create([
+                        'barbershop_id' => $tenant->id,
+                        'professional_id' => $prof->id,
+                        'period_start' => $this->startDate,
+                        'period_end' => $this->endDate,
+                        'appointments_count' => $pendingAppts->count(),
+                        'services_gross' => $servicesGross,
+                        'services_commission' => $servicesCommission,
+                        'products_gross' => $productsGross,
+                        'products_commission' => $productsCommission,
+                        'products_count' => (int) $pendingProdSales->sum('quantity'),
+                        'total_gross' => $totalGross,
+                        'total_commission' => $totalCommission,
+                        'barbershop_cut' => $barbershopCut,
+                        'payment_method' => $data['payment_method'] ?? 'pix',
+                        'notes' => $data['notes'] ?? null,
+                        'paid_at' => now(),
+                    ]);
+
+                    if ($pendingAppts->isNotEmpty()) {
+                        Appointment::whereIn('id', $pendingAppts->pluck('id'))->update([
+                            'commission_status' => 'paid',
+                            'commission_payout_id' => $payout->id,
+                            'commission_paid_at' => now(),
+                        ]);
+                    }
+
+                    if ($pendingProdSales->isNotEmpty()) {
+                        ProductSale::whereIn('id', $pendingProdSales->pluck('id'))->update([
+                            'commission_status' => 'paid',
+                            'commission_payout_id' => $payout->id,
+                            'commission_paid_at' => now(),
+                        ]);
+                    }
+                });
+
+                Notification::make()
+                    ->title('Comissão liquidada com sucesso!')
+                    ->body('Recibo gerado e comissões de serviços e produtos marcadas como pagas.')
+                    ->success()
+                    ->send();
+            });
     }
 
     public function openPayoutModal(): void
