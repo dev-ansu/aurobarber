@@ -412,42 +412,28 @@ class DailySchedule extends Page
                     ->required()
                     ->columnSpanFull(),
 
-                Repeater::make('products')
-                    ->label('🧴 Vender Produto ao Cliente (Opcional - Gera Comissão)')
-                    ->schema([
-                        Select::make('product_id')
-                            ->label('Produto')
-                            ->options(function () {
-                                $tenant = filament()->getTenant();
-                                if (! $tenant) {
-                                    return [];
-                                }
-                                return Product::where('barbershop_id', $tenant->id)
-                                    ->where('is_active', true)
-                                    ->where('stock_quantity', '>', 0)
-                                    ->orderBy('name')
-                                    ->get()
-                                    ->mapWithKeys(fn ($p) => [
-                                        $p->id => "{$p->name} — R$ " . number_format((float) $p->price, 2, ',', '.') . " ({$p->stock_quantity} un. em estoque)"
-                                    ])
-                                    ->all();
-                            })
-                            ->searchable()
-                            ->required()
-                            ->columnSpan(2),
-
-                        TextInput::make('quantity')
-                            ->label('Qtd')
-                            ->numeric()
-                            ->default(1)
-                            ->minValue(1)
-                            ->required()
-                            ->columnSpan(1),
-                    ])
-                    ->columns(3)
-                    ->default([])
-                    ->addActionLabel('+ Adicionar Produto (Opcional)')
-                    ->helperText('O produto é um PLUS opcional. Se o cliente realizou apenas o corte/serviço, basta deixar esta lista vazia.')
+                Select::make('consumed_product_ids')
+                    ->label('🧴 Vender Produtos ao Cliente (Opcional - Gera Comissão)')
+                    ->options(function () {
+                        $tenant = filament()->getTenant();
+                        if (! $tenant) {
+                            return [];
+                        }
+                        return Product::where('barbershop_id', $tenant->id)
+                            ->where('is_active', true)
+                            ->where('stock_quantity', '>', 0)
+                            ->orderBy('name')
+                            ->get()
+                            ->mapWithKeys(fn ($p) => [
+                                $p->id => "{$p->name} — R$ " . number_format((float) $p->price, 2, ',', '.') . " ({$p->stock_quantity} un. em estoque)"
+                            ])
+                            ->all();
+                    })
+                    ->multiple()
+                    ->searchable()
+                    ->preload()
+                    ->placeholder('Nenhum produto selecionado (opcional)')
+                    ->helperText('O produto é um PLUS opcional. Se o cliente realizou apenas o corte/serviço, basta deixar este campo vazio.')
                     ->columnSpanFull(),
             ])
             ->mountUsing(function (Schema $schema, Action $action): void {
@@ -467,7 +453,7 @@ class DailySchedule extends Page
                     'payment_method' => in_array($appt->payment_method, ['pix', 'dinheiro', 'debito', 'credito'])
                         ? $appt->payment_method
                         : 'pix',
-                    'products' => [],
+                    'consumed_product_ids' => [],
                 ]);
             })
             ->action(function (array $data, Action $action): void {
@@ -482,12 +468,10 @@ class DailySchedule extends Page
                     $productsTotal = 0.0;
                     $productsCommissionTotal = 0.0;
 
-                    $productsList = (array) ($data['products'] ?? []);
+                    $productIds = (array) ($data['consumed_product_ids'] ?? []);
 
-                    foreach ($productsList as $item) {
-                        $productId = (int) ($item['product_id'] ?? 0);
-                        $qty = max(1, (int) ($item['quantity'] ?? 1));
-
+                    foreach ($productIds as $productId) {
+                        $productId = (int) $productId;
                         if ($productId <= 0) {
                             continue;
                         }
@@ -500,11 +484,11 @@ class DailySchedule extends Page
                             continue;
                         }
 
-                        if ($product->stock_quantity < $qty) {
-                            throw new \Exception("Estoque insuficiente para o produto {$product->name}. Disponível: {$product->stock_quantity}");
+                        if ($product->stock_quantity < 1) {
+                            throw new \Exception("Estoque insuficiente para o produto {$product->name}.");
                         }
 
-                        $lineTotal = (float) $product->price * $qty;
+                        $lineTotal = (float) $product->price;
                         $productsTotal += $lineTotal;
 
                         $commRate = (float) $product->commission_rate;
@@ -515,19 +499,19 @@ class DailySchedule extends Page
                         $productsCommissionTotal += $commAmount;
 
                         $appt->products()->attach($product->id, [
-                            'quantity' => $qty,
+                            'quantity' => 1,
                             'unit_price' => $product->price,
                             'total_price' => $lineTotal,
                         ]);
 
-                        $product->decrement('stock_quantity', $qty);
+                        $product->decrement('stock_quantity', 1);
 
                         ProductSale::create([
                             'barbershop_id' => $appt->barbershop_id,
                             'product_id' => $product->id,
                             'professional_id' => $appt->professional_id,
                             'appointment_id' => $appt->id,
-                            'quantity' => $qty,
+                            'quantity' => 1,
                             'unit_price' => $product->price,
                             'total_price' => $lineTotal,
                             'cost_price' => $product->cost_price,
