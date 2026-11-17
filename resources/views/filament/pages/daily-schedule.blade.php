@@ -753,7 +753,7 @@
                 @foreach ($professionals as $pro)
                     @php
                         $appts = $byBarber[$pro->id] ?? collect();
-                        $barberRevenue = $appts->where('status', '!=', 'cancelled')->sum('service_price');
+                        $barberRevenue = $appts->whereNotIn('status', ['cancelled', 'no_show'])->sum('service_price');
                     @endphp
 
                     <div class="ab-col">
@@ -844,7 +844,7 @@
                                     </div>
 
                                     {{-- AÇÕES DE ATENDIMENTO --}}
-                                    @if (!in_array($appt->status, ['completed', 'cancelled']))
+                                    @if (!in_array($appt->status, ['completed', 'cancelled', 'no_show'], true))
                                         <div class="ab-card-actions">
                                             @if ($appt->status !== 'in_progress')
                                                 <button

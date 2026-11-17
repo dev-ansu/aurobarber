@@ -168,7 +168,7 @@ class DailySchedule extends Page
             'total_count' => $appts->count(),
             'completed_count' => $appts->where('status', 'completed')->count(),
             'in_progress_count' => $appts->where('status', 'in_progress')->count(),
-            'total_revenue' => $appts->where('status', '!=', 'cancelled')->sum('service_price'),
+            'total_revenue' => $appts->whereNotIn('status', ['cancelled', 'no_show'])->sum('service_price'),
             'realized_revenue' => $appts->where('status', 'completed')->sum('service_price'),
         ];
     }
@@ -176,6 +176,16 @@ class DailySchedule extends Page
     public function updateStatus(int $appointmentId, string $status): void
     {
         $appt = $this->findAccessibleAppointment($appointmentId);
+
+        if (in_array($appt->status, ['completed', 'cancelled', 'no_show'], true)) {
+            Notification::make()
+                ->title('Este agendamento já foi encerrado ou marcado como falta.')
+                ->warning()
+                ->send();
+
+            return;
+        }
+
         $appt->status = $status;
 
         if ($status === 'completed' && $appt->payment_status === 'pending') {
@@ -444,6 +454,17 @@ class DailySchedule extends Page
 
                 $appt = $this->findAccessibleAppointment($appointmentId);
 
+                if (in_array($appt->status, ['completed', 'cancelled', 'no_show'], true)) {
+                    Notification::make()
+                        ->title('Este agendamento não pode ser concluído pois já foi encerrado ou marcado como falta.')
+                        ->warning()
+                        ->send();
+
+                    $action->cancel();
+
+                    return;
+                }
+
                 $schema->fill([
                     'appointment_id' => $appt->id,
                     'client_name' => $appt->client_name,
@@ -461,6 +482,16 @@ class DailySchedule extends Page
                 abort_unless($appointmentId > 0, 404);
 
                 $appt = $this->findAccessibleAppointment($appointmentId);
+
+                if (in_array($appt->status, ['completed', 'cancelled', 'no_show'], true)) {
+                    Notification::make()
+                        ->title('Este agendamento já foi encerrado ou marcado como falta.')
+                        ->warning()
+                        ->send();
+
+                    return;
+                }
+
                 $tenant = filament()->getTenant();
 
                 DB::transaction(function () use ($appt, $tenant, $data) {

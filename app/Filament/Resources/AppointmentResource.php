@@ -241,7 +241,7 @@ class AppointmentResource extends Resource
                         'confirmed' => 'info',
                         'in_progress' => 'primary',
                         'completed' => 'success',
-                        'cancelled' => 'danger',
+                        'cancelled', 'no_show' => 'danger',
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
@@ -250,6 +250,7 @@ class AppointmentResource extends Resource
                         'in_progress' => 'Em Atendimento',
                         'completed' => 'Concluído',
                         'cancelled' => 'Cancelado',
+                        'no_show' => 'Não Compareceu',
                         default => ucfirst($state),
                     }),
             ])
@@ -262,6 +263,7 @@ class AppointmentResource extends Resource
                         'in_progress' => 'Em Atendimento',
                         'completed' => 'Concluído',
                         'cancelled' => 'Cancelado',
+                        'no_show' => 'Não Compareceu',
                     ]),
                 Tables\Filters\SelectFilter::make('professional_id')
                     ->label('Barbeiro')
@@ -309,7 +311,7 @@ class AppointmentResource extends Resource
                     ->label('Concluir & Comanda')
                     ->icon('heroicon-o-check-circle')
                     ->color('primary')
-                    ->visible(fn (Appointment $record) => $record->status !== 'completed' && ! $record->is_blocked_slot)
+                    ->visible(fn (Appointment $record) => ! in_array($record->status, ['completed', 'cancelled', 'no_show'], true) && ! $record->is_blocked_slot)
                     ->form([
                         Tabs::make('CheckoutComanda')
                             ->tabs([
@@ -352,7 +354,7 @@ class AppointmentResource extends Resource
                                 ->lockForUpdate()
                                 ->firstOrFail();
 
-                            if ($appointment->status === 'completed' || $appointment->is_blocked_slot) {
+                            if (in_array($appointment->status, ['completed', 'cancelled', 'no_show'], true) || $appointment->is_blocked_slot) {
                                 throw ValidationException::withMessages([
                                     'payment_method' => 'Este agendamento não pode ser finalizado.',
                                 ]);
