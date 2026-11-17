@@ -267,12 +267,11 @@ class ProductResource extends Resource
 
                         CashMovement::create([
                             'barbershop_id' => $record->barbershop_id,
-                            'type' => 'in',
-                            'category' => 'Venda de Produto',
+                            'user_id' => auth()->id(),
+                            'type' => 'inflow',
                             'description' => "Venda de produto: {$qty}x {$record->name}" . ($proName ? " (Barbeiro: {$proName})" : ''),
                             'amount' => $total,
-                            'payment_method' => $data['payment_method'] ?? 'pix',
-                            'occurred_at' => now(),
+                            'date' => now()->toDateString(),
                         ]);
 
                         $msg = "{$qty}x {$record->name} (R$ " . number_format($total, 2, ',', '.') . ") lançado no Caixa e baixado do estoque.";
