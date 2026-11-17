@@ -332,12 +332,12 @@ class AppointmentResource extends Resource
                                             ->label('Adicionar Consumo do Bar / Produtos na Comanda (Opcional)')
                                             ->options(fn () => Product::where('barbershop_id', filament()->getTenant()?->id)
                                                 ->where('is_active', true)
-                                                ->where('stock_quantity', '>', 0)
+                                                ->orderBy('name')
                                                 ->get()
-                                                ->mapWithKeys(fn ($p) => [$p->id => "{$p->name} — R$ ".number_format((float) $p->price, 2, ',', '.')." ({$p->stock_quantity} em estoque)"]))
+                                                ->mapWithKeys(fn ($p) => [$p->id => "{$p->name} — R$ ".number_format((float) $p->price, 2, ',', '.').' ('.($p->stock_quantity > 0 ? "{$p->stock_quantity} em estoque" : 'sem estoque').')']))
                                             ->multiple()
                                             ->searchable()
-                                            ->preload()
+                                            ->dynamicOptions(false)
                                             ->helperText('Os produtos selecionados serão somados ao total e baixados automaticamente do estoque.')
                                             ->columnSpanFull(),
                                     ]),
@@ -380,10 +380,9 @@ class AppointmentResource extends Resource
                                     ->lockForUpdate()
                                     ->get();
 
-                                if ($products->count() !== count($normalizedProductIds)
-                                    || $products->contains(fn (Product $product): bool => $product->stock_quantity < 1)) {
+                                if ($products->count() !== count($normalizedProductIds)) {
                                     throw ValidationException::withMessages([
-                                        'consumed_product_ids' => 'Um ou mais produtos não pertencem a esta barbearia ou estão sem estoque.',
+                                        'consumed_product_ids' => 'Um ou mais produtos não pertencem a esta barbearia.',
                                     ]);
                                 }
                             }
@@ -408,7 +407,9 @@ class AppointmentResource extends Resource
                                     'unit_price' => $product->price,
                                     'total_price' => $product->price,
                                 ]);
-                                $product->decrement('stock_quantity', 1);
+                                $product->update([
+                                    'stock_quantity' => max(0, (int) $product->stock_quantity - 1),
+                                ]);
 
                                 ProductSale::create([
                                     'barbershop_id' => $appointment->barbershop_id,

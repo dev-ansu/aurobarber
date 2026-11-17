@@ -421,17 +421,16 @@ class DailySchedule extends Page
                         }
                         return Product::where('barbershop_id', $tenant->id)
                             ->where('is_active', true)
-                            ->where('stock_quantity', '>', 0)
                             ->orderBy('name')
                             ->get()
                             ->mapWithKeys(fn ($p) => [
-                                $p->id => "{$p->name} — R$ " . number_format((float) $p->price, 2, ',', '.') . " ({$p->stock_quantity} un. em estoque)"
+                                $p->id => "{$p->name} — R$ " . number_format((float) $p->price, 2, ',', '.') . ' (' . ($p->stock_quantity > 0 ? "{$p->stock_quantity} un. em estoque" : 'sem estoque') . ')'
                             ])
                             ->all();
                     })
                     ->multiple()
                     ->searchable()
-                    ->preload()
+                    ->dynamicOptions(false)
                     ->placeholder('Nenhum produto selecionado (opcional)')
                     ->helperText('O produto é um PLUS opcional. Se o cliente realizou apenas o corte/serviço, basta deixar este campo vazio.')
                     ->columnSpanFull(),
@@ -484,10 +483,6 @@ class DailySchedule extends Page
                             continue;
                         }
 
-                        if ($product->stock_quantity < 1) {
-                            throw new \Exception("Estoque insuficiente para o produto {$product->name}.");
-                        }
-
                         $lineTotal = (float) $product->price;
                         $productsTotal += $lineTotal;
 
@@ -504,7 +499,9 @@ class DailySchedule extends Page
                             'total_price' => $lineTotal,
                         ]);
 
-                        $product->decrement('stock_quantity', 1);
+                        $product->update([
+                            'stock_quantity' => max(0, (int) $product->stock_quantity - 1),
+                        ]);
 
                         ProductSale::create([
                             'barbershop_id' => $appt->barbershop_id,
@@ -585,6 +582,7 @@ class DailySchedule extends Page
                                         ])
                                         ->all())
                                     ->searchable()
+                                    ->dynamicOptions(false)
                                     ->required()
                                     ->columnSpanFull(),
 
@@ -598,6 +596,7 @@ class DailySchedule extends Page
                                         ])
                                         ->all())
                                     ->searchable()
+                                    ->dynamicOptions(false)
                                     ->required()
                                     ->columnSpanFull(),
 

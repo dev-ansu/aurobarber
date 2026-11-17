@@ -40,7 +40,26 @@ class ResolveTenantSchema
             if ($routeTenant instanceof Barbershop) {
                 $tenantBarbershop = $routeTenant;
             } elseif (is_string($routeTenant) && $routeTenant !== '') {
-                $tenantBarbershop = Barbershop::where('slug', $routeTenant)->first();
+                $tenantBarbershop = Barbershop::where('slug', $routeTenant)
+                    ->orderByDesc('is_active')
+                    ->orderByDesc('id')
+                    ->first();
+            }
+        }
+
+        // 3.1. Resolução via contexto do Filament (ex: requisições Livewire /livewire/update com persistent middleware)
+        if (! $tenantBarbershop && function_exists('filament') && filament()->getTenant() instanceof Barbershop) {
+            $tenantBarbershop = filament()->getTenant();
+        }
+
+        // 3.2. Resolução via Referer em requisições Livewire (/admin/{slug}/... ou /{slug}/...)
+        if (! $tenantBarbershop && $request->headers->has('referer')) {
+            $refererPath = (string) parse_url((string) $request->headers->get('referer'), PHP_URL_PATH);
+            if (preg_match('#^/admin/([^/?\#]+)#', $refererPath, $matches)) {
+                $tenantBarbershop = Barbershop::where('slug', $matches[1])
+                    ->orderByDesc('is_active')
+                    ->orderByDesc('id')
+                    ->first();
             }
         }
 
