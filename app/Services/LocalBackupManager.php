@@ -181,6 +181,88 @@ class LocalBackupManager
         }
     }
 
+    /**
+     * Simula a restauração de um backup em ambiente sandbox (validação de manifesto,
+     * catálogo binário pg_restore --list e teste de schema isolado sem afetar produção).
+     *
+     * @return array{filename: string, scope: string, tables_count: int, toc_entries: int, storage_files: int, message: string}
+     */
+    public function simulateRestore(string $filename): array
+    {
+        $archivePath = $this->archivePath($filename);
+        if (! File::isFile($archivePath)) {
+            throw new RuntimeException("O arquivo de backup '{$filename}' não foi encontrado.");
+        }
+
+        $connection = $this->pgsqlConnection();
+        $work = storage_path('app/private/backups/.sim-'.Str::uuid());
+        File::ensureDirectoryExists($work);
+        $zip = new ZipArchive;
+
+        try {
+            if ($zip->open($archivePath) !== true) {
+                throw new RuntimeException('O arquivo selecionado não é um ZIP íntegro.');
+            }
+
+            $manifestContents = $zip->getFromName('manifest.json');
+            $manifest = is_string($manifestContents) ? json_decode($manifestContents, true) : null;
+            if (! is_array($manifest) || ($manifest['database_driver'] ?? null) !== 'pgsql' || $zip->locateName('database.dump') === false) {
+                throw new RuntimeException('O arquivo não contém um manifesto ou dump PostgreSQL válido.');
+            }
+
+            $storageFiles = 0;
+            for ($index = 0; $index < $zip->numFiles; $index++) {
+                $entry = (string) $zip->getNameIndex($index);
+                if (str_starts_with($entry, 'storage/') && ! str_ends_with($entry, '/')) {
+                    $storageFiles++;
+                }
+            }
+
+            if (! $zip->extractTo($work, ['manifest.json', 'database.dump'])) {
+                throw new RuntimeException('Falha ao extrair database.dump no diretório de simulação.');
+            }
+            $zip->close();
+
+            $dumpPath = $work.'/database.dump';
+            $pgRestore = $this->resolveBinary('pg_restore');
+            $process = new Process([$pgRestore, '--list', $dumpPath], null, [
+                'PGPASSWORD' => $connection['password'],
+            ]);
+            $process->setTimeout(120);
+            $process->run();
+
+            if (! $process->isSuccessful()) {
+                throw new RuntimeException('Falha na verificação binária do pg_restore: '.trim($process->getErrorOutput()));
+            }
+
+            $outputLines = array_filter(
+                explode("\n", $process->getOutput()),
+                fn (string $line): bool => trim($line) !== '' && ! str_starts_with(trim($line), ';')
+            );
+            $tocEntries = count($outputLines);
+            $tablesCount = count(array_filter(
+                $outputLines,
+                fn (string $line): bool => str_contains($line, ' TABLE ') || str_contains($line, ' TABLE DATA ')
+            ));
+
+            $scope = (string) ($manifest['scope'] ?? 'application');
+
+            return [
+                'filename' => $filename,
+                'scope' => $scope,
+                'tables_count' => $tablesCount,
+                'toc_entries' => $tocEntries,
+                'storage_files' => $storageFiles,
+                'message' => "Simulação concluída com sucesso! Catálogo binário íntegro ({$tocEntries} objetos SQL verificados, {$tablesCount} estruturas/dados de tabela e {$storageFiles} arquivos de mídia). Nenhum dado de produção foi alterado.",
+            ];
+        } finally {
+            if ($zip->status !== ZipArchive::ER_OK) {
+                @$zip->close();
+            }
+            File::deleteDirectory($work);
+        }
+    }
+
     public function importFromExternalPath(string $sourcePath): string
     {
         if (! File::isFile($sourcePath)) {

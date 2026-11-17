@@ -876,6 +876,24 @@
                                                 🚫 Faltou
                                             </button>
                                         </div>
+                                        <div style="display: flex; gap: 6px; margin-top: 6px;">
+                                            <button
+                                                type="button"
+                                                wire:click="mountAction('editAppointment', @js(['appointmentId' => $appt->id]))"
+                                                class="ab-action-btn"
+                                                style="background: rgba(51, 65, 85, 0.35); border: 1px solid #334155; color: #cbd5e1; font-size: 11px; padding: 6px 8px;"
+                                            >
+                                                ✏️ Editar / Reagendar
+                                            </button>
+                                            <button
+                                                type="button"
+                                                wire:click="mountAction('cancelAppointment', @js(['appointmentId' => $appt->id]))"
+                                                class="ab-action-btn"
+                                                style="background: rgba(100, 116, 139, 0.15); border: 1px solid #334155; color: #94a3b8; font-size: 11px; padding: 6px 8px;"
+                                            >
+                                                ✖ Cancelar
+                                            </button>
+                                        </div>
                                     @endif
                                 </div>
                             @empty

@@ -5,15 +5,21 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\BarbershopResource\Pages;
 use App\Models\Barbershop;
 use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\RestoreAction;
 use Filament\Forms;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Filament\Schemas\Components\Utilities\Get;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Unique;
 
@@ -326,9 +332,19 @@ class BarbershopResource extends Resource
                     ->money('BRL')
                     ->sortable(),
 
+                Tables\Columns\TextColumn::make('schema_name')
+                    ->label('Isolamento DB')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => $state ? "Schema: {$state}" : 'Public (Compartilhado)')
+                    ->color(fn (?string $state): string => $state ? 'success' : 'gray')
+                    ->toggleable(),
+
                 Tables\Columns\TextColumn::make('city')
                     ->label('Cidade')
                     ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                TrashedFilter::make(),
             ])
             ->actions([
                 Action::make('open_panel')
@@ -422,7 +438,8 @@ class BarbershopResource extends Resource
                     ->color('info')
                     ->action(function (Barbershop $record, \App\Services\LocalBackupManager $backupManager): void {
                         try {
-                            $filename = $backupManager->create(false, "tenant_{$record->slug}");
+                            $schema = ! empty($record->schema_name) ? $record->schema_name : null;
+                            $filename = $backupManager->create(false, $schema);
                             \Filament\Notifications\Notification::make()
                                 ->title('Backup gerado com sucesso!')
                                 ->body("Arquivo: {$filename}")
@@ -438,6 +455,18 @@ class BarbershopResource extends Resource
                     }),
 
                 EditAction::make(),
+                DeleteAction::make()
+                    ->label('Lixeira'),
+                RestoreAction::make(),
+                ForceDeleteAction::make(),
+            ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
             ]);
     }
 

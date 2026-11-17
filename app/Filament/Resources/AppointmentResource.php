@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\AppointmentResource\Pages;
 use App\Models\Appointment;
 use App\Models\Barbershop;
+use App\Models\CashMovement;
 use App\Models\Product;
 use App\Models\ProductSale;
 use App\Models\Service;
@@ -447,7 +448,18 @@ class AppointmentResource extends Resource
                                 'commission_status' => 'pending',
                             ]);
 
-                            return (float) $appointment->service_price + (float) $appointment->products_total;
+                            $grandTotalValue = (float) $appointment->service_price + (float) $appointment->products_total;
+
+                            CashMovement::create([
+                                'barbershop_id' => $appointment->barbershop_id,
+                                'user_id' => auth()->id(),
+                                'type' => 'inflow',
+                                'description' => "Corte/Serviço: {$appointment->client_name}".($productsTotal > 0 ? ' (+ produtos: R$ '.number_format($productsTotal, 2, ',', '.').')' : ''),
+                                'amount' => $grandTotalValue,
+                                'date' => now()->toDateString(),
+                            ]);
+
+                            return $grandTotalValue;
                         });
 
                         Notification::make()

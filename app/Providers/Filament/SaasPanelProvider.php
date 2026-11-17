@@ -74,6 +74,7 @@ class SaasPanelProvider extends PanelProvider
             ->favicon(fn () => asset('favicon.ico'))
             ->sidebarCollapsibleOnDesktop()
             ->darkMode(true)
+            ->viteTheme('resources/css/filament/admin/theme.css')
             ->colors([
                 'primary' => Color::Amber,
                 'gray' => Color::Slate,
@@ -81,6 +82,7 @@ class SaasPanelProvider extends PanelProvider
             ->pages([
                 SaasDashboard::class,
                 \App\Filament\Saas\Pages\SaasBackups::class,
+                \App\Filament\Saas\Pages\SaasLogs::class,
                 SaasSupportSettings::class,
                 ForcePasswordChange::class,
             ])

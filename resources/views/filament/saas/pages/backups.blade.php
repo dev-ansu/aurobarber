@@ -164,6 +164,15 @@
                                     <td style="padding: 16px 20px; text-align: right; white-space: nowrap;">
                                         <div style="display: inline-flex; align-items: center; gap: 8px;">
                                             <button
+                                                wire:click="simulateBackup(@js($item['filename']))"
+                                                type="button"
+                                                style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 10px; background: rgba(56, 189, 248, 0.12); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35); font-weight: 800; font-size: 12px; cursor: pointer; transition: all 0.2s;"
+                                                onmouseover="this.style.background='rgba(56, 189, 248, 0.25)'"
+                                                onmouseout="this.style.background='rgba(56, 189, 248, 0.12)'">
+                                                <x-filament::icon icon="heroicon-m-beaker" style="width: 14px; height: 14px;" />
+                                                <span>Simular Restore</span>
+                                            </button>
+                                            <button
                                                 wire:click="restoreBackup(@js($item['filename']))"
                                                 wire:confirm="Tem certeza de que deseja restaurar este backup? Uma cópia de segurança preventiva será gerada automaticamente antes da restauração."
                                                 type="button"

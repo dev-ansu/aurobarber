@@ -724,6 +724,172 @@ class DailySchedule extends Page
             });
     }
 
+    public function editAppointmentAction(): Action
+    {
+        return Action::make('editAppointment')
+            ->modalHeading('Editar / Reagendar Atendimento')
+            ->modalIcon('heroicon-o-pencil-square')
+            ->modalSubmitActionLabel('Salvar Alterações')
+            ->modalWidth(Width::TwoExtraLarge)
+            ->schema([
+                Tabs::make('EditarAgendamento')
+                    ->tabs([
+                        Tab::make('Atendimento')
+                            ->icon('heroicon-o-scissors')
+                            ->schema([
+                                Select::make('professional_id')
+                                    ->label('Barbeiro responsável')
+                                    ->options(fn (): array => $this->professionals
+                                        ->mapWithKeys(fn ($professional): array => [
+                                            $professional->id => $professional->display_name,
+                                        ])
+                                        ->all())
+                                    ->searchable()
+                                    ->dynamicOptions(false)
+                                    ->required()
+                                    ->columnSpanFull(),
+
+                                Select::make('service_id')
+                                    ->label('Serviço')
+                                    ->options(fn (): array => $this->services
+                                        ->mapWithKeys(fn ($service): array => [
+                                            $service->id => $service->name
+                                                .' — R$ '.number_format((float) $service->price, 2, ',', '.')
+                                                .' ('.$service->duration_minutes.' min)',
+                                        ])
+                                        ->all())
+                                    ->searchable()
+                                    ->dynamicOptions(false)
+                                    ->required()
+                                    ->columnSpanFull(),
+
+                                DateTimePicker::make('scheduled_at')
+                                    ->label('Data e horário de início')
+                                    ->seconds(false)
+                                    ->required()
+                                    ->columnSpanFull(),
+                            ]),
+                        Tab::make('Cliente')
+                            ->icon('heroicon-o-user')
+                            ->schema([
+                                TextInput::make('client_name')
+                                    ->label('Nome completo do cliente')
+                                    ->required()
+                                    ->minLength(2)
+                                    ->maxLength(255)
+                                    ->columnSpanFull(),
+
+                                TextInput::make('client_phone')
+                                    ->label('WhatsApp do cliente')
+                                    ->tel()
+                                    ->maxLength(20)
+                                    ->placeholder('Ex: 85999999999')
+                                    ->columnSpanFull(),
+                            ]),
+                    ])
+                    ->columnSpanFull(),
+            ])
+            ->mountUsing(function (Schema $schema, Action $action): void {
+                $arguments = $action->getArguments();
+                $appointmentId = (int) ($arguments['appointmentId'] ?? 0);
+                if (! $appointmentId) {
+                    return;
+                }
+
+                $appt = $this->findAccessibleAppointment($appointmentId);
+
+                if (in_array($appt->status, ['completed', 'cancelled', 'no_show'], true)) {
+                    Notification::make()
+                        ->title('Este agendamento já foi encerrado e não pode ser editado.')
+                        ->warning()
+                        ->send();
+
+                    $action->cancel();
+
+                    return;
+                }
+
+                $schema->fill([
+                    'appointment_id' => $appt->id,
+                    'professional_id' => $appt->professional_id,
+                    'service_id' => $appt->service_id,
+                    'scheduled_at' => $appt->scheduled_at,
+                    'client_name' => $appt->client_name,
+                    'client_phone' => $appt->client_phone,
+                ]);
+            })
+            ->action(function (array $data, Action $action): void {
+                $arguments = $action->getArguments();
+                $appointmentId = (int) ($arguments['appointmentId'] ?? $data['appointment_id'] ?? 0);
+                abort_unless($appointmentId > 0, 404);
+
+                $appt = $this->findAccessibleAppointment($appointmentId);
+                if (in_array($appt->status, ['completed', 'cancelled', 'no_show'], true)) {
+                    return;
+                }
+
+                $tenant = filament()->getTenant();
+                $service = $tenant->services()->findOrFail($data['service_id']);
+                $professional = $tenant->professionals()->where('is_active', true)->findOrFail($data['professional_id']);
+                $scheduledAt = Carbon::parse($data['scheduled_at']);
+                $commissionRate = $professional->commission_rate ?: 50.00;
+                $commissionAmount = round(((float) $service->price * $commissionRate) / 100, 2);
+
+                $appt->update([
+                    'professional_id' => $professional->id,
+                    'service_id' => $service->id,
+                    'client_name' => trim($data['client_name']),
+                    'client_phone' => isset($data['client_phone']) ? trim((string) $data['client_phone']) : $appt->client_phone,
+                    'scheduled_at' => $scheduledAt,
+                    'ends_at' => $scheduledAt->copy()->addMinutes($service->duration_minutes),
+                    'service_price' => $service->price,
+                    'commission_rate' => $commissionRate,
+                    'commission_amount' => $commissionAmount,
+                ]);
+
+                $appt->services()->sync([
+                    $service->id => [
+                        'price' => $service->price,
+                        'duration_minutes' => $service->duration_minutes,
+                    ],
+                ]);
+
+                Notification::make()
+                    ->title('Agendamento atualizado com sucesso!')
+                    ->success()
+                    ->send();
+            });
+    }
+
+    public function cancelAppointmentAction(): Action
+    {
+        return Action::make('cancelAppointment')
+            ->requiresConfirmation()
+            ->color('danger')
+            ->modalHeading('Cancelar Agendamento?')
+            ->modalDescription('Tem certeza que deseja cancelar este agendamento? O horário ficará livre novamente na agenda do barbeiro.')
+            ->modalSubmitActionLabel('Sim, cancelar agendamento')
+            ->action(function (Action $action): void {
+                $arguments = $action->getArguments();
+                $appointmentId = (int) ($arguments['appointmentId'] ?? 0);
+                abort_unless($appointmentId > 0, 404);
+
+                $appt = $this->findAccessibleAppointment($appointmentId);
+                if (in_array($appt->status, ['completed', 'cancelled', 'no_show'], true)) {
+                    return;
+                }
+
+                $appt->update([
+                    'status' => 'cancelled',
+                ]);
+
+                Notification::make()
+                    ->title('Agendamento cancelado.')
+                    ->success()
+                    ->send();
+            });
+    }
+
     private function findAccessibleAppointment(int $appointmentId): Appointment
     {
         $tenant = filament()->getTenant();

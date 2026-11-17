@@ -69,36 +69,51 @@ class CreateBarbershop extends CreateRecord
             ]);
         }
 
-        // Provisionamento inicial: Catálogo básico de serviços
-        Service::firstOrCreate(
-            ['barbershop_id' => $barbershop->id, 'name' => 'Corte Masculino'],
-            [
-                'description' => 'Degradê, social ou navalhado com finalização.',
-                'price' => 40.00,
-                'duration_minutes' => 35,
-                'is_active' => true,
-            ]
-        );
+        $tenantService = app(\App\Services\TenantService::class);
+        if (\Illuminate\Support\Facades\DB::connection()->getDriverName() === 'pgsql' && ! app()->runningUnitTests() && empty($barbershop->schema_name)) {
+            try {
+                $schemaName = $tenantService->createTenant($barbershop->slug);
+                $barbershop->update(['schema_name' => $schemaName]);
+                $tenantService->switchToTenant($schemaName);
+            } catch (\Throwable $e) {
+                logger()->error('Falha ao provisionar schema isolado para nova barbearia: '.$e->getMessage());
+            }
+        }
 
-        Service::firstOrCreate(
-            ['barbershop_id' => $barbershop->id, 'name' => 'Barba Tradicional / Barboterapia'],
-            [
-                'description' => 'Alinhamento com toalha quente, navalha e óleo pós-barba.',
-                'price' => 35.00,
-                'duration_minutes' => 30,
-                'is_active' => true,
-            ]
-        );
+        try {
+            // Provisionamento inicial: Catálogo básico de serviços
+            Service::firstOrCreate(
+                ['barbershop_id' => $barbershop->id, 'name' => 'Corte Masculino'],
+                [
+                    'description' => 'Degradê, social ou navalhado com finalização.',
+                    'price' => 40.00,
+                    'duration_minutes' => 35,
+                    'is_active' => true,
+                ]
+            );
 
-        Service::firstOrCreate(
-            ['barbershop_id' => $barbershop->id, 'name' => 'Combo Cabelo + Barba'],
-            [
-                'description' => 'Experiência completa de corte e cuidados com a barba.',
-                'price' => 65.00,
-                'duration_minutes' => 55,
-                'is_active' => true,
-            ]
-        );
+            Service::firstOrCreate(
+                ['barbershop_id' => $barbershop->id, 'name' => 'Barba Tradicional / Barboterapia'],
+                [
+                    'description' => 'Alinhamento com toalha quente, navalha e óleo pós-barba.',
+                    'price' => 35.00,
+                    'duration_minutes' => 30,
+                    'is_active' => true,
+                ]
+            );
+
+            Service::firstOrCreate(
+                ['barbershop_id' => $barbershop->id, 'name' => 'Combo Cabelo + Barba'],
+                [
+                    'description' => 'Experiência completa de corte e cuidados com a barba.',
+                    'price' => 65.00,
+                    'duration_minutes' => 55,
+                    'is_active' => true,
+                ]
+            );
+        } finally {
+            $tenantService->switchToPublic();
+        }
 
         // Disparo do e-mail de boas-vindas com a senha temporária
         if ($this->createdOwner && $this->generatedTempPassword && $sendEmail) {

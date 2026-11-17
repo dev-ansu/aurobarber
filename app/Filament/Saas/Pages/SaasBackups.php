@@ -63,7 +63,11 @@ class SaasBackups extends Page
                 ->action(function (array $data, LocalBackupManager $backupManager): void {
                     try {
                         $scope = (string) $data['scope'];
-                        $schema = $scope === 'GLOBAL' ? null : "tenant_{$scope}";
+                        $schema = null;
+                        if ($scope !== 'GLOBAL') {
+                            $shop = Barbershop::where('slug', $scope)->first();
+                            $schema = $shop?->schema_name ?: null;
+                        }
                         $filename = $backupManager->create(false, $schema);
 
                         Notification::make()
@@ -131,6 +135,30 @@ class SaasBackups extends Page
             'tenants' => $all->filter(fn ($b) => ! $b['is_global'])->values(),
             default => $all,
         };
+    }
+
+    public function simulateBackup(string $filename): void
+    {
+        abort_unless(auth()->user()?->role === 'master_admin', 403);
+
+        try {
+            $backupManager = app(LocalBackupManager::class);
+            $report = $backupManager->simulateRestore($filename);
+
+            Notification::make()
+                ->title('🧪 Simulação de Restauração Concluída!')
+                ->body($report['message'])
+                ->success()
+                ->persistent()
+                ->send();
+        } catch (\Throwable $e) {
+            Notification::make()
+                ->title('Falha na Simulação de Restauração')
+                ->body($e->getMessage())
+                ->danger()
+                ->persistent()
+                ->send();
+        }
     }
 
     public function restoreBackup(string $filename): void
