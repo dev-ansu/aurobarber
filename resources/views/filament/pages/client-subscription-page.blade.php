@@ -2,9 +2,9 @@
     @php
         $shop = $this->barbershop;
         $supportPhone = preg_replace('/\D/', '', $this->supportPhone);
-        $expiresAt = $shop?->subscription_expires_at ? \Carbon\Carbon::parse($shop->subscription_expires_at) : null;
+        $expiresAt = $shop?->license_expires_at ? \Carbon\Carbon::parse($shop->license_expires_at) : null;
         $isInGrace = $shop?->isInGracePeriod() ?? false;
-        $isValid = $shop?->hasValidLicense() ?? true;
+        $isValid = $shop?->isLicenseActive() ?? true;
     @endphp
 
     @if($shop)
@@ -39,7 +39,7 @@
                         {{ $expiresAt ? $expiresAt->format('d/m/Y') : 'Vitalícia / Isenta' }}
                     </div>
                     <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
-                        Valor atual: R$ {{ number_format((float) ($shop->monthly_fee ?: 89.90), 2, ',', '.') }} • Barbeiros Ilimitados
+                        Valor atual: R$ {{ number_format((float) ($shop->monthly_price ?: 89.90), 2, ',', '.') }} • Barbeiros Ilimitados
                     </div>
                 </div>
             </div>

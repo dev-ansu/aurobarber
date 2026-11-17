@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Pages;
 
 use App\Models\Barbershop;
-use App\Models\PlatformSetting;
+use App\Services\SaasSupportContact;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
 
@@ -42,6 +42,6 @@ class ClientSubscriptionPage extends Page
 
     public function getSupportPhoneProperty(): string
     {
-        return PlatformSetting::getSupportPhone() ?: '5585999728450';
+        return app(SaasSupportContact::class)->phone() ?: '5585999728450';
     }
 }
