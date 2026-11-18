@@ -13,6 +13,7 @@ class ListProducts extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            ProductResource::registerSaleAction(),
             CreateAction::make()
                 ->label('Novo Produto / Bebida')
                 ->icon('heroicon-o-plus'),

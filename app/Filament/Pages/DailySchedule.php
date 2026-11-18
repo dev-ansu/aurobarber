@@ -4,25 +4,24 @@ namespace App\Filament\Pages;
 
 use App\Models\Appointment;
 use App\Models\Barbershop;
-use App\Models\CashMovement;
 use App\Models\Product;
-use App\Models\ProductSale;
+use App\Services\CheckoutService;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
 
 class DailySchedule extends Page
@@ -52,24 +51,6 @@ class DailySchedule extends Page
     }
 
     public string $selectedDate = '';
-
-    // Estado do Modal de Conclusão e Recebimento
-    public bool $checkoutModalOpen = false;
-
-    public ?int $checkoutAppointmentId = null;
-
-    public string $checkoutPaymentMethod = 'pix'; // pix, dinheiro, debito, credito
-
-    public float $checkoutAmount = 0.00;
-
-    public ?string $checkoutClientName = '';
-
-    public ?string $checkoutServicesSummary = '';
-
-    /** @var array<int, array{product_id: int, name: string, price: float, commission_rate: float, quantity: int}> */
-    public array $checkoutProducts = [];
-
-    public ?int $selectedProductIdToAdd = null;
 
     public function mount(): void
     {
@@ -103,16 +84,18 @@ class DailySchedule extends Page
             return collect();
         }
 
-        $query = $tenant->professionals()
-            ->where('is_active', true)
-            ->orderBy('display_order');
-
         if (auth()->user()?->isRestrictedBarber()) {
             $proId = auth()->user()->resolveProfessionalId($tenant->id) ?? 0;
-            $query->where('id', $proId);
+
+            return $tenant->professionals()
+                ->whereKey($proId)
+                ->get();
         }
 
-        return $query->get();
+        return $tenant->professionals()
+            ->where('is_active', true)
+            ->orderBy('display_order')
+            ->get();
     }
 
     public function getServicesProperty(): Collection
@@ -200,191 +183,6 @@ class DailySchedule extends Page
             ->send();
     }
 
-    public function openCheckoutModal(int $appointmentId): void
-    {
-        $appt = $this->findAccessibleAppointment($appointmentId);
-        $this->checkoutAppointmentId = $appt->id;
-        $this->checkoutAmount = (float) $appt->service_price;
-        $this->checkoutPaymentMethod = $appt->payment_method ?: 'pix';
-        $this->checkoutClientName = $appt->client_name;
-        $this->checkoutServicesSummary = $appt->services_summary;
-        $this->checkoutProducts = [];
-        $this->selectedProductIdToAdd = null;
-        $this->checkoutModalOpen = true;
-    }
-
-    public function addProductToCheckout(): void
-    {
-        if (! $this->selectedProductIdToAdd) {
-            return;
-        }
-
-        $tenant = filament()->getTenant();
-        if (! $tenant) {
-            return;
-        }
-
-        $product = Product::where('barbershop_id', $tenant->id)
-            ->where('is_active', true)
-            ->find($this->selectedProductIdToAdd);
-
-        if (! $product || $product->stock_quantity <= 0) {
-            Notification::make()->title('Produto indisponível ou sem estoque.')->warning()->send();
-            return;
-        }
-
-        foreach ($this->checkoutProducts as $idx => $item) {
-            if ($item['product_id'] === $product->id) {
-                if ($item['quantity'] + 1 > $product->stock_quantity) {
-                    Notification::make()->title("Estoque máximo disponível: {$product->stock_quantity}")->warning()->send();
-                    return;
-                }
-                $this->checkoutProducts[$idx]['quantity']++;
-                $this->selectedProductIdToAdd = null;
-                return;
-            }
-        }
-
-        $this->checkoutProducts[] = [
-            'product_id' => $product->id,
-            'name' => $product->name,
-            'price' => (float) $product->price,
-            'commission_rate' => (float) $product->commission_rate,
-            'quantity' => 1,
-        ];
-
-        $this->selectedProductIdToAdd = null;
-    }
-
-    public function removeProductFromCheckout(int $index): void
-    {
-        if (isset($this->checkoutProducts[$index])) {
-            unset($this->checkoutProducts[$index]);
-            $this->checkoutProducts = array_values($this->checkoutProducts);
-        }
-    }
-
-    public function getAvailableProductsProperty(): Collection
-    {
-        $tenant = filament()->getTenant();
-        if (! $tenant) {
-            return collect();
-        }
-
-        return Product::where('barbershop_id', $tenant->id)
-            ->where('is_active', true)
-            ->where('stock_quantity', '>', 0)
-            ->orderBy('name')
-            ->get();
-    }
-
-    public function getCheckoutProductsTotalProperty(): float
-    {
-        $total = 0.0;
-        foreach ($this->checkoutProducts as $item) {
-            $total += (float) $item['price'] * (int) $item['quantity'];
-        }
-        return $total;
-    }
-
-    public function getCheckoutGrandTotalProperty(): float
-    {
-        return (float) $this->checkoutAmount + $this->checkoutProductsTotal;
-    }
-
-    public function confirmCheckout(): void
-    {
-        if (! $this->checkoutAppointmentId) {
-            return;
-        }
-
-        $appt = $this->findAccessibleAppointment($this->checkoutAppointmentId);
-        $tenant = filament()->getTenant();
-
-        $productsTotal = 0.0;
-        $productsCommissionTotal = 0.0;
-
-        foreach ($this->checkoutProducts as $item) {
-            $product = Product::where('barbershop_id', $tenant?->id)->find($item['product_id']);
-            if ($product) {
-                $qty = max(1, (int) $item['quantity']);
-                $lineTotal = (float) $product->price * $qty;
-                $productsTotal += $lineTotal;
-
-                // Taxa de comissão do produto (fallback para a taxa do profissional)
-                $commRate = (float) $product->commission_rate;
-                if ($commRate <= 0 && $appt->professional) {
-                    $commRate = (float) ($appt->professional->commission_rate ?? 0);
-                }
-                $commAmount = round(($lineTotal * $commRate) / 100, 2);
-                $productsCommissionTotal += $commAmount;
-
-                $appt->products()->attach($product->id, [
-                    'quantity' => $qty,
-                    'unit_price' => $product->price,
-                    'total_price' => $lineTotal,
-                ]);
-
-                $product->decrement('stock_quantity', $qty);
-
-                ProductSale::create([
-                    'barbershop_id' => $appt->barbershop_id,
-                    'product_id' => $product->id,
-                    'professional_id' => $appt->professional_id,
-                    'appointment_id' => $appt->id,
-                    'quantity' => $qty,
-                    'unit_price' => $product->price,
-                    'total_price' => $lineTotal,
-                    'cost_price' => $product->cost_price,
-                    'commission_rate' => $commRate,
-                    'commission_amount' => $commAmount,
-                    'commission_status' => 'pending',
-                    'payment_method' => $this->checkoutPaymentMethod,
-                    'client_name' => $appt->client_name,
-                    'notes' => "Produto vendido no atendimento #{$appt->id}",
-                ]);
-            }
-        }
-
-        $serviceCommAmount = round(((float) $this->checkoutAmount * (float) $appt->commission_rate) / 100, 2);
-        $totalCommission = $serviceCommAmount + $productsCommissionTotal;
-        $grandTotal = (float) $this->checkoutAmount + $productsTotal;
-
-        $appt->status = 'completed';
-        $appt->payment_status = 'paid';
-        $appt->payment_method = $this->checkoutPaymentMethod;
-        $appt->service_price = $this->checkoutAmount;
-        $appt->products_total = (float) $appt->products_total + $productsTotal;
-        $appt->products_commission_amount = (float) $appt->products_commission_amount + $productsCommissionTotal;
-        $appt->commission_amount = $totalCommission;
-        $appt->commission_status = 'pending';
-        $appt->paid_at = now();
-        $appt->save();
-
-        CashMovement::create([
-            'barbershop_id' => $appt->barbershop_id,
-            'user_id' => auth()->id(),
-            'type' => 'inflow',
-            'description' => "Corte/Serviço: {$appt->client_name}" . ($productsTotal > 0 ? " (+ produtos: R$ " . number_format($productsTotal, 2, ',', '.') . ")" : ''),
-            'amount' => $grandTotal,
-            'date' => now()->toDateString(),
-        ]);
-
-        $this->checkoutModalOpen = false;
-        $this->checkoutProducts = [];
-
-        $msg = "Recebido via {$appt->payment_method} no valor total de R$ " . number_format($grandTotal, 2, ',', '.');
-        if ($productsCommissionTotal > 0) {
-            $msg .= " (Comissão de R$ " . number_format($productsCommissionTotal, 2, ',', '.') . " em produtos computada para o barbeiro).";
-        }
-
-        Notification::make()
-            ->title('Atendimento concluído e lançado no Caixa!')
-            ->body($msg)
-            ->success()
-            ->send();
-    }
-
     public function completeAppointmentAction(): Action
     {
         return Action::make('completeAppointment')
@@ -397,8 +195,8 @@ class DailySchedule extends Page
                     ->label('Atendimento')
                     ->content(fn ($get) => new HtmlString(
                         '<div style="font-size: 13px; line-height: 1.6; color: #cbd5e1; background: #0f172a; padding: 12px 16px; border-radius: 12px; border: 1px solid #1e293b;">'
-                        .'<div><strong style="color: #94a3b8;">Cliente:</strong> <span style="color: #ffffff; font-weight: 700;">' . e($get('client_name') ?: '—') . '</span></div>'
-                        .'<div><strong style="color: #94a3b8;">Serviço(s):</strong> <span style="color: #fbbf24; font-weight: 700;">' . e($get('services_summary') ?: '—') . '</span></div>'
+                        .'<div><strong style="color: #94a3b8;">Cliente:</strong> <span style="color: #ffffff; font-weight: 700;">'.e($get('client_name') ?: '—').'</span></div>'
+                        .'<div><strong style="color: #94a3b8;">Serviço(s):</strong> <span style="color: #fbbf24; font-weight: 700;">'.e($get('services_summary') ?: '—').'</span></div>'
                         .'</div>'
                     ))
                     ->columnSpanFull(),
@@ -408,10 +206,11 @@ class DailySchedule extends Page
                     ->prefix('R$')
                     ->numeric()
                     ->required()
+                    ->live(onBlur: true)
                     ->columnSpanFull(),
 
                 Select::make('payment_method')
-                    ->label('Forma de Pagamento')
+                    ->label('Forma de Pagamento Principal')
                     ->options([
                         'pix' => '📱 PIX',
                         'dinheiro' => '💵 Dinheiro',
@@ -422,6 +221,35 @@ class DailySchedule extends Page
                     ->required()
                     ->columnSpanFull(),
 
+                Section::make('Pagamento Dividido (Opcional)')
+                    ->description('Preencha os valores usados nas outras formas. O restante será computado na forma principal.')
+                    ->collapsible()
+                    ->collapsed()
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('additional_pix_amount')
+                            ->label('PIX adicional (R$)')
+                            ->numeric()
+                            ->minValue(0)
+                            ->default(0),
+                        TextInput::make('additional_dinheiro_amount')
+                            ->label('Dinheiro adicional (R$)')
+                            ->numeric()
+                            ->minValue(0)
+                            ->default(0),
+                        TextInput::make('additional_debito_amount')
+                            ->label('Cartão de débito adicional (R$)')
+                            ->numeric()
+                            ->minValue(0)
+                            ->default(0),
+                        TextInput::make('additional_credito_amount')
+                            ->label('Cartão de crédito adicional (R$)')
+                            ->numeric()
+                            ->minValue(0)
+                            ->default(0),
+                    ])
+                    ->columnSpanFull(),
+
                 Select::make('consumed_product_ids')
                     ->label('🧴 Vender Produtos ao Cliente (Opcional - Gera Comissão)')
                     ->options(function () {
@@ -429,20 +257,39 @@ class DailySchedule extends Page
                         if (! $tenant) {
                             return [];
                         }
+
                         return Product::where('barbershop_id', $tenant->id)
                             ->where('is_active', true)
+                            ->where('stock_quantity', '>', 0)
                             ->orderBy('name')
                             ->get()
                             ->mapWithKeys(fn ($p) => [
-                                $p->id => "{$p->name} — R$ " . number_format((float) $p->price, 2, ',', '.') . ' (' . ($p->stock_quantity > 0 ? "{$p->stock_quantity} un. em estoque" : 'sem estoque') . ')'
+                                $p->id => "{$p->name} — R$ ".number_format((float) $p->price, 2, ',', '.').' ('.($p->stock_quantity > 0 ? "{$p->stock_quantity} un. em estoque" : 'sem estoque').')',
                             ])
                             ->all();
                     })
                     ->multiple()
+                    ->live()
                     ->searchable()
                     ->dynamicOptions(false)
                     ->placeholder('Nenhum produto selecionado (opcional)')
                     ->helperText('O produto é um PLUS opcional. Se o cliente realizou apenas o corte/serviço, basta deixar este campo vazio.')
+                    ->columnSpanFull(),
+
+                Placeholder::make('checkout_total')
+                    ->label('Total do atendimento')
+                    ->content(function (Get $get): string {
+                        $tenant = filament()->getTenant();
+                        $productIds = collect((array) $get('consumed_product_ids'))
+                            ->map(fn ($id): int => (int) $id)
+                            ->filter()
+                            ->unique();
+                        $productsTotal = $tenant
+                            ? Product::query()->where('barbershop_id', $tenant->id)->whereIn('id', $productIds)->sum('price')
+                            : 0;
+
+                        return 'R$ '.number_format((float) $get('service_price') + (float) $productsTotal, 2, ',', '.');
+                    })
                     ->columnSpanFull(),
             ])
             ->mountUsing(function (Schema $schema, Action $action): void {
@@ -474,6 +321,7 @@ class DailySchedule extends Page
                         ? $appt->payment_method
                         : 'pix',
                     'consumed_product_ids' => [],
+                    'additional_payments' => [],
                 ]);
             })
             ->action(function (array $data, Action $action): void {
@@ -492,103 +340,24 @@ class DailySchedule extends Page
                     return;
                 }
 
-                $tenant = filament()->getTenant();
+                $grandTotal = app(CheckoutService::class)->completeAppointment(
+                    appointment: $appt,
+                    servicePrice: (float) ($data['service_price'] ?? $appt->service_price),
+                    primaryPaymentMethod: (string) ($data['payment_method'] ?? 'pix'),
+                    additionalAmounts: [
+                        'pix' => $data['additional_pix_amount'] ?? 0,
+                        'dinheiro' => $data['additional_dinheiro_amount'] ?? 0,
+                        'debito' => $data['additional_debito_amount'] ?? 0,
+                        'credito' => $data['additional_credito_amount'] ?? 0,
+                    ],
+                    productIds: (array) ($data['consumed_product_ids'] ?? []),
+                );
 
-                DB::transaction(function () use ($appt, $tenant, $data) {
-                    $productsTotal = 0.0;
-                    $productsCommissionTotal = 0.0;
-
-                    $productIds = (array) ($data['consumed_product_ids'] ?? []);
-
-                    foreach ($productIds as $productId) {
-                        $productId = (int) $productId;
-                        if ($productId <= 0) {
-                            continue;
-                        }
-
-                        $product = Product::where('barbershop_id', $tenant?->id)
-                            ->lockForUpdate()
-                            ->find($productId);
-
-                        if (! $product) {
-                            continue;
-                        }
-
-                        $lineTotal = (float) $product->price;
-                        $productsTotal += $lineTotal;
-
-                        $commRate = (float) $product->commission_rate;
-                        if ($commRate <= 0 && $appt->professional) {
-                            $commRate = (float) ($appt->professional->commission_rate ?? 0);
-                        }
-                        $commAmount = round(($lineTotal * $commRate) / 100, 2);
-                        $productsCommissionTotal += $commAmount;
-
-                        $appt->products()->attach($product->id, [
-                            'quantity' => 1,
-                            'unit_price' => $product->price,
-                            'total_price' => $lineTotal,
-                        ]);
-
-                        $product->update([
-                            'stock_quantity' => max(0, (int) $product->stock_quantity - 1),
-                        ]);
-
-                        ProductSale::create([
-                            'barbershop_id' => $appt->barbershop_id,
-                            'product_id' => $product->id,
-                            'professional_id' => $appt->professional_id,
-                            'appointment_id' => $appt->id,
-                            'quantity' => 1,
-                            'unit_price' => $product->price,
-                            'total_price' => $lineTotal,
-                            'cost_price' => $product->cost_price,
-                            'commission_rate' => $commRate,
-                            'commission_amount' => $commAmount,
-                            'commission_status' => 'pending',
-                            'payment_method' => $data['payment_method'] ?? 'pix',
-                            'client_name' => $appt->client_name,
-                            'notes' => "Produto vendido no atendimento #{$appt->id}",
-                        ]);
-                    }
-
-                    $servicePrice = (float) ($data['service_price'] ?? $appt->service_price);
-                    $commRate = (float) ($appt->professional?->commission_rate ?: $appt->commission_rate ?: 50.0);
-                    $serviceCommAmount = round(($servicePrice * $commRate) / 100, 2);
-                    $totalCommission = $serviceCommAmount + $productsCommissionTotal;
-                    $grandTotal = $servicePrice + $productsTotal;
-
-                    $appt->status = 'completed';
-                    $appt->payment_status = 'paid';
-                    $appt->payment_method = $data['payment_method'] ?? 'pix';
-                    $appt->service_price = $servicePrice;
-                    $appt->products_total = (float) $appt->products_total + $productsTotal;
-                    $appt->products_commission_amount = (float) $appt->products_commission_amount + $productsCommissionTotal;
-                    $appt->commission_amount = $totalCommission;
-                    $appt->commission_status = 'pending';
-                    $appt->paid_at = now();
-                    $appt->save();
-
-                    CashMovement::create([
-                        'barbershop_id' => $appt->barbershop_id,
-                        'user_id' => auth()->id(),
-                        'type' => 'inflow',
-                        'description' => "Corte/Serviço: {$appt->client_name}" . ($productsTotal > 0 ? " (+ produtos: R$ " . number_format($productsTotal, 2, ',', '.') . ")" : ''),
-                        'amount' => $grandTotal,
-                        'date' => now()->toDateString(),
-                    ]);
-
-                    $msg = "Recebido via {$appt->payment_method} no valor total de R$ " . number_format($grandTotal, 2, ',', '.');
-                    if ($productsCommissionTotal > 0) {
-                        $msg .= " (Comissão de R$ " . number_format($productsCommissionTotal, 2, ',', '.') . " em produtos computada para o barbeiro).";
-                    }
-
-                    Notification::make()
-                        ->title('Atendimento concluído e lançado no Caixa!')
-                        ->body($msg)
-                        ->success()
-                        ->send();
-                });
+                Notification::make()
+                    ->title('Atendimento concluído e lançado no Caixa!')
+                    ->body('Valor total recebido: R$ '.number_format($grandTotal, 2, ',', '.'))
+                    ->success()
+                    ->send();
             });
     }
 

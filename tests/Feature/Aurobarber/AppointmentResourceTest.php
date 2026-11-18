@@ -51,6 +51,7 @@ test('checkout consumes only in-tenant products and completes without creating a
     Livewire::test(ListAppointments::class)
         ->callTableAction('concluir', $appointment, [
             'payment_method' => 'pix',
+            'additional_dinheiro_amount' => 10,
             'consumed_product_ids' => [$product->id],
         ]);
 
@@ -59,7 +60,8 @@ test('checkout consumes only in-tenant products and completes without creating a
         ->and((float) $appointment->fresh()->products_total)->toBe(15.0)
         ->and($product->fresh()->stock_quantity)->toBe(1)
         ->and($appointment->products()->whereKey($product->id)->exists())->toBeTrue()
-        ->and(DB::table('cash_movements')->count())->toBe(0);
+        ->and($appointment->fresh()->payment_details)->toBeArray()
+        ->and(DB::table('cash_movements')->count())->toBe(1);
 });
 
 test('checkout rejects a product from another tenant without changing stock or appointment', function () {

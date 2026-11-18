@@ -19,7 +19,7 @@ class ResolveTenantSchema
     /**
      * Handle an incoming request.
      *
-     * @param Closure(Request): (Response) $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
@@ -28,6 +28,7 @@ class ResolveTenantSchema
         // 1. Painel SaaS Master ou rotas globais
         if (str_starts_with($host, 'saas.') || str_starts_with($host, 'master.') || $request->is('saas*')) {
             $this->tenantService->switchToPublic();
+
             return $next($request);
         }
 
@@ -63,6 +64,24 @@ class ResolveTenantSchema
             }
         }
 
+        // 3.3. Fallback via sessão autenticada (blindagem para requisições Livewire sem Referer)
+        if (! $tenantBarbershop && $request->hasSession()) {
+            $sessionTenantId = $request->session()->get('aurobarber.active_tenant_id');
+            if ($sessionTenantId) {
+                $candidate = Barbershop::query()->find($sessionTenantId);
+                $user = $request->user();
+
+                if ($candidate && (! $user || ! method_exists($user, 'canAccessTenant') || $user->canAccessTenant($candidate))) {
+                    $tenantBarbershop = $candidate;
+                }
+            }
+        }
+
+        // Persiste o tenant ativo na sessão para requisições assíncronas subsequentes
+        if ($tenantBarbershop && $request->hasSession()) {
+            $request->session()->put('aurobarber.active_tenant_id', $tenantBarbershop->getKey());
+        }
+
         // 4. Se o tenant foi identificado e possui schema PostgreSQL dedicado
         if ($tenantBarbershop && ! empty($tenantBarbershop->schema_name)) {
             $this->tenantService->switchToTenant($tenantBarbershop->schema_name);
@@ -70,6 +89,9 @@ class ResolveTenantSchema
         } else {
             // Modo retrocompatível: barbearia opera no schema public com barbershop_id
             $this->tenantService->switchToPublic();
+            if ($tenantBarbershop) {
+                app()->instance('current_tenant_barbershop', $tenantBarbershop);
+            }
         }
 
         $response = $next($request);

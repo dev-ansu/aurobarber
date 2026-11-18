@@ -11,6 +11,7 @@ use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 uses(RefreshDatabase::class);
 
@@ -82,13 +83,8 @@ test('a restricted barber sees and can only act on their own appointments', func
     expect(fn () => $page->updateStatus($otherAppointment->id, 'completed'))
         ->toThrow(ModelNotFoundException::class);
 
-    expect(fn () => $page->openCheckoutModal($otherAppointment->id))
-        ->toThrow(ModelNotFoundException::class);
-
-    $page->checkoutAppointmentId = $otherAppointment->id;
-
-    expect(fn () => $page->confirmCheckout())
-        ->toThrow(ModelNotFoundException::class);
+    expect(fn () => $page->completeAppointmentAction()->call(['appointmentId' => $otherAppointment->id]))
+        ->toThrow(NotFoundHttpException::class);
 
     expect($otherAppointment->fresh()->status)->toBe('confirmed');
 

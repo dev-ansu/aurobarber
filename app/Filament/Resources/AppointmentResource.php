@@ -5,10 +5,9 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\AppointmentResource\Pages;
 use App\Models\Appointment;
 use App\Models\Barbershop;
-use App\Models\CashMovement;
 use App\Models\Product;
-use App\Models\ProductSale;
 use App\Models\Service;
+use App\Services\CheckoutService;
 use App\Services\SensitiveClientData;
 use App\Services\SensitiveClientDataAccess;
 use Filament\Actions\Action;
@@ -18,14 +17,13 @@ use Filament\Actions\EditAction;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class AppointmentResource extends Resource
 {
@@ -320,15 +318,44 @@ class AppointmentResource extends Resource
                                     ->icon('heroicon-o-banknotes')
                                     ->schema([
                                         Forms\Components\Select::make('payment_method')
-                                            ->label('Forma de Pagamento')
+                                            ->label('Forma de Pagamento Principal')
                                             ->options([
                                                 'pix' => 'PIX',
                                                 'dinheiro' => 'Dinheiro',
-                                                'cartao_credito' => 'Cartão de Crédito',
-                                                'cartao_debito' => 'Cartão de Débito',
+                                                'credito' => 'Cartão de Crédito',
+                                                'debito' => 'Cartão de Débito',
                                             ])
                                             ->default('pix')
                                             ->required()
+                                            ->columnSpanFull(),
+
+                                        Section::make('Pagamento Dividido (Opcional)')
+                                            ->description('Preencha os valores usados nas outras formas. O restante será computado na forma principal.')
+                                            ->collapsible()
+                                            ->collapsed()
+                                            ->columns(2)
+                                            ->schema([
+                                                Forms\Components\TextInput::make('additional_pix_amount')
+                                                    ->label('PIX adicional (R$)')
+                                                    ->numeric()
+                                                    ->minValue(0)
+                                                    ->default(0),
+                                                Forms\Components\TextInput::make('additional_dinheiro_amount')
+                                                    ->label('Dinheiro adicional (R$)')
+                                                    ->numeric()
+                                                    ->minValue(0)
+                                                    ->default(0),
+                                                Forms\Components\TextInput::make('additional_debito_amount')
+                                                    ->label('Cartão de débito adicional (R$)')
+                                                    ->numeric()
+                                                    ->minValue(0)
+                                                    ->default(0),
+                                                Forms\Components\TextInput::make('additional_credito_amount')
+                                                    ->label('Cartão de crédito adicional (R$)')
+                                                    ->numeric()
+                                                    ->minValue(0)
+                                                    ->default(0),
+                                            ])
                                             ->columnSpanFull(),
 
                                         Forms\Components\Select::make('consumed_product_ids')
@@ -348,119 +375,18 @@ class AppointmentResource extends Resource
                             ->columnSpanFull(),
                     ])
                     ->action(function (Appointment $record, array $data): void {
-                        $grandTotal = DB::transaction(function () use ($record, $data): float {
-                            $appointment = Appointment::query()
-                                ->where('barbershop_id', filament()->getTenant()?->getKey() ?? 0)
-                                ->whereKey($record->getKey())
-                                ->lockForUpdate()
-                                ->firstOrFail();
-
-                            if (in_array($appointment->status, ['completed', 'cancelled', 'no_show'], true) || $appointment->is_blocked_slot) {
-                                throw ValidationException::withMessages([
-                                    'payment_method' => 'Este agendamento não pode ser finalizado.',
-                                ]);
-                            }
-
-                            $productIds = (array) ($data['consumed_product_ids'] ?? []);
-                            $normalizedProductIds = array_values(array_unique(array_filter(
-                                $productIds,
-                                fn ($id): bool => is_scalar($id) && ctype_digit((string) $id),
-                            )));
-
-                            if (count($normalizedProductIds) !== count($productIds)) {
-                                throw ValidationException::withMessages([
-                                    'consumed_product_ids' => 'A seleção de produtos é inválida.',
-                                ]);
-                            }
-
-                            $products = collect();
-                            if ($normalizedProductIds !== []) {
-                                $products = Product::query()
-                                    ->where('barbershop_id', $appointment->barbershop_id)
-                                    ->where('is_active', true)
-                                    ->whereIn('id', $normalizedProductIds)
-                                    ->orderBy('id')
-                                    ->lockForUpdate()
-                                    ->get();
-
-                                if ($products->count() !== count($normalizedProductIds)) {
-                                    throw ValidationException::withMessages([
-                                        'consumed_product_ids' => 'Um ou mais produtos não pertencem a esta barbearia.',
-                                    ]);
-                                }
-                            }
-
-                            $productsTotal = 0.0;
-                            $productsCommissionTotal = 0.0;
-
-                            foreach ($products as $product) {
-                                $itemPrice = (float) $product->price;
-                                $productsTotal += $itemPrice;
-
-                                // Product commission rate (or fallback to professional rate if product is 0)
-                                $prodCommRate = (float) $product->commission_rate;
-                                if ($prodCommRate <= 0 && $appointment->professional) {
-                                    $prodCommRate = (float) ($appointment->professional->commission_rate ?? 0);
-                                }
-                                $prodCommAmount = round(($itemPrice * $prodCommRate) / 100, 2);
-                                $productsCommissionTotal += $prodCommAmount;
-
-                                $appointment->products()->attach($product->id, [
-                                    'quantity' => 1,
-                                    'unit_price' => $product->price,
-                                    'total_price' => $product->price,
-                                ]);
-                                $product->update([
-                                    'stock_quantity' => max(0, (int) $product->stock_quantity - 1),
-                                ]);
-
-                                ProductSale::create([
-                                    'barbershop_id' => $appointment->barbershop_id,
-                                    'product_id' => $product->id,
-                                    'professional_id' => $appointment->professional_id,
-                                    'appointment_id' => $appointment->id,
-                                    'quantity' => 1,
-                                    'unit_price' => $product->price,
-                                    'total_price' => $product->price,
-                                    'cost_price' => $product->cost_price,
-                                    'commission_rate' => $prodCommRate,
-                                    'commission_amount' => $prodCommAmount,
-                                    'commission_status' => 'pending',
-                                    'payment_method' => $data['payment_method'] ?? 'pix',
-                                    'client_name' => $appointment->client_name,
-                                    'notes' => 'Produto consumido/vendido no atendimento #' . $appointment->id,
-                                ]);
-                            }
-
-                            $commRate = (float) ($appointment->professional?->commission_rate ?? 50.0);
-                            $serviceCommAmount = round(((float) $appointment->service_price * $commRate) / 100, 2);
-                            $totalCommAmount = $serviceCommAmount + $productsCommissionTotal;
-
-                            $appointment->update([
-                                'status' => 'completed',
-                                'payment_status' => 'paid',
-                                'payment_method' => $data['payment_method'] ?? 'pix',
-                                'paid_at' => now(),
-                                'products_total' => (float) $appointment->products_total + $productsTotal,
-                                'products_commission_amount' => (float) $appointment->products_commission_amount + $productsCommissionTotal,
-                                'commission_rate' => $commRate,
-                                'commission_amount' => $totalCommAmount,
-                                'commission_status' => 'pending',
-                            ]);
-
-                            $grandTotalValue = (float) $appointment->service_price + (float) $appointment->products_total;
-
-                            CashMovement::create([
-                                'barbershop_id' => $appointment->barbershop_id,
-                                'user_id' => auth()->id(),
-                                'type' => 'inflow',
-                                'description' => "Corte/Serviço: {$appointment->client_name}".($productsTotal > 0 ? ' (+ produtos: R$ '.number_format($productsTotal, 2, ',', '.').')' : ''),
-                                'amount' => $grandTotalValue,
-                                'date' => now()->toDateString(),
-                            ]);
-
-                            return $grandTotalValue;
-                        });
+                        $grandTotal = app(CheckoutService::class)->completeAppointment(
+                            appointment: $record,
+                            servicePrice: (float) $record->service_price,
+                            primaryPaymentMethod: (string) ($data['payment_method'] ?? 'pix'),
+                            additionalAmounts: [
+                                'pix' => $data['additional_pix_amount'] ?? 0,
+                                'dinheiro' => $data['additional_dinheiro_amount'] ?? 0,
+                                'debito' => $data['additional_debito_amount'] ?? 0,
+                                'credito' => $data['additional_credito_amount'] ?? 0,
+                            ],
+                            productIds: (array) ($data['consumed_product_ids'] ?? []),
+                        );
 
                         Notification::make()
                             ->title('Atendimento concluído e lançado no Caixa!')

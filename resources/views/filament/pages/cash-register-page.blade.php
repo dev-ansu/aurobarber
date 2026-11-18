@@ -6,6 +6,7 @@
         $isYesterday = $selectedDate === now()->subDay()->format('Y-m-d');
         $stats = $this->cashStats;
         $txs = $this->dailyTransactions;
+        $productSales = $this->dailyProductSales->groupBy(fn (\App\Models\ProductSale $sale): string => $sale->sale_group_id ?? 'single-'.$sale->id);
         $movs = $this->dailyMovements;
         $tenant = filament()->getTenant();
     @endphp
@@ -434,6 +435,10 @@
             </div>
 
             <div style="display: flex; align-items: center; gap: 10px;">
+                <button type="button" wire:click="mountAction('registerProductSale')" class="cr-btn-cta">
+                    <span>🛍️ Venda de produtos</span>
+                </button>
+
                 <button type="button" wire:click="mountAction('registerMovement', @js(['type' => 'outflow']))" class="cr-btn-cta cr-btn-move">
                     <span>💸 Sangria / Suprimento</span>
                 </button>
@@ -456,9 +461,9 @@
             </div>
 
             <div class="cr-stat-box">
-                <span class="cr-stat-label">💵 Dinheiro (Cortes)</span>
+                <span class="cr-stat-label">💵 Dinheiro (Vendas)</span>
                 <span class="cr-stat-val cr-stat-val-green">R$ {{ number_format($stats['dinheiro'], 2, ',', '.') }}</span>
-                <span style="font-size: 10px; color: #64748b;">Recebido em atendimentos</span>
+                <span style="font-size: 10px; color: #64748b;">Recebido nas vendas</span>
             </div>
 
             <div class="cr-stat-box">
@@ -538,6 +543,9 @@
                                         'credito' => 'cr-method-credito',
                                         default => 'cr-method-outros',
                                     };
+                                    $paymentSummary = collect($t->payment_details ?? [])
+                                        ->map(fn (array $payment): string => strtoupper($payment['method']).' R$ '.number_format((float) $payment['amount'], 2, ',', '.'))
+                                        ->join(' + ');
                                 @endphp
                                 <tr>
                                     <td style="font-weight: 800; color: #ffffff;">
@@ -554,11 +562,61 @@
                                     </td>
                                     <td>
                                         <span class="cr-pill-method {{ $methodClass }}">
-                                            {{ $t->payment_method ? strtoupper($t->payment_method) : 'NÃO INFORMADO' }}
+                                            {{ $paymentSummary ?: ($t->payment_method ? strtoupper($t->payment_method) : 'NÃO INFORMADO') }}
                                         </span>
                                     </td>
                                     <td style="font-weight: 900; color: #34d399; font-size: 14px;">
-                                        R$ {{ number_format($t->service_price, 2, ',', '.') }}
+                                        R$ {{ number_format($t->total_amount, 2, ',', '.') }}
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
+            </div>
+        </div>
+
+        {{-- VENDAS DE PRODUTOS SEM ATENDIMENTO --}}
+        <div>
+            <h3 style="font-size: 14px; font-weight: 800; color: #ffffff; margin-bottom: 12px;">
+                Vendas avulsas de produtos ({{ $productSales->count() }})
+            </h3>
+
+            <div class="cr-table-container">
+                @if ($productSales->isEmpty())
+                    <div class="cr-empty" style="padding: 24px 20px;">
+                        <p style="font-size: 12px; color: #94a3b8;">Nenhuma venda avulsa de produto nesta data.</p>
+                    </div>
+                @else
+                    <table class="cr-table">
+                        <thead>
+                            <tr>
+                                <th>Horário</th>
+                                <th>Cliente</th>
+                                <th>Produtos e quantidades</th>
+                                <th>Forma(s) de pagamento</th>
+                                <th>Valor recebido</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($productSales as $saleLines)
+                                @php
+                                    $firstSale = $saleLines->first();
+                                    $paymentMethods = collect($firstSale->payment_details ?? [])
+                                        ->map(fn (array $payment): string => strtoupper($payment['method']).' R$ '.number_format((float) $payment['amount'], 2, ',', '.'))
+                                        ->join(' + ');
+                                @endphp
+                                <tr>
+                                    <td>{{ $firstSale->created_at->format('H:i') }}</td>
+                                    <td>{{ $firstSale->client_name ?: 'Venda de balcão' }}</td>
+                                    <td>
+                                        @foreach ($saleLines as $saleLine)
+                                            <span style="display: block;">{{ $saleLine->product?->name }} × {{ $saleLine->quantity }}</span>
+                                        @endforeach
+                                    </td>
+                                    <td>{{ $paymentMethods ?: strtoupper($firstSale->payment_method ?: 'não informado') }}</td>
+                                    <td style="font-weight: 900; color: #34d399;">
+                                        R$ {{ number_format((float) $saleLines->sum('total_price'), 2, ',', '.') }}
                                     </td>
                                 </tr>
                             @endforeach
@@ -677,7 +735,7 @@
                             <span>PIX:</span> <strong>R$ {{ number_format($stats['pix'], 2, ',', '.') }}</strong>
                         </div>
                         <div style="display: flex; justify-content: space-between;">
-                            <span>DINHEIRO (CORTES):</span> <strong>R$ {{ number_format($stats['dinheiro'], 2, ',', '.') }}</strong>
+                            <span>DINHEIRO (VENDAS):</span> <strong>R$ {{ number_format($stats['dinheiro'], 2, ',', '.') }}</strong>
                         </div>
                         <div style="display: flex; justify-content: space-between;">
                             <span>CARTÃO DÉBITO:</span> <strong>R$ {{ number_format($stats['debito'], 2, ',', '.') }}</strong>
@@ -710,7 +768,7 @@
                     </div>
 
                     <div style="text-align: center; font-size: 10px; margin-top: 15px;">
-                        <span>TOTAL DE CLIENTES: {{ $stats['count'] }}</span>
+                        <span>TOTAL DE VENDAS: {{ $stats['count'] }}</span>
                         <div style="margin-top: 25px; border-top: 1px solid #000; padding-top: 4px;">
                             RESPONSÁVEL PELO CAIXA
                         </div>

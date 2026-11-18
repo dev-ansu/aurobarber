@@ -2,8 +2,11 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Resources\ProductResource;
 use App\Models\Appointment;
 use App\Models\CashMovement;
+use App\Models\ProductSale;
+use App\Services\PaymentBreakdown;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -96,21 +99,75 @@ class CashRegisterPage extends Page
             ->get();
     }
 
+    public function getDailyProductSalesProperty(): Collection
+    {
+        $tenant = filament()->getTenant();
+        if (! $tenant) {
+            return collect();
+        }
+
+        return ProductSale::query()
+            ->where('barbershop_id', $tenant->id)
+            ->whereNull('appointment_id')
+            ->whereDate('created_at', $this->selectedDate)
+            ->with(['product', 'professional'])
+            ->orderBy('created_at')
+            ->get();
+    }
+
     public function getCashStatsProperty(): array
     {
         $txs = $this->dailyTransactions;
         $movs = $this->dailyMovements;
 
-        $pix = (float) $txs->where('payment_method', 'pix')->sum('total_amount');
-        $dinheiroCortes = (float) $txs->where('payment_method', 'dinheiro')->sum('total_amount');
-        $debito = (float) $txs->where('payment_method', 'debito')->sum('total_amount');
-        $credito = (float) $txs->where('payment_method', 'credito')->sum('total_amount');
-        $outros = (float) $txs->whereNotIn('payment_method', ['pix', 'dinheiro', 'debito', 'credito'])->sum('total_amount');
+        $methodTotals = ['pix' => 0.0, 'dinheiro' => 0.0, 'debito' => 0.0, 'credito' => 0.0, 'outros' => 0.0];
+
+        foreach ($txs as $transaction) {
+            foreach (PaymentBreakdown::totals(
+                $transaction->payment_details,
+                $transaction->payment_method,
+                (float) $transaction->total_amount,
+            ) as $method => $amount) {
+                $methodTotals[$method] = ($methodTotals[$method] ?? 0.0) + $amount;
+            }
+        }
+
+        $sales = $this->dailyProductSales;
+        $salesWithDetails = $sales->whereNotNull('sale_group_id')->groupBy('sale_group_id');
+        foreach ($salesWithDetails as $saleLines) {
+            $firstLine = $saleLines->first();
+            foreach (PaymentBreakdown::totals(
+                $firstLine->payment_details,
+                $firstLine->payment_method,
+                (float) $saleLines->sum('total_price'),
+            ) as $method => $amount) {
+                $methodTotals[$method] = ($methodTotals[$method] ?? 0.0) + $amount;
+            }
+        }
+
+        foreach ($sales->whereNull('sale_group_id') as $sale) {
+            foreach (PaymentBreakdown::totals(
+                $sale->payment_details,
+                $sale->payment_method,
+                (float) $sale->total_price,
+            ) as $method => $amount) {
+                $methodTotals[$method] = ($methodTotals[$method] ?? 0.0) + $amount;
+            }
+        }
+
+        $pix = $methodTotals['pix'];
+        $dinheiroCortes = $methodTotals['dinheiro'];
+        $debito = $methodTotals['debito'];
+        $credito = $methodTotals['credito'];
+        $outros = $methodTotals['outros'];
 
         $faturamentoTotal = $pix + $dinheiroCortes + $debito + $credito + $outros;
 
         $fundoAbertura = (float) $movs->where('type', 'opening')->sum('amount');
-        $suprimentos = (float) $movs->where('type', 'inflow')->sum('amount');
+        $suprimentos = (float) $movs->where('type', 'inflow')
+            ->reject(fn (CashMovement $movement): bool => str_starts_with($movement->description, 'Corte/Serviço:')
+                || str_starts_with($movement->description, 'Venda de produto:'))
+            ->sum('amount');
         $sangrias = (float) $movs->where('type', 'outflow')->sum('amount');
 
         // Dinheiro Físico Esperado na Gaveta
@@ -123,12 +180,17 @@ class CashRegisterPage extends Page
             'credito' => $credito,
             'outros' => $outros,
             'total' => $faturamentoTotal,
-            'count' => $txs->count(),
+            'count' => $txs->count() + $sales->whereNull('sale_group_id')->count() + $salesWithDetails->count(),
             'fundo_abertura' => $fundoAbertura,
             'suprimentos' => $suprimentos,
             'sangrias' => $sangrias,
             'saldo_dinheiro_gaveta' => $saldoDinheiroGaveta,
         ];
+    }
+
+    public function registerProductSaleAction(): Action
+    {
+        return ProductResource::registerSaleAction();
     }
 
     public function registerMovementAction(): Action

@@ -25,6 +25,8 @@ class ProductSale extends Model
         'commission_payout_id',
         'commission_paid_at',
         'payment_method',
+        'payment_details',
+        'sale_group_id',
         'client_name',
         'notes',
     ];
@@ -36,6 +38,7 @@ class ProductSale extends Model
         'commission_rate' => 'decimal:2',
         'commission_amount' => 'decimal:2',
         'commission_paid_at' => 'datetime',
+        'payment_details' => 'array',
     ];
 
     public function barbershop(): BelongsTo
@@ -68,6 +71,9 @@ class ProductSale extends Model
         return match ($this->payment_method) {
             'pix' => 'PIX',
             'dinheiro' => 'Dinheiro',
+            'credito' => 'Cartão de Crédito',
+            'debito' => 'Cartão de Débito',
+            'misto' => 'Pagamento dividido',
             'cartao_credito' => 'Cartão de Crédito',
             'cartao_debito' => 'Cartão de Débito',
             default => ucfirst((string) $this->payment_method),
