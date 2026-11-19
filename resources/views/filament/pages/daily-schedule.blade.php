@@ -41,15 +41,13 @@
                         <span class="text-sm font-medium capitalize text-gray-600 dark:text-gray-300">{{ $dateFormatted }}</span>
                     </div>
 
-                    @if (! $isRestrictedBarber)
-                        <x-filament::button
-                            icon="heroicon-o-plus"
-                            color="warning"
-                            wire:click="mountAction('quickAppointment')"
-                        >
-                            Novo encaixe
-                        </x-filament::button>
-                    @endif
+                    <x-filament::button
+                        icon="heroicon-o-plus"
+                        color="warning"
+                        wire:click="mountAction('quickAppointment')"
+                    >
+                        Novo encaixe
+                    </x-filament::button>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3 border-t border-gray-200 pt-5 dark:border-white/10 md:grid-cols-4">
@@ -108,14 +106,12 @@
                             {{ $appts->count() }} atendimento(s) · R$ {{ number_format($barberRevenue, 2, ',', '.') }}
                         </x-slot>
                         <x-slot name="afterHeader">
-                            @if (! $isRestrictedBarber)
-                                <x-filament::icon-button
-                                    icon="heroicon-o-plus"
-                                    color="warning"
-                                    label="Encaixar cliente para {{ $pro->display_name }}"
-                                    wire:click="mountAction('quickAppointment', @js(['professionalId' => $pro->id]))"
-                                />
-                            @endif
+                            <x-filament::icon-button
+                                icon="heroicon-o-plus"
+                                color="warning"
+                                label="Encaixar cliente para {{ $pro->display_name }}"
+                                wire:click="mountAction('quickAppointment', { professionalId: {{ $pro->id }} })"
+                            />
                         </x-slot>
 
                         <div class="space-y-3">
@@ -169,16 +165,16 @@
                                             @else
                                                 <x-filament::badge color="info">Em atendimento</x-filament::badge>
                                             @endif
-                                            <x-filament::button size="xs" color="success" icon="heroicon-o-check" wire:click="mountAction('completeAppointment', @js(['appointmentId' => $appt->id]))">
+                                            <x-filament::button size="xs" color="success" icon="heroicon-o-check" wire:click="mountAction('completeAppointment', { appointmentId: {{ $appt->id }} })">
                                                 Concluir
                                             </x-filament::button>
                                             <x-filament::button size="xs" color="gray" wire:click="updateStatus({{ $appt->id }}, 'no_show')">
                                                 Faltou
                                             </x-filament::button>
-                                            <x-filament::button size="xs" color="gray" outlined wire:click="mountAction('editAppointment', @js(['appointmentId' => $appt->id]))">
+                                            <x-filament::button size="xs" color="gray" outlined wire:click="mountAction('editAppointment', { appointmentId: {{ $appt->id }} })">
                                                 Editar / reagendar
                                             </x-filament::button>
-                                            <x-filament::button size="xs" color="danger" outlined wire:click="mountAction('cancelAppointment', @js(['appointmentId' => $appt->id]))">
+                                            <x-filament::button size="xs" color="danger" outlined wire:click="mountAction('cancelAppointment', { appointmentId: {{ $appt->id }} })">
                                                 Cancelar
                                             </x-filament::button>
                                         </div>
@@ -187,17 +183,15 @@
                             @empty
                                 <div class="rounded-xl border border-dashed border-gray-300 px-4 py-8 text-center dark:border-white/15">
                                     <p class="text-sm text-gray-500 dark:text-gray-400">Sem agendamentos para este barbeiro.</p>
-                                    @if (! $isRestrictedBarber)
-                                        <x-filament::button
-                                            class="mt-3"
-                                            size="sm"
-                                            color="warning"
-                                            icon="heroicon-o-plus"
-                                            wire:click="mountAction('quickAppointment', @js(['professionalId' => $pro->id]))"
-                                        >
-                                            Encaixar cliente
-                                        </x-filament::button>
-                                    @endif
+                                    <x-filament::button
+                                        class="mt-3"
+                                        size="sm"
+                                        color="warning"
+                                        icon="heroicon-o-plus"
+                                        wire:click="mountAction('quickAppointment', { professionalId: {{ $pro->id }} })"
+                                    >
+                                        Encaixar cliente
+                                    </x-filament::button>
                                 </div>
                             @endforelse
                         </div>
