@@ -435,9 +435,11 @@
             </div>
 
             <div style="display: flex; align-items: center; gap: 10px;">
-                <button type="button" wire:click="mountAction('registerProductSale')" class="cr-btn-cta">
-                    <span>🛍️ Venda de produtos</span>
-                </button>
+                @if (\App\Filament\Pages\ProductPosPage::canAccess())
+                    <a href="{{ \App\Filament\Pages\ProductPosPage::getUrl() }}" class="cr-btn-cta" style="text-decoration: none; background: #059669; color: #ffffff;">
+                        <span>🛒 PDV / Vender produtos</span>
+                    </a>
+                @endif
 
                 <button type="button" wire:click="mountAction('registerMovement', @js(['type' => 'outflow']))" class="cr-btn-cta cr-btn-move">
                     <span>💸 Sangria / Suprimento</span>

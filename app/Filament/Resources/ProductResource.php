@@ -52,7 +52,7 @@ class ProductResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return ! auth()->user()?->isRestrictedBarber();
+        return auth()->user()?->can('ViewAny:Product') ?? false;
     }
 
     public static function getEloquentQuery(): Builder
@@ -74,6 +74,8 @@ class ProductResource extends Resource
             ->label('Vender produtos')
             ->icon('heroicon-o-shopping-bag')
             ->color('success')
+            ->visible(fn (): bool => auth()->user()?->can('Sell:Product') ?? false)
+            ->authorize(fn (): bool => auth()->user()?->can('Sell:Product') ?? false)
             ->modalHeading('Registrar venda de produtos')
             ->modalSubmitActionLabel('Registrar venda')
             ->modalWidth(Width::TwoExtraLarge)
@@ -369,7 +371,8 @@ class ProductResource extends Resource
                     ->label('Venda Rápida')
                     ->icon('heroicon-o-currency-dollar')
                     ->color('success')
-                    ->visible(fn (Product $record): bool => $record->is_active && $record->stock_quantity > 0)
+                    ->visible(fn (Product $record): bool => $record->is_active && $record->stock_quantity > 0 && (auth()->user()?->can('Sell:Product') ?? false))
+                    ->authorize(fn (): bool => auth()->user()?->can('Sell:Product') ?? false)
                     ->form([
                         Tabs::make('VendaRapida')
                             ->tabs([
@@ -515,6 +518,8 @@ class ProductResource extends Resource
                     ->label('+ Estoque')
                     ->icon('heroicon-o-plus-circle')
                     ->color('info')
+                    ->visible(fn (Product $record): bool => auth()->user()?->can('update', $record) ?? false)
+                    ->authorize(fn (Product $record): bool => auth()->user()?->can('update', $record) ?? false)
                     ->form([
                         Tabs::make('ReporEstoque')
                             ->tabs([

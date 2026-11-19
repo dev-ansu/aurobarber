@@ -166,7 +166,8 @@ class CashRegisterPage extends Page
         $fundoAbertura = (float) $movs->where('type', 'opening')->sum('amount');
         $suprimentos = (float) $movs->where('type', 'inflow')
             ->reject(fn (CashMovement $movement): bool => str_starts_with($movement->description, 'Corte/Serviço:')
-                || str_starts_with($movement->description, 'Venda de produto:'))
+                || str_starts_with($movement->description, 'Venda de produto:')
+                || str_starts_with($movement->description, 'Venda de produtos no balcão'))
             ->sum('amount');
         $sangrias = (float) $movs->where('type', 'outflow')->sum('amount');
 

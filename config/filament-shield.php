@@ -257,6 +257,7 @@ return [
 
     'custom_permissions' => [
         'View:SensitiveClientData' => 'Visualizar dados pessoais de clientes',
+        'Sell:Product' => 'Vender produtos (PDV / Balcão)',
     ],
 
     /*

@@ -9,6 +9,7 @@ use App\Models\Barbershop;
 use App\Models\CashMovement;
 use App\Models\Product;
 use App\Models\ProductSale;
+use App\Models\Professional;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -167,15 +168,17 @@ class CheckoutService
      * @param  array<int, int|string>  $productIds
      * @param  array<int|string, int|string|null>  $quantities
      * @param  array<string, int|float|string|null>  $additionalAmounts
+     * @param  array<int, array{method?: string, payment_method?: string, amount?: int|float|string|null}>|null  $payments
      */
     public function registerStandaloneSale(
         Barbershop $barbershop,
         array $productIds,
         array $quantities,
-        string $primaryPaymentMethod,
+        string $primaryPaymentMethod = 'pix',
         array $additionalAmounts = [],
         ?string $clientName = null,
-        ?int $professionalId = null
+        ?int $professionalId = null,
+        ?array $payments = null
     ): float {
         return DB::transaction(function () use (
             $barbershop,
@@ -184,7 +187,8 @@ class CheckoutService
             $primaryPaymentMethod,
             $additionalAmounts,
             $clientName,
-            $professionalId
+            $professionalId,
+            $payments
         ): float {
             $normalizedProductIds = collect($productIds)
                 ->map(fn ($id): int => (int) $id)
@@ -213,6 +217,20 @@ class CheckoutService
                 ]);
             }
 
+            $professional = null;
+            if ($professionalId !== null && $professionalId > 0) {
+                $professional = Professional::query()
+                    ->where('barbershop_id', $barbershop->id)
+                    ->whereKey($professionalId)
+                    ->first();
+
+                if (! $professional) {
+                    throw ValidationException::withMessages([
+                        'professional_id' => 'O profissional selecionado não pertence a esta barbearia.',
+                    ]);
+                }
+            }
+
             $total = 0.0;
             foreach ($normalizedProductIds as $productId) {
                 /** @var Product $product */
@@ -229,13 +247,20 @@ class CheckoutService
             }
 
             $total = round($total, 2);
-            $paymentDetails = PaymentBreakdown::fromAdditionalAmounts(
-                $total,
-                $primaryPaymentMethod,
-                $additionalAmounts,
-            );
+            $paymentDetails = $payments !== null
+                ? PaymentBreakdown::fromPayments($total, $payments)
+                : PaymentBreakdown::fromAdditionalAmounts(
+                    $total,
+                    $primaryPaymentMethod,
+                    $additionalAmounts,
+                );
             $saleGroupId = (string) Str::uuid();
             $paymentMethod = PaymentBreakdown::summaryMethod($paymentDetails);
+
+            $trimmedClientName = $clientName !== null ? trim($clientName) : null;
+            if ($trimmedClientName === '') {
+                $trimmedClientName = null;
+            }
 
             foreach ($normalizedProductIds as $index => $productId) {
                 /** @var Product $product */
@@ -243,24 +268,36 @@ class CheckoutService
                 $qty = max(1, (int) ($quantities[$productId] ?? 1));
                 $lineTotal = round((float) $product->price * $qty, 2);
 
+                $commRate = 0.0;
+                $commAmount = 0.0;
+                if ($professional !== null) {
+                    $commRate = (float) $product->commission_rate;
+                    if ($commRate <= 0) {
+                        $commRate = (float) ($professional->commission_rate ?? 0);
+                    }
+                    $commAmount = round(($lineTotal * $commRate) / 100, 2);
+                }
+
                 $product->decrement('stock_quantity', $qty);
 
                 ProductSale::create([
                     'barbershop_id' => $barbershop->id,
                     'product_id' => $product->id,
-                    'professional_id' => $professionalId,
+                    'professional_id' => $professional?->id,
                     'quantity' => $qty,
                     'unit_price' => $product->price,
                     'total_price' => $lineTotal,
                     'cost_price' => $product->cost_price,
-                    'commission_rate' => 0,
-                    'commission_amount' => 0,
-                    'commission_status' => 'none',
+                    'commission_rate' => $commRate,
+                    'commission_amount' => $commAmount,
+                    'commission_status' => $professional !== null ? 'pending' : 'none',
                     'payment_method' => $paymentMethod,
                     'payment_details' => $index === 0 ? $paymentDetails : null,
                     'sale_group_id' => $saleGroupId,
-                    'client_name' => $clientName,
-                    'notes' => 'Venda avulsa de balcão',
+                    'client_name' => $trimmedClientName,
+                    'notes' => $professional !== null
+                        ? "Venda PDV realizada por {$professional->display_name}"
+                        : 'Venda avulsa de balcão',
                 ]);
             }
 
@@ -268,7 +305,9 @@ class CheckoutService
                 'barbershop_id' => $barbershop->id,
                 'user_id' => auth()->id(),
                 'type' => 'inflow',
-                'description' => 'Venda de produtos no balcão'.($clientName ? " ({$clientName})" : ''),
+                'description' => 'Venda de produtos no balcão'
+                    .($trimmedClientName ? " ({$trimmedClientName})" : '')
+                    .($professional !== null ? " - Barbeiro: {$professional->display_name}" : ''),
                 'amount' => $total,
                 'date' => now()->toDateString(),
             ]);
