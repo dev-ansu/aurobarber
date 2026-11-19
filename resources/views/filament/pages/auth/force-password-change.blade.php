@@ -1,37 +1,34 @@
 <x-filament-panels::page>
-    <div style="width: 100%; max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px;">
-        
+    <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
         {{-- Banner de Alerta de Segurança e Boas-Vindas --}}
-        <div style="background: linear-gradient(135deg, rgba(217, 119, 6, 0.18), rgba(15, 23, 42, 0.95)); border: 1px solid rgba(217, 119, 6, 0.45); border-radius: 18px; padding: 24px 28px; display: flex; gap: 20px; align-items: center; box-shadow: 0 12px 30px -8px rgba(0,0,0,0.5);">
-            <div style="width: 52px; height: 52px; border-radius: 14px; background: rgba(217, 119, 6, 0.25); border: 1px solid rgba(217, 119, 6, 0.6); display: flex; align-items: center; justify-content: center; color: #fbbf24; flex-shrink: 0; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);">
-                <svg style="width: 28px; height: 28px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                </svg>
+        <div class="flex flex-col gap-4 rounded-xl border border-warning-500/30 bg-warning-50 p-5 shadow-sm dark:bg-warning-500/10 sm:flex-row sm:items-center">
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-warning-500/40 bg-warning-100 text-warning-600 dark:bg-warning-500/20 dark:text-warning-400">
+                <x-filament::icon icon="heroicon-o-exclamation-triangle" class="h-6 w-6" />
             </div>
-            <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
-                <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #f8fafc; letter-spacing: -0.01em;">Primeiro Acesso ao AuroBarber Detectado</h3>
-                <p style="margin: 0; font-size: 14px; color: #cbd5e1; line-height: 1.6;">
+            <div class="flex-1 space-y-1">
+                <h3 class="text-base font-bold text-gray-950 dark:text-white">Primeiro Acesso ao AuroBarber Detectado</h3>
+                <p class="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
                     Você está autenticado utilizando uma <strong>senha temporária provisória</strong>. Para garantir a segurança total da sua barbearia e a confidencialidade dos dados dos seus clientes e finanças, defina agora sua senha definitiva de acesso.
                 </p>
             </div>
         </div>
 
         {{-- Formulário Filament Completo em Abas e 100% de Largura --}}
-        <form wire:submit="save" style="width: 100%; display: flex; flex-direction: column; gap: 24px;">
-            <div style="width: 100%;">
+        <form wire:submit="save" class="flex w-full flex-col gap-6">
+            <div class="w-full">
                 {{ $this->form }}
             </div>
 
-            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 16px; margin-top: 8px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
-                <button type="submit" 
-                        style="background: linear-gradient(135deg, #d97706, #b45309); color: #ffffff; font-weight: 800; font-size: 15px; padding: 14px 32px; border-radius: 12px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 6px 20px rgba(217, 119, 6, 0.4); transition: all 0.2s ease;">
-                    <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
-                    </svg>
+            <div class="flex items-center justify-end gap-4 border-t border-gray-200 pt-4 dark:border-white/10">
+                <x-filament::button
+                    type="submit"
+                    color="primary"
+                    size="lg"
+                    icon="heroicon-o-check"
+                >
                     Salvar Nova Senha e Acessar Painel
-                </button>
+                </x-filament::button>
             </div>
         </form>
-
     </div>
 </x-filament-panels::page>

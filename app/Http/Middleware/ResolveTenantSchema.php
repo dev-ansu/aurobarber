@@ -25,32 +25,40 @@ class ResolveTenantSchema
     {
         $host = strtolower(trim(explode(':', $request->getHost())[0]));
 
+        // Garante que a resolução do cadastro da barbearia sempre consulte o schema public
+        $this->tenantService->switchToPublic();
+
         // 1. Painel SaaS Master ou rotas globais
         if (str_starts_with($host, 'saas.') || str_starts_with($host, 'master.') || $request->is('saas*')) {
-            $this->tenantService->switchToPublic();
-
             return $next($request);
         }
 
         // 2. Resolução por Subdomínio ou Domínio Próprio
         $tenantBarbershop = $this->tenantService->resolveTenantFromHost($host);
+        $resolvedFromAdminContext = false;
 
-        // 3. Resolução por Rota de Tenant do Filament (ex: /admin/{tenant}/...)
+        // 3. Resolução por Rota de Tenant do Filament (/admin/{tenant}/...) ou Rota Pública (/{slug}/...)
         if (! $tenantBarbershop) {
             $routeTenant = $request->route('tenant');
-            if ($routeTenant instanceof Barbershop) {
-                $tenantBarbershop = $routeTenant;
-            } elseif (is_string($routeTenant) && $routeTenant !== '') {
-                $tenantBarbershop = Barbershop::where('slug', $routeTenant)
+            $routeSlug = $request->route('slug');
+            $routeIdentifier = $routeTenant ?? $routeSlug;
+
+            if ($routeIdentifier instanceof Barbershop) {
+                $tenantBarbershop = $routeIdentifier;
+                $resolvedFromAdminContext = $routeTenant !== null;
+            } elseif (is_string($routeIdentifier) && $routeIdentifier !== '') {
+                $tenantBarbershop = Barbershop::where('slug', $routeIdentifier)
                     ->orderByDesc('is_active')
                     ->orderByDesc('id')
                     ->first();
+                $resolvedFromAdminContext = $routeTenant !== null;
             }
         }
 
         // 3.1. Resolução via contexto do Filament (ex: requisições Livewire /livewire/update com persistent middleware)
         if (! $tenantBarbershop && function_exists('filament') && filament()->getTenant() instanceof Barbershop) {
             $tenantBarbershop = filament()->getTenant();
+            $resolvedFromAdminContext = true;
         }
 
         // 3.2. Resolução via Referer em requisições Livewire (/admin/{slug}/... ou /{slug}/...)
@@ -61,6 +69,7 @@ class ResolveTenantSchema
                     ->orderByDesc('is_active')
                     ->orderByDesc('id')
                     ->first();
+                $resolvedFromAdminContext = true;
             }
         }
 
@@ -73,12 +82,13 @@ class ResolveTenantSchema
 
                 if ($candidate && (! $user || ! method_exists($user, 'canAccessTenant') || $user->canAccessTenant($candidate))) {
                     $tenantBarbershop = $candidate;
+                    $resolvedFromAdminContext = true;
                 }
             }
         }
 
-        // Persiste o tenant ativo na sessão para requisições assíncronas subsequentes
-        if ($tenantBarbershop && $request->hasSession()) {
+        // Persiste o tenant ativo na sessão apenas em contexto do painel administrativo
+        if ($tenantBarbershop && $resolvedFromAdminContext && $request->hasSession()) {
             $request->session()->put('aurobarber.active_tenant_id', $tenantBarbershop->getKey());
         }
 

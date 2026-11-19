@@ -1,12 +1,23 @@
 <?php
 
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\SaasPaymentProofController;
+use App\Http\Controllers\TenantSaasPaymentController;
 use App\Models\Appointment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Redirecionamentos de conveniência e proteção de rotas
 Route::redirect('/admin/saas', '/saas');
+
+Route::middleware('auth')->group(function () {
+    Route::post('/admin/{tenant}/assinatura/comprovante', [TenantSaasPaymentController::class, 'store'])
+        ->name('tenant.billing.payments.store');
+
+    Route::get('/saas/cobranca/comprovantes/{submission}', [SaasPaymentProofController::class, 'show'])
+        ->middleware('signed')
+        ->name('saas.billing.proofs.show');
+});
 
 Route::get('/admin/force-password-change', function () {
     if (!auth()->check()) {

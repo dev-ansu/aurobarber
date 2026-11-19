@@ -4,20 +4,25 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\BarbershopResource\Pages;
 use App\Models\Barbershop;
+use App\Models\SaasPlan;
+use App\Models\User;
+use App\Services\LocalBackupManager;
+use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
 use Filament\Forms;
+use Filament\Notifications\Notification;
+use Filament\Resources\Resource;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
-use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
-use Filament\Schemas\Components\Utilities\Get;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Validation\Rule;
@@ -29,9 +34,9 @@ class BarbershopResource extends Resource
 
     protected static bool $isScopedToTenant = false;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-building-storefront';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-building-storefront';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'SaaS Master';
+    protected static string|\UnitEnum|null $navigationGroup = 'SaaS Master';
 
     protected static ?string $navigationLabel = 'Todas as Barbearias';
 
@@ -212,6 +217,26 @@ class BarbershopResource extends Resource
                         Tab::make('Licença & Faturamento')
                             ->icon('heroicon-o-key')
                             ->schema([
+                                Forms\Components\Select::make('saas_plan_id')
+                                    ->label('Plano de Licenciamento')
+                                    ->options(fn (): array => SaasPlan::query()
+                                        ->orderBy('sort_order')
+                                        ->get()
+                                        ->mapWithKeys(fn (SaasPlan $plan): array => [
+                                            $plan->id => $plan->name.' — R$ '.number_format((float) $plan->monthly_price, 2, ',', '.').'/mês',
+                                        ])
+                                        ->all())
+                                    ->searchable()
+                                    ->preload()
+                                    ->live()
+                                    ->afterStateUpdated(function ($state, callable $set): void {
+                                        if ($state && ($plan = SaasPlan::query()->find($state))) {
+                                            $set('monthly_price', (float) $plan->monthly_price);
+                                        }
+                                    })
+                                    ->helperText('Selecione o plano contratado pela barbearia. O valor mensal é sugerido automaticamente e pode ser ajustado abaixo.')
+                                    ->columnSpanFull(),
+
                                 Forms\Components\Select::make('license_status')
                                     ->label('Status da Licença')
                                     ->options([
@@ -295,6 +320,7 @@ class BarbershopResource extends Resource
                         if ($record->isInGracePeriod()) {
                             return 'Em Carência';
                         }
+
                         return match ($record->license_status) {
                             'active' => 'Ativa',
                             'trial' => 'Em Teste',
@@ -306,6 +332,7 @@ class BarbershopResource extends Resource
                         if ($record->isInGracePeriod()) {
                             return "Tolerância: {$record->graceDaysRemaining()}d restantes";
                         }
+
                         return null;
                     }),
 
@@ -314,18 +341,26 @@ class BarbershopResource extends Resource
                     ->date('d/m/Y')
                     ->sortable()
                     ->description(function (Barbershop $record): string {
-                        if (!$record->license_expires_at) {
+                        if (! $record->license_expires_at) {
                             return 'Sem data';
                         }
                         $days = $record->daysRemaining();
                         if ($days < 0) {
-                            return abs($days) . ' dias atrasado';
+                            return abs($days).' dias atrasado';
                         }
                         if ($days === 0) {
                             return 'Vence hoje!';
                         }
+
                         return "Restam {$days} dias";
                     }),
+
+                Tables\Columns\TextColumn::make('saasPlan.name')
+                    ->label('Plano')
+                    ->badge()
+                    ->color('primary')
+                    ->placeholder('Personalizado')
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('monthly_price')
                     ->label('Mensalidade')
@@ -375,8 +410,8 @@ class BarbershopResource extends Resource
                             ->columnSpanFull(),
                     ])
                     ->action(function (Barbershop $record, array $data): void {
-                        $record->license_expires_at = \Carbon\Carbon::parse($data['new_expires_at'])->endOfDay();
-                        if (!empty($data['reactivate'])) {
+                        $record->license_expires_at = Carbon::parse($data['new_expires_at'])->endOfDay();
+                        if (! empty($data['reactivate'])) {
                             $record->license_status = 'active';
                             $record->is_active = true;
                             $record->suspended_at = null;
@@ -384,7 +419,7 @@ class BarbershopResource extends Resource
                         }
                         $record->save();
 
-                        \Filament\Notifications\Notification::make()
+                        Notification::make()
                             ->title('Vencimento atualizado!')
                             ->body("Novo vencimento de {$record->name}: {$record->license_expires_at->format('d/m/Y')}")
                             ->success()
@@ -397,10 +432,10 @@ class BarbershopResource extends Resource
                     ->color('success')
                     ->requiresConfirmation()
                     ->modalHeading('Renovar Licença por +30 Dias')
-                    ->modalDescription(fn (Barbershop $record): string => "Deseja renovar a licença de {$record->name}? O novo vencimento será " . (($record->license_expires_at && $record->license_expires_at->isFuture()) ? $record->license_expires_at->copy()->addDays(30)->format('d/m/Y') : now()->addDays(30)->format('d/m/Y')) . ".")
+                    ->modalDescription(fn (Barbershop $record): string => "Deseja renovar a licença de {$record->name}? O novo vencimento será ".(($record->license_expires_at && $record->license_expires_at->isFuture()) ? $record->license_expires_at->copy()->addDays(30)->format('d/m/Y') : now()->addDays(30)->format('d/m/Y')).'.')
                     ->action(function (Barbershop $record): void {
                         $record->renew(30);
-                        \Filament\Notifications\Notification::make()
+                        Notification::make()
                             ->title('Licença renovada por +30 dias!')
                             ->body("Novo vencimento registrado: {$record->license_expires_at->format('d/m/Y')}")
                             ->success()
@@ -417,14 +452,14 @@ class BarbershopResource extends Resource
                     ->action(function (Barbershop $record): void {
                         if ($record->isSuspended()) {
                             $record->activate();
-                            \Filament\Notifications\Notification::make()
+                            Notification::make()
                                 ->title('Barbearia reativada!')
                                 ->body('O acesso ao sistema foi restabelecido.')
                                 ->success()
                                 ->send();
                         } else {
                             $record->suspend('Suspensão manual por inadimplência via Painel SaaS');
-                            \Filament\Notifications\Notification::make()
+                            Notification::make()
                                 ->title('Barbearia suspensa!')
                                 ->body('O acesso ao painel foi bloqueado.')
                                 ->warning()
@@ -436,17 +471,17 @@ class BarbershopResource extends Resource
                     ->label('Backup')
                     ->icon('heroicon-m-arrow-down-tray')
                     ->color('info')
-                    ->action(function (Barbershop $record, \App\Services\LocalBackupManager $backupManager): void {
+                    ->action(function (Barbershop $record, LocalBackupManager $backupManager): void {
                         try {
                             $schema = ! empty($record->schema_name) ? $record->schema_name : null;
                             $filename = $backupManager->create(false, $schema);
-                            \Filament\Notifications\Notification::make()
+                            Notification::make()
                                 ->title('Backup gerado com sucesso!')
                                 ->body("Arquivo: {$filename}")
                                 ->success()
                                 ->send();
                         } catch (\Throwable $e) {
-                            \Filament\Notifications\Notification::make()
+                            Notification::make()
                                 ->title('Erro ao gerar backup')
                                 ->body($e->getMessage())
                                 ->danger()

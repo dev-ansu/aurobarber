@@ -75,7 +75,7 @@ class SaasLogs extends Page implements HasTable
                         $content = e($this->readTail($record['name']));
 
                         return new HtmlString(
-                            '<pre style="background: #020617; color: #e2e8f0; border: 1px solid #1e293b; border-radius: 12px; padding: 16px; font-size: 11px; line-height: 1.5; max-height: 65vh; overflow: auto; white-space: pre-wrap; word-break: break-word;">'
+                            '<pre class="max-h-[65vh] overflow-auto whitespace-pre-wrap break-words rounded-xl border border-gray-200 bg-gray-50 p-4 font-mono text-xs leading-relaxed text-gray-900 dark:border-white/10 dark:bg-gray-950 dark:text-gray-100">'
                             .($content !== '' ? $content : 'Log vazio (sem ocorrências registradas).')
                             .'</pre>'
                         );

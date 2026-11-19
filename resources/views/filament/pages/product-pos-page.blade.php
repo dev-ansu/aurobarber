@@ -25,479 +25,38 @@
         ];
     @endphp
 
-    <style>
-        .pos-wrap {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            color: #f1f5f9;
-            font-family: inherit;
-        }
-
-        .pos-grid {
-            display: grid;
-            grid-template-columns: minmax(0, 1.45fr) minmax(340px, 1fr);
-            gap: 20px;
-            align-items: start;
-        }
-
-        @media (max-width: 1024px) {
-            .pos-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .pos-panel {
-            background: linear-gradient(180deg, #0f172a 0%, #0b1120 100%);
-            border: 1px solid #1e293b;
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-        }
-
-        .pos-sticky {
-            position: sticky;
-            top: 84px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .pos-search-bar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .pos-input {
-            width: 100%;
-            height: 42px;
-            background: #020617;
-            border: 1px solid #334155;
-            border-radius: 12px;
-            color: #ffffff;
-            padding: 0 14px;
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.15s ease;
-        }
-
-        .pos-input:focus {
-            border-color: #d97706;
-        }
-
-        .pos-input:disabled {
-            opacity: 0.65;
-            cursor: not-allowed;
-        }
-
-        .pos-pills {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 18px;
-        }
-
-        .pos-pill {
-            height: 34px;
-            padding: 0 14px;
-            border-radius: 9999px;
-            font-size: 12px;
-            font-weight: 700;
-            border: 1px solid #334155;
-            background: #1e293b;
-            color: #94a3b8;
-            cursor: pointer;
-            transition: all 0.15s ease;
-        }
-
-        .pos-pill:hover {
-            background: #334155;
-            color: #ffffff;
-        }
-
-        .pos-pill.active {
-            background: rgba(217, 119, 6, 0.18);
-            border-color: #d97706;
-            color: #fbbf24;
-        }
-
-        .pos-catalog {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
-            gap: 12px;
-        }
-
-        .pos-card {
-            position: relative;
-            text-align: left;
-            background: #0b1222;
-            border: 1px solid #1e293b;
-            border-radius: 16px;
-            padding: 14px;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            gap: 10px;
-            min-height: 118px;
-        }
-
-        .pos-card:hover {
-            border-color: #d97706;
-            background: #111c33;
-            transform: translateY(-1px);
-        }
-
-        .pos-card.in-cart {
-            border-color: #f59e0b;
-            background: rgba(217, 119, 6, 0.10);
-            box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.35);
-        }
-
-        .pos-card-badge {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background: #f59e0b;
-            color: #020617;
-            font-size: 11px;
-            font-weight: 900;
-            padding: 2px 8px;
-            border-radius: 9999px;
-            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.45);
-        }
-
-        .pos-card-name {
-            font-size: 14px;
-            font-weight: 800;
-            color: #f8fafc;
-            line-height: 1.3;
-        }
-
-        .pos-card-footer {
-            display: flex;
-            align-items: flex-end;
-            justify-content: space-between;
-            gap: 8px;
-        }
-
-        .pos-card-price {
-            font-size: 16px;
-            font-weight: 900;
-            color: #fbbf24;
-        }
-
-        .pos-stock {
-            font-size: 11px;
-            font-weight: 700;
-            padding: 2px 8px;
-            border-radius: 9999px;
-        }
-
-        .pos-stock.ok {
-            background: rgba(16, 185, 129, 0.14);
-            color: #34d399;
-        }
-
-        .pos-stock.low {
-            background: rgba(245, 158, 11, 0.18);
-            color: #fbbf24;
-        }
-
-        .pos-section-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-        }
-
-        .pos-section-title {
-            font-size: 15px;
-            font-weight: 800;
-            color: #ffffff;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .pos-count-badge {
-            background: rgba(245, 158, 11, 0.18);
-            color: #fbbf24;
-            font-size: 12px;
-            font-weight: 800;
-            padding: 2px 9px;
-            border-radius: 9999px;
-        }
-
-        .pos-link-btn {
-            background: transparent;
-            border: none;
-            color: #94a3b8;
-            font-size: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 8px;
-        }
-
-        .pos-link-btn:hover {
-            color: #f87171;
-            background: rgba(248, 113, 113, 0.1);
-        }
-
-        .pos-cart-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-height: 290px;
-            overflow-y: auto;
-            padding-right: 4px;
-        }
-
-        .pos-cart-item {
-            background: #020617;
-            border: 1px solid #1e293b;
-            border-radius: 14px;
-            padding: 10px 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        .pos-stepper {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: #0f172a;
-            border: 1px solid #334155;
-            border-radius: 10px;
-            padding: 2px;
-        }
-
-        .pos-step-btn {
-            width: 28px;
-            height: 28px;
-            border-radius: 8px;
-            border: none;
-            background: #1e293b;
-            color: #ffffff;
-            font-size: 15px;
-            font-weight: 800;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .pos-step-btn:hover {
-            background: #d97706;
-            color: #020617;
-        }
-
-        .pos-qty-input {
-            width: 42px;
-            height: 28px;
-            text-align: center;
-            background: transparent;
-            border: none;
-            color: #ffffff;
-            font-size: 13px;
-            font-weight: 800;
-            outline: none;
-        }
-
-        .pos-meta-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        @media (max-width: 640px) {
-            .pos-meta-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .pos-label {
-            display: block;
-            font-size: 11px;
-            font-weight: 700;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            margin-bottom: 6px;
-        }
-
-        .pos-total-box {
-            background: linear-gradient(135deg, rgba(217, 119, 6, 0.16) 0%, rgba(15, 23, 42, 0.95) 100%);
-            border: 1px solid rgba(245, 158, 11, 0.45);
-            border-radius: 16px;
-            padding: 14px 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-        }
-
-        .pos-total-value {
-            font-size: 26px;
-            font-weight: 900;
-            color: #fbbf24;
-            letter-spacing: -0.02em;
-        }
-
-        .pos-pay-methods {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-        }
-
-        .pos-pay-btn {
-            height: 40px;
-            border-radius: 12px;
-            border: 1px solid #334155;
-            background: #1e293b;
-            color: #cbd5e1;
-            font-size: 13px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: all 0.15s ease;
-        }
-
-        .pos-pay-btn:hover {
-            background: #334155;
-            color: #ffffff;
-        }
-
-        .pos-pay-btn.active {
-            background: rgba(16, 185, 129, 0.18);
-            border-color: #10b981;
-            color: #34d399;
-        }
-
-        .pos-split-row {
-            display: grid;
-            grid-template-columns: 1.15fr 1fr auto auto;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .pos-mini-btn {
-            height: 38px;
-            padding: 0 10px;
-            border-radius: 10px;
-            border: 1px solid #334155;
-            background: #1e293b;
-            color: #fbbf24;
-            font-size: 11px;
-            font-weight: 800;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-
-        .pos-mini-btn:hover {
-            background: #334155;
-        }
-
-        .pos-summary-bar {
-            background: #020617;
-            border: 1px solid #1e293b;
-            border-radius: 12px;
-            padding: 10px 12px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            gap: 8px;
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-        .pos-submit-btn {
-            width: 100%;
-            height: 48px;
-            border-radius: 14px;
-            border: none;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: #ffffff;
-            font-size: 15px;
-            font-weight: 900;
-            letter-spacing: 0.02em;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            box-shadow: 0 8px 20px -6px rgba(16, 185, 129, 0.55);
-        }
-
-        .pos-submit-btn:hover:not(:disabled) {
-            filter: brightness(1.08);
-            transform: translateY(-1px);
-        }
-
-        .pos-submit-btn:disabled {
-            opacity: 0.45;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-
-        .pos-recent-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-            margin-top: 12px;
-        }
-
-        .pos-recent-table th {
-            text-align: left;
-            color: #94a3b8;
-            font-size: 11px;
-            text-transform: uppercase;
-            padding: 8px 10px;
-            border-bottom: 1px solid #1e293b;
-        }
-
-        .pos-recent-table td {
-            padding: 10px;
-            border-bottom: 1px solid #1e293b;
-            color: #e2e8f0;
-        }
-    </style>
-
-    <div class="pos-wrap">
-        <div class="pos-grid">
+    <div class="space-y-6">
+        <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
             {{-- COLUNA ESQUERDA: CATÁLOGO DE PRODUTOS --}}
-            <div class="pos-panel">
-                <div class="pos-search-bar">
+            <div class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 lg:col-span-7">
+                <div class="mb-4">
                     <input
                         type="search"
                         wire:model.live.debounce.250ms="search"
-                        class="pos-input"
                         placeholder="Buscar produto por nome (ex: Pomada, Cerveja, Água)..."
+                        class="block h-10 w-full rounded-lg border border-gray-300 bg-white px-3.5 text-sm text-gray-950 shadow-sm outline-none transition placeholder:text-gray-400 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-gray-500"
                     />
                 </div>
 
-                <div class="pos-pills">
+                <div class="mb-5 flex flex-wrap gap-2">
                     @foreach ($categories as $key => $label)
-                        <button
-                            type="button"
+                        <x-filament::button
+                            size="xs"
+                            :color="$selectedCategory === $key ? 'primary' : 'gray'"
                             wire:click="$set('selectedCategory', '{{ $key }}')"
-                            class="pos-pill {{ $selectedCategory === $key ? 'active' : '' }}"
                         >
                             {{ $label }}
-                        </button>
+                        </x-filament::button>
                     @endforeach
                 </div>
 
                 @if ($products->isEmpty())
-                    <div style="text-align: center; padding: 48px 16px; color: #94a3b8;">
-                        <p style="font-size: 15px; font-weight: 700; color: #cbd5e1;">Nenhum produto disponível encontrado.</p>
-                        <p style="font-size: 13px; margin-top: 4px;">Verifique o filtro selecionado ou se há produtos ativos com estoque positivo.</p>
+                    <div class="px-4 py-12 text-center">
+                        <p class="text-sm font-semibold text-gray-700 dark:text-gray-200">Nenhum produto disponível encontrado.</p>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Verifique o filtro selecionado ou se há produtos ativos com estoque positivo.</p>
                     </div>
                 @else
-                    <div class="pos-catalog">
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                         @foreach ($products as $product)
                             @php
                                 $inCartQty = (int) ($cart[$product->id] ?? 0);
@@ -506,26 +65,32 @@
                                 type="button"
                                 wire:key="pos-product-{{ $product->id }}"
                                 wire:click="addToCart({{ $product->id }})"
-                                class="pos-card {{ $inCartQty > 0 ? 'in-cart' : '' }}"
+                                @class([
+                                    'relative flex min-h-28 flex-col justify-between gap-3 rounded-xl border p-3.5 text-left transition hover:-translate-y-0.5 hover:shadow-sm',
+                                    'border-primary-500 bg-primary-50/70 ring-1 ring-primary-500/30 dark:border-primary-400 dark:bg-primary-500/10' => $inCartQty > 0,
+                                    'border-gray-200 bg-gray-50/70 hover:border-primary-400 dark:border-white/10 dark:bg-white/5 dark:hover:border-primary-500/50' => $inCartQty === 0,
+                                ])
                             >
                                 @if ($inCartQty > 0)
-                                    <span class="pos-card-badge">{{ $inCartQty }}x</span>
+                                    <span class="absolute right-2.5 top-2.5 inline-flex items-center rounded-full bg-primary-600 px-2 py-0.5 text-[11px] font-bold text-white dark:bg-primary-500 dark:text-gray-950">
+                                        {{ $inCartQty }}x
+                                    </span>
                                 @endif
 
-                                <div>
-                                    <div class="pos-card-name">{{ $product->name }}</div>
-                                    <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">
+                                <div class="pr-8">
+                                    <div class="text-sm font-bold text-gray-950 dark:text-white">{{ $product->name }}</div>
+                                    <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                         {{ $categories[$product->category] ?? '📦 Outros' }}
                                     </div>
                                 </div>
 
-                                <div class="pos-card-footer">
-                                    <span class="pos-card-price">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-sm font-bold text-primary-600 dark:text-primary-400">
                                         R$ {{ number_format((float) $product->price, 2, ',', '.') }}
                                     </span>
-                                    <span class="pos-stock {{ $product->isLowStock() ? 'low' : 'ok' }}">
+                                    <x-filament::badge :color="$product->isLowStock() ? 'danger' : 'success'" size="sm">
                                         {{ $product->stock_quantity }} un.
-                                    </span>
+                                    </x-filament::badge>
                                 </div>
                             </button>
                         @endforeach
@@ -534,58 +99,81 @@
             </div>
 
             {{-- COLUNA DIREITA: CARRINHO E PAGAMENTO --}}
-            <div class="pos-panel pos-sticky">
-                <div class="pos-section-head">
-                    <div class="pos-section-title">
-                        <span>Carrinho da Venda</span>
+            <div class="flex flex-col gap-4 rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 lg:sticky lg:top-20 lg:col-span-5">
+                <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-base font-bold text-gray-950 dark:text-white">Carrinho da Venda</h3>
                         @if ($cartCount > 0)
-                            <span class="pos-count-badge">{{ $cartCount }} {{ $cartCount === 1 ? 'item' : 'itens' }}</span>
+                            <x-filament::badge color="primary" size="sm">
+                                {{ $cartCount }} {{ $cartCount === 1 ? 'item' : 'itens' }}
+                            </x-filament::badge>
                         @endif
                     </div>
 
                     @if ($cartCount > 0)
-                        <button type="button" wire:click="clearCart" class="pos-link-btn">
+                        <button
+                            type="button"
+                            wire:click="clearCart"
+                            class="text-xs font-semibold text-danger-600 transition hover:text-danger-500 dark:text-danger-400"
+                        >
                             Limpar carrinho
                         </button>
                     @endif
                 </div>
 
                 @if ($cartItems->isEmpty())
-                    <div style="background: #020617; border: 1px dashed #334155; border-radius: 14px; padding: 28px 16px; text-align: center; color: #94a3b8; font-size: 13px;">
+                    <div class="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-4 py-7 text-center text-sm text-gray-500 dark:border-white/15 dark:bg-white/5 dark:text-gray-400">
                         Clique nos produtos ao lado para adicionar à venda.
                     </div>
                 @else
-                    <div class="pos-cart-list">
+                    <div class="max-h-72 space-y-2.5 overflow-y-auto pr-1">
                         @foreach ($cartItems as $item)
                             @php
                                 /** @var \App\Models\Product $p */
                                 $p = $item['product'];
                             @endphp
-                            <div class="pos-cart-item" wire:key="cart-item-{{ $p->id }}">
-                                <div style="min-width: 0; flex: 1;">
-                                    <div style="font-size: 13px; font-weight: 800; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            <div
+                                wire:key="cart-item-{{ $p->id }}"
+                                class="flex items-center gap-2.5 rounded-xl border border-gray-200 bg-gray-50 p-3 dark:border-white/10 dark:bg-white/5"
+                            >
+                                <div class="min-w-0 flex-1">
+                                    <div class="truncate text-sm font-semibold text-gray-950 dark:text-white">
                                         {{ $p->name }}
                                     </div>
-                                    <div style="font-size: 11px; color: #94a3b8;">
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">
                                         R$ {{ number_format($item['unit_price'], 2, ',', '.') }} / un. · Estoque: {{ $p->stock_quantity }}
                                     </div>
                                 </div>
 
-                                <div class="pos-stepper">
-                                    <button type="button" wire:click="decrementCart({{ $p->id }})" class="pos-step-btn" title="Diminuir">−</button>
+                                <div class="flex items-center gap-1">
+                                    <button
+                                        type="button"
+                                        wire:click="decrementCart({{ $p->id }})"
+                                        title="Diminuir"
+                                        class="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-300 bg-white text-sm font-bold text-gray-700 transition hover:bg-gray-100 dark:border-white/10 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                                    >
+                                        −
+                                    </button>
                                     <input
                                         type="number"
                                         min="1"
                                         max="{{ $p->stock_quantity }}"
                                         value="{{ $item['quantity'] }}"
                                         wire:change="setQuantity({{ $p->id }}, $event.target.value)"
-                                        class="pos-qty-input"
+                                        class="h-7 w-12 rounded-lg border border-gray-300 bg-white text-center text-xs font-bold text-gray-950 outline-none focus:border-primary-500 dark:border-white/10 dark:bg-gray-950 dark:text-white"
                                     />
-                                    <button type="button" wire:click="addToCart({{ $p->id }})" class="pos-step-btn" title="Aumentar">+</button>
+                                    <button
+                                        type="button"
+                                        wire:click="addToCart({{ $p->id }})"
+                                        title="Aumentar"
+                                        class="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-300 bg-white text-sm font-bold text-gray-700 transition hover:bg-gray-100 dark:border-white/10 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                                    >
+                                        +
+                                    </button>
                                 </div>
 
-                                <div style="text-align: right; min-width: 78px;">
-                                    <div style="font-size: 13px; font-weight: 900; color: #fbbf24;">
+                                <div class="min-w-20 text-right">
+                                    <div class="text-sm font-bold text-primary-600 dark:text-primary-400">
                                         R$ {{ number_format($item['subtotal'], 2, ',', '.') }}
                                     </div>
                                 </div>
@@ -593,9 +181,8 @@
                                 <button
                                     type="button"
                                     wire:click="removeFromCart({{ $p->id }})"
-                                    class="pos-link-btn"
                                     title="Remover produto"
-                                    style="font-size: 16px; line-height: 1;"
+                                    class="rounded-md p-1 text-base leading-none text-gray-400 transition hover:bg-danger-50 hover:text-danger-600 dark:hover:bg-danger-500/10 dark:hover:text-danger-400"
                                 >
                                     ×
                                 </button>
@@ -605,23 +192,23 @@
                 @endif
 
                 {{-- CLIENTE E VENDEDOR --}}
-                <div class="pos-meta-grid">
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
-                        <label class="pos-label">Cliente (opcional)</label>
+                        <label class="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">Cliente (opcional)</label>
                         <input
                             type="text"
                             wire:model="clientName"
-                            class="pos-input"
                             placeholder="Ex: João Silva"
                             maxlength="255"
+                            class="block h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-950 shadow-sm outline-none transition placeholder:text-gray-400 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-gray-500"
                         />
                     </div>
                     <div>
-                        <label class="pos-label">Barbeiro / Vendedor (comissão)</label>
+                        <label class="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">Barbeiro / Vendedor (comissão)</label>
                         <select
                             wire:model="professionalId"
-                            class="pos-input"
                             @disabled($isRestrictedBarber)
+                            class="block h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-950 shadow-sm outline-none transition focus:border-primary-500 focus:ring-1 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/10 dark:bg-gray-950 dark:text-white"
                         >
                             <option value="">Balcão (sem comissão)</option>
                             @foreach ($professionals as $pro)
@@ -632,74 +219,83 @@
                 </div>
 
                 {{-- TOTAL DA VENDA --}}
-                <div class="pos-total-box">
+                <div class="flex items-center justify-between rounded-xl border border-primary-500/30 bg-primary-50 px-4 py-3 dark:bg-primary-500/10">
                     <div>
-                        <div style="font-size: 11px; font-weight: 800; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.06em;">
+                        <div class="text-xs font-bold uppercase tracking-wider text-primary-800 dark:text-primary-300">
                             Total da Venda
                         </div>
-                        <div style="font-size: 12px; color: #94a3b8;">
+                        <div class="text-xs text-primary-700/80 dark:text-primary-200/70">
                             {{ $cartCount }} {{ $cartCount === 1 ? 'unidade' : 'unidades' }}
                         </div>
                     </div>
-                    <div class="pos-total-value">
+                    <div class="text-2xl font-black text-primary-700 dark:text-primary-400">
                         R$ {{ number_format($cartTotal, 2, ',', '.') }}
                     </div>
                 </div>
 
                 {{-- PAGAMENTO --}}
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <div class="pos-section-head">
-                        <span class="pos-label" style="margin: 0;">Forma de Pagamento</span>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">Forma de Pagamento</span>
                         @if (! $splitPayment)
-                            <button type="button" wire:click="enableSplitPayment" class="pos-mini-btn">
+                            <x-filament::button size="xs" color="gray" wire:click="enableSplitPayment">
                                 + Dividir pagamento
-                            </button>
+                            </x-filament::button>
                         @else
-                            <button type="button" wire:click="disableSplitPayment" class="pos-link-btn" style="color: #fbbf24;">
+                            <button
+                                type="button"
+                                wire:click="disableSplitPayment"
+                                class="text-xs font-semibold text-primary-600 transition hover:text-primary-500 dark:text-primary-400"
+                            >
                                 Usar forma única
                             </button>
                         @endif
                     </div>
 
                     @if (! $splitPayment)
-                        <div class="pos-pay-methods">
+                        <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
                             @foreach ($paymentLabels as $methodKey => $methodLabel)
-                                <button
-                                    type="button"
+                                <x-filament::button
+                                    size="sm"
+                                    :color="$singlePaymentMethod === $methodKey ? 'primary' : 'gray'"
                                     wire:click="selectSinglePaymentMethod('{{ $methodKey }}')"
-                                    class="pos-pay-btn {{ $singlePaymentMethod === $methodKey ? 'active' : '' }}"
                                 >
                                     {{ $methodLabel }}
-                                </button>
+                                </x-filament::button>
                             @endforeach
                         </div>
 
                         @if ($singlePaymentMethod === 'dinheiro' && $cartTotal > 0)
                             <div>
-                                <label class="pos-label">Valor recebido em dinheiro (opcional — para troco)</label>
+                                <label class="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                    Valor recebido em dinheiro (opcional — para troco)
+                                </label>
                                 <input
                                     type="text"
                                     inputmode="decimal"
                                     wire:model.live.debounce.300ms="cashReceived"
-                                    class="pos-input"
                                     placeholder="Ex: {{ number_format(ceil($cartTotal / 10) * 10, 2, ',', '.') }}"
+                                    class="block h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-950 shadow-sm outline-none transition placeholder:text-gray-400 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-gray-500"
                                 />
                                 @if ($paymentSummary['change'] > 0)
-                                    <div style="margin-top: 6px; font-size: 13px; font-weight: 800; color: #34d399;">
+                                    <div class="mt-1.5 text-sm font-bold text-success-600 dark:text-success-400">
                                         Troco a devolver: R$ {{ number_format($paymentSummary['change'], 2, ',', '.') }}
                                     </div>
                                 @elseif ($paymentSummary['error'])
-                                    <div style="margin-top: 6px; font-size: 12px; font-weight: 700; color: #f87171;">
+                                    <div class="mt-1.5 text-xs font-semibold text-danger-600 dark:text-danger-400">
                                         {{ $paymentSummary['error'] }}
                                     </div>
                                 @endif
                             </div>
                         @endif
                     @else
-                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <div class="space-y-2">
                             @foreach ($payments as $index => $row)
-                                <div class="pos-split-row" wire:key="payment-row-{{ $index }}">
-                                    <select wire:model.live="payments.{{ $index }}.method" class="pos-input" style="height: 38px; font-size: 13px;">
+                                <div class="flex items-center gap-2" wire:key="payment-row-{{ $index }}">
+                                    <select
+                                        wire:model.live="payments.{{ $index }}.method"
+                                        class="h-9 flex-1 rounded-lg border border-gray-300 bg-white px-2.5 text-sm text-gray-950 shadow-sm outline-none focus:border-primary-500 dark:border-white/10 dark:bg-gray-950 dark:text-white"
+                                    >
                                         @foreach ($paymentLabels as $methodKey => $methodLabel)
                                             <option value="{{ $methodKey }}">{{ $methodLabel }}</option>
                                         @endforeach
@@ -709,62 +305,60 @@
                                         type="text"
                                         inputmode="decimal"
                                         wire:model.live.debounce.300ms="payments.{{ $index }}.amount"
-                                        class="pos-input"
-                                        style="height: 38px; font-size: 13px;"
                                         placeholder="0,00"
+                                        class="h-9 w-28 rounded-lg border border-gray-300 bg-white px-2.5 text-sm text-gray-950 shadow-sm outline-none focus:border-primary-500 dark:border-white/10 dark:bg-white/5 dark:text-white"
                                     />
 
-                                    <button
-                                        type="button"
+                                    <x-filament::button
+                                        size="xs"
+                                        color="gray"
                                         wire:click="fillRemaining({{ $index }})"
-                                        class="pos-mini-btn"
                                         title="Preencher com o saldo restante"
                                     >
                                         Restante
-                                    </button>
+                                    </x-filament::button>
 
                                     <button
                                         type="button"
                                         wire:click="removePaymentRow({{ $index }})"
-                                        class="pos-link-btn"
                                         title="Remover forma"
-                                        style="font-size: 16px;"
+                                        class="rounded-md p-1 text-base leading-none text-gray-400 transition hover:bg-danger-50 hover:text-danger-600 dark:hover:bg-danger-500/10 dark:hover:text-danger-400"
                                     >
                                         ×
                                     </button>
                                 </div>
                             @endforeach
 
-                            <button
-                                type="button"
+                            <x-filament::button
+                                size="xs"
+                                color="gray"
+                                class="w-full"
                                 wire:click="addPaymentRow"
-                                class="pos-mini-btn"
-                                style="width: 100%; height: 34px; color: #cbd5e1;"
                             >
                                 + Adicionar outra forma de pagamento
-                            </button>
+                            </x-filament::button>
                         </div>
 
-                        <div class="pos-summary-bar">
-                            <span>Informado: <strong style="color: #ffffff;">R$ {{ number_format($paymentSummary['paid'], 2, ',', '.') }}</strong></span>
+                        <div class="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-600 dark:bg-white/5 dark:text-gray-300">
+                            <span>Informado: <strong class="font-bold text-gray-950 dark:text-white">R$ {{ number_format($paymentSummary['paid'], 2, ',', '.') }}</strong></span>
 
                             @if ($paymentSummary['remaining'] > 0)
-                                <span style="color: #fbbf24;">
+                                <span class="font-semibold text-warning-600 dark:text-warning-400">
                                     Falta pagar: R$ {{ number_format($paymentSummary['remaining'], 2, ',', '.') }}
                                 </span>
                             @elseif ($paymentSummary['change'] > 0)
-                                <span style="color: #34d399;">
+                                <span class="font-semibold text-success-600 dark:text-success-400">
                                     Troco: R$ {{ number_format($paymentSummary['change'], 2, ',', '.') }}
                                 </span>
                             @elseif ($paymentSummary['is_valid'])
-                                <span style="color: #34d399;">
+                                <span class="font-semibold text-success-600 dark:text-success-400">
                                     Pagamento fechado ✓
                                 </span>
                             @endif
                         </div>
 
                         @if ($paymentSummary['error'])
-                            <div style="font-size: 12px; font-weight: 700; color: #f87171;">
+                            <div class="text-xs font-semibold text-danger-600 dark:text-danger-400">
                                 {{ $paymentSummary['error'] }}
                             </div>
                         @endif
@@ -772,12 +366,13 @@
                 </div>
 
                 {{-- BOTÃO FINALIZAR --}}
-                <button
-                    type="button"
+                <x-filament::button
+                    color="primary"
+                    size="lg"
+                    class="w-full"
                     wire:click="finalizeSale"
                     wire:loading.attr="disabled"
-                    @disabled($cartItems->isEmpty() || ! $paymentSummary['is_valid'])
-                    class="pos-submit-btn"
+                    :disabled="$cartItems->isEmpty() || ! $paymentSummary['is_valid']"
                 >
                     <span wire:loading.remove wire:target="finalizeSale">
                         Finalizar Venda · R$ {{ number_format($cartTotal, 2, ',', '.') }}
@@ -785,40 +380,40 @@
                     <span wire:loading wire:target="finalizeSale">
                         Registrando venda...
                     </span>
-                </button>
+                </x-filament::button>
             </div>
         </div>
 
         {{-- VENDAS RECENTES DE HOJE --}}
-        <div class="pos-panel">
-            <div class="pos-section-head">
-                <div class="pos-section-title">
-                    <span>Vendas de Balcão Hoje</span>
-                    <span class="pos-count-badge">{{ $todaySales->count() }}</span>
+        <div class="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 px-5 py-4 dark:border-white/10">
+                <div class="flex items-center gap-2">
+                    <h3 class="text-base font-bold text-gray-950 dark:text-white">Vendas de Balcão Hoje</h3>
+                    <x-filament::badge color="primary" size="sm">{{ $todaySales->count() }}</x-filament::badge>
                 </div>
-                <button type="button" wire:click="$toggle('showRecentSales')" class="pos-mini-btn">
+                <x-filament::button size="xs" color="gray" wire:click="$toggle('showRecentSales')">
                     {{ $showRecentSales ? 'Ocultar histórico' : 'Mostrar histórico' }}
-                </button>
+                </x-filament::button>
             </div>
 
             @if ($showRecentSales)
                 @if ($todaySales->isEmpty())
-                    <p style="margin-top: 12px; font-size: 13px; color: #94a3b8;">
+                    <p class="px-5 py-6 text-sm text-gray-500 dark:text-gray-400">
                         Nenhuma venda avulsa registrada hoje ainda.
                     </p>
                 @else
-                    <div style="overflow-x: auto;">
-                        <table class="pos-recent-table">
-                            <thead>
+                    <div class="overflow-x-auto">
+                        <table class="w-full divide-y divide-gray-200 text-left text-sm dark:divide-white/5">
+                            <thead class="bg-gray-50 dark:bg-white/5">
                                 <tr>
-                                    <th>Hora</th>
-                                    <th>Itens</th>
-                                    <th>Cliente / Vendedor</th>
-                                    <th>Pagamento</th>
-                                    <th style="text-align: right;">Total</th>
+                                    <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Hora</th>
+                                    <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Itens</th>
+                                    <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Cliente / Vendedor</th>
+                                    <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Pagamento</th>
+                                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Total</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="divide-y divide-gray-200 dark:divide-white/5">
                                 @foreach ($todaySales as $group)
                                     @php
                                         $first = $group->first();
@@ -827,19 +422,19 @@
                                             ? collect($first->payment_details)->map(fn ($p): string => ($paymentLabels[$p['method'] ?? ''] ?? ucfirst((string) ($p['method'] ?? ''))) . ': R$ ' . number_format((float) ($p['amount'] ?? 0), 2, ',', '.'))->implode(' + ')
                                             : $first->payment_method_label;
                                     @endphp
-                                    <tr>
-                                        <td>{{ $first->created_at?->format('H:i') }}</td>
-                                        <td>
+                                    <tr class="transition hover:bg-gray-50 dark:hover:bg-white/5">
+                                        <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-950 dark:text-white">{{ $first->created_at?->format('H:i') }}</td>
+                                        <td class="px-4 py-3 text-gray-700 dark:text-gray-200">
                                             {{ $group->map(fn ($line): string => "{$line->quantity}x " . ($line->product?->name ?? 'Produto'))->implode(', ') }}
                                         </td>
-                                        <td>
+                                        <td class="px-4 py-3 text-gray-950 dark:text-white">
                                             {{ $first->client_name ?: 'Balcão' }}
                                             @if ($first->professional)
-                                                <span style="color: #94a3b8;">· {{ $first->professional->display_name }}</span>
+                                                <span class="text-gray-500 dark:text-gray-400">· {{ $first->professional->display_name }}</span>
                                             @endif
                                         </td>
-                                        <td>{{ $details }}</td>
-                                        <td style="text-align: right; font-weight: 800; color: #fbbf24;">
+                                        <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ $details }}</td>
+                                        <td class="whitespace-nowrap px-4 py-3 text-right font-bold text-primary-600 dark:text-primary-400">
                                             R$ {{ number_format($groupTotal, 2, ',', '.') }}
                                         </td>
                                     </tr>

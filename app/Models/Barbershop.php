@@ -38,6 +38,7 @@ class Barbershop extends Model
         'is_active',
         // AuroBarber product licensing
         'license_status',
+        'saas_plan_id',
         'license_expires_at',
         'grace_period_days',
         'monthly_price',
@@ -200,9 +201,67 @@ class Barbershop extends Model
         ])->save();
     }
 
+    /**
+     * Verifica se a licença já passou da data de vencimento oficial.
+     */
+    public function isLicenseExpired(): bool
+    {
+        if ($this->license_expires_at === null) {
+            return false;
+        }
+
+        return now()->gt($this->license_expires_at->copy()->endOfDay());
+    }
+
+    /**
+     * Retorna o valor de mensalidade efetivo da barbearia (preço customizado ou preço do plano).
+     */
+    public function effectiveMonthlyPrice(): float
+    {
+        if ((float) $this->monthly_price > 0) {
+            return (float) $this->monthly_price;
+        }
+
+        if ($this->saasPlan && (float) $this->saasPlan->monthly_price > 0) {
+            return (float) $this->saasPlan->monthly_price;
+        }
+
+        return 89.90;
+    }
+
+    /**
+     * Retorna a quantidade de dias padrão para renovação desta barbearia.
+     */
+    public function effectiveRenewalDays(): int
+    {
+        $days = (int) ($this->saasPlan?->renewal_days ?? 30);
+
+        return $days > 0 ? $days : 30;
+    }
+
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    public function saasPlan(): BelongsTo
+    {
+        return $this->belongsTo(SaasPlan::class, 'saas_plan_id');
+    }
+
+    public function paymentSubmissions(): HasMany
+    {
+        return $this->hasMany(SaasPaymentSubmission::class, 'barbershop_id');
+    }
+
+    public function paymentReceipts(): HasMany
+    {
+        return $this->hasMany(SaasPaymentReceipt::class, 'barbershop_id');
+    }
+
+    public function planChangeRequests(): HasMany
+    {
+        return $this->hasMany(SaasPlanChangeRequest::class, 'barbershop_id');
     }
 
     public function parent(): BelongsTo

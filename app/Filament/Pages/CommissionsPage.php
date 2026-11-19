@@ -262,11 +262,11 @@ class CommissionsPage extends Page
                         $totalCommission = $servicesCommission + $productsCommission;
 
                         return new HtmlString(
-                            '<div style="font-size: 13px; line-height: 1.6; color: #cbd5e1; background: #0f172a; padding: 12px 16px; border-radius: 12px; border: 1px solid #1e293b;">'
-                            .'<div><strong>Profissional:</strong> ' . e($prof?->name ?? '—') . '</div>'
-                            .'<div><strong>Comissão de Cortes:</strong> R$ ' . number_format($servicesCommission, 2, ',', '.') . ' (' . $appts->count() . ' atendimentos)</div>'
-                            .'<div><strong>Comissão de Produtos:</strong> R$ ' . number_format($productsCommission, 2, ',', '.') . ' (' . (int) $prodSales->sum('quantity') . ' un.)</div>'
-                            .'<div style="font-size: 15px; margin-top: 6px; padding-top: 6px; border-top: 1px solid #334155;"><strong style="color: #34d399;">Total Líquido a Pagar: R$ ' . number_format($totalCommission, 2, ',', '.') . '</strong></div>'
+                            '<div class="space-y-1 rounded-xl border border-gray-200 bg-gray-50 p-3.5 text-sm leading-relaxed text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-gray-300">'
+                            .'<div><strong class="text-gray-950 dark:text-white">Profissional:</strong> ' . e($prof?->name ?? '—') . '</div>'
+                            .'<div><strong class="text-gray-950 dark:text-white">Comissão de Cortes:</strong> R$ ' . number_format($servicesCommission, 2, ',', '.') . ' (' . $appts->count() . ' atendimentos)</div>'
+                            .'<div><strong class="text-gray-950 dark:text-white">Comissão de Produtos:</strong> R$ ' . number_format($productsCommission, 2, ',', '.') . ' (' . (int) $prodSales->sum('quantity') . ' un.)</div>'
+                            .'<div class="mt-2 border-t border-gray-200 pt-2 text-base dark:border-white/10"><strong class="text-success-600 dark:text-success-400">Total Líquido a Pagar: R$ ' . number_format($totalCommission, 2, ',', '.') . '</strong></div>'
                             .'</div>'
                         );
                     })

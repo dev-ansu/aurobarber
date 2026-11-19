@@ -6,6 +6,7 @@ use App\Models\Appointment;
 use App\Models\Barbershop;
 use App\Models\Professional;
 use App\Models\Service;
+use App\Services\TenantService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,17 +16,51 @@ use Illuminate\View\View;
 class BookingController extends Controller
 {
     /**
+     * Resolve a barbearia ativa pelo slug no schema public e garante a troca
+     * para o schema PostgreSQL isolado do tenant antes de ler/gravar agendamentos.
+     */
+    private function resolveActiveBarbershop(string $slug): Barbershop
+    {
+        $tenantService = app(TenantService::class);
+        $barbershop = null;
+
+        if (app()->bound('current_tenant_barbershop')) {
+            $bound = app('current_tenant_barbershop');
+            if ($bound instanceof Barbershop && $bound->slug === $slug) {
+                $barbershop = $bound;
+            }
+        }
+
+        if (! $barbershop) {
+            $tenantService->switchToPublic();
+            $barbershop = Barbershop::where('slug', $slug)
+                ->where('is_active', true)
+                ->firstOrFail();
+        } elseif (! (bool) $barbershop->is_active) {
+            abort(404);
+        }
+
+        if (! empty($barbershop->schema_name)) {
+            $tenantService->switchToTenant($barbershop->schema_name);
+        } else {
+            $tenantService->switchToPublic();
+        }
+
+        app()->instance('current_tenant_barbershop', $barbershop);
+
+        return $barbershop;
+    }
+
+    /**
      * Exibe a página pública da barbearia / filial.
      */
     public function show(string $slug): View
     {
-        $barbershop = Barbershop::where('slug', $slug)
-            ->where('is_active', true)
-            ->with([
-                'professionals' => fn ($q) => $q->where('is_active', true)->orderBy('display_order'),
-                'services' => fn ($q) => $q->where('is_active', true)->orderBy('display_order'),
-            ])
-            ->firstOrFail();
+        $barbershop = $this->resolveActiveBarbershop($slug);
+        $barbershop->load([
+            'professionals' => fn ($q) => $q->where('is_active', true)->orderBy('display_order'),
+            'services' => fn ($q) => $q->where('is_active', true)->orderBy('display_order'),
+        ]);
 
         return view('barbershop-public', compact('barbershop'));
     }
@@ -42,7 +77,7 @@ class BookingController extends Controller
             'professional_id' => 'nullable|string',
         ]);
 
-        $barbershop = Barbershop::where('slug', $slug)->where('is_active', true)->firstOrFail();
+        $barbershop = $this->resolveActiveBarbershop($slug);
 
         // Extrai a lista de serviços solicitados
         $serviceIds = (array) ($request->service_ids ?: ($request->service_id ? [$request->service_id] : []));
@@ -64,7 +99,7 @@ class BookingController extends Controller
         $openingHours = $barbershop->opening_hours ?? [];
         $openDays = $openingHours['days'] ?? ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 
-        if (!in_array($dayOfWeek, $openDays, true)) {
+        if (! in_array($dayOfWeek, $openDays, true)) {
             return response()->json([
                 'date' => $date,
                 'slots' => [],
@@ -92,6 +127,7 @@ class BookingController extends Controller
         }
         $professionals = $professionals->get()->filter(function ($prof) use ($dayOfWeek) {
             $workingDays = $prof->working_days ?? ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+
             return in_array($dayOfWeek, (array) $workingDays, true);
         });
 
@@ -105,8 +141,8 @@ class BookingController extends Controller
             ]);
         }
 
-        $startTime = Carbon::createFromFormat('Y-m-d H:i', "{$date} " . substr($shopStartTimeStr, 0, 5));
-        $endTime = Carbon::createFromFormat('Y-m-d H:i', "{$date} " . substr($shopEndTimeStr, 0, 5));
+        $startTime = Carbon::createFromFormat('Y-m-d H:i', "{$date} ".substr($shopStartTimeStr, 0, 5));
+        $endTime = Carbon::createFromFormat('Y-m-d H:i', "{$date} ".substr($shopEndTimeStr, 0, 5));
 
         $slots = [];
         $currentTime = $startTime->copy();
@@ -123,6 +159,7 @@ class BookingController extends Controller
             // Não exibe horários passados para hoje
             if ($slotStart->isPast()) {
                 $currentTime->addMinutes($stepMinutes);
+
                 continue;
             }
 
@@ -159,12 +196,12 @@ class BookingController extends Controller
                     ->where(function ($query) use ($slotStart, $slotEnd) {
                         $query->where(function ($q) use ($slotStart, $slotEnd) {
                             $q->where('scheduled_at', '<', $slotEnd)
-                              ->where('ends_at', '>', $slotStart);
+                                ->where('ends_at', '>', $slotStart);
                         });
                     })
                     ->exists();
 
-                if (!$hasConflict) {
+                if (! $hasConflict) {
                     $availableProf = $prof;
                     break;
                 }
@@ -205,7 +242,7 @@ class BookingController extends Controller
             'notes' => 'nullable|string|max:500',
         ]);
 
-        $barbershop = Barbershop::where('slug', $slug)->where('is_active', true)->firstOrFail();
+        $barbershop = $this->resolveActiveBarbershop($slug);
 
         // Extrai serviços
         $serviceIds = (array) ($validated['service_ids'] ?? ($validated['service_id'] ? [$validated['service_id']] : []));
@@ -237,7 +274,7 @@ class BookingController extends Controller
         $openingHours = $barbershop->opening_hours ?? [];
         $openDays = $openingHours['days'] ?? ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 
-        if (!in_array($dayOfWeek, $openDays, true)) {
+        if (! in_array($dayOfWeek, $openDays, true)) {
             return response()->json([
                 'success' => false,
                 'message' => 'A barbearia está fechada neste dia da semana.',
@@ -248,7 +285,7 @@ class BookingController extends Controller
             $professional = null;
 
             // Se escolheu um barbeiro específico
-            if (!empty($validated['professional_id']) && $validated['professional_id'] !== 'any') {
+            if (! empty($validated['professional_id']) && $validated['professional_id'] !== 'any') {
                 $profCandidate = Professional::where('id', $validated['professional_id'])
                     ->where('barbershop_id', $barbershop->id)
                     ->where('is_active', true)
@@ -257,7 +294,7 @@ class BookingController extends Controller
 
                 // Verifica se o profissional atende neste dia da semana
                 $workingDays = $profCandidate->working_days ?? ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
-                if (!in_array($dayOfWeek, (array) $workingDays, true)) {
+                if (! in_array($dayOfWeek, (array) $workingDays, true)) {
                     return response()->json([
                         'success' => false,
                         'message' => 'O profissional selecionado não atende neste dia.',
@@ -297,7 +334,7 @@ class BookingController extends Controller
                     ->where('status', '!=', 'cancelled')
                     ->where(function ($query) use ($scheduledAt, $endsAt) {
                         $query->where('scheduled_at', '<', $endsAt)
-                              ->where('ends_at', '>', $scheduledAt);
+                            ->where('ends_at', '>', $scheduledAt);
                     })
                     ->exists();
 
@@ -319,7 +356,7 @@ class BookingController extends Controller
 
                 foreach ($candidates as $candidate) {
                     $workingDays = $candidate->working_days ?? ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
-                    if (!in_array($dayOfWeek, (array) $workingDays, true)) {
+                    if (! in_array($dayOfWeek, (array) $workingDays, true)) {
                         continue;
                     }
 
@@ -348,17 +385,17 @@ class BookingController extends Controller
                         ->where('status', '!=', 'cancelled')
                         ->where(function ($query) use ($scheduledAt, $endsAt) {
                             $query->where('scheduled_at', '<', $endsAt)
-                                  ->where('ends_at', '>', $scheduledAt);
+                                ->where('ends_at', '>', $scheduledAt);
                         })
                         ->exists();
 
-                    if (!$conflict) {
+                    if (! $conflict) {
                         $professional = $candidate;
                         break;
                     }
                 }
 
-                if (!$professional) {
+                if (! $professional) {
                     return response()->json([
                         'success' => false,
                         'message' => 'Todos os barbeiros estão ocupados neste horário para a duração dos serviços escolhidos. Por favor, escolha outro horário.',
@@ -400,26 +437,26 @@ class BookingController extends Controller
             // Formatação da mensagem para o WhatsApp
             $dateFormatted = $scheduledAt->format('d/m/Y');
             $timeFormatted = $scheduledAt->format('H:i');
-            $priceFormatted = 'R$ ' . number_format($totalPrice, 2, ',', '.');
+            $priceFormatted = 'R$ '.number_format($totalPrice, 2, ',', '.');
 
             $servicesLines = [];
             foreach ($services as $s) {
-                $servicesLines[] = "• {$s->name} (R$ " . number_format($s->price, 2, ',', '.') . " - {$s->duration_minutes} min)";
+                $servicesLines[] = "• {$s->name} (R$ ".number_format($s->price, 2, ',', '.')." - {$s->duration_minutes} min)";
             }
             $servicesText = implode("\n", $servicesLines);
 
             $msg = "Olá! Acabei de agendar um horário na *{$barbershop->name}*!\n\n"
-                 . "🔖 *Protocolo:* #{$appointment->id}\n"
-                 . "✂️ *Serviço(s):*\n{$servicesText}\n"
-                 . "💈 *Barbeiro:* {$professional->display_name}\n"
-                 . "📅 *Data:* {$dateFormatted}\n"
-                 . "⏰ *Horário:* {$timeFormatted} (Duração: {$totalDuration} min)\n"
-                 . "💰 *Total:* {$priceFormatted}\n"
-                 . "👤 *Cliente:* {$appointment->client_name} ({$appointment->client_phone})";
+                 ."🔖 *Protocolo:* #{$appointment->id}\n"
+                 ."✂️ *Serviço(s):*\n{$servicesText}\n"
+                 ."💈 *Barbeiro:* {$professional->display_name}\n"
+                 ."📅 *Data:* {$dateFormatted}\n"
+                 ."⏰ *Horário:* {$timeFormatted} (Duração: {$totalDuration} min)\n"
+                 ."💰 *Total:* {$priceFormatted}\n"
+                 ."👤 *Cliente:* {$appointment->client_name} ({$appointment->client_phone})";
 
             $whatsappUrl = null;
             if ($barbershop->formatted_whatsapp) {
-                $whatsappUrl = 'https://api.whatsapp.com/send?phone=' . $barbershop->formatted_whatsapp . '&text=' . urlencode($msg);
+                $whatsappUrl = 'https://api.whatsapp.com/send?phone='.$barbershop->formatted_whatsapp.'&text='.urlencode($msg);
             }
 
             return response()->json([

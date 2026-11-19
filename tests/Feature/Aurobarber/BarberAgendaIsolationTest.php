@@ -143,6 +143,7 @@ test('a shop owner can create a quick appointment from the daily schedule using 
         'is_active' => true,
     ]));
     $service = $services->last();
+    $secondService = $services->first();
 
     Filament::setTenant($barbershop, isQuiet: true);
     $this->actingAs($owner);
@@ -158,19 +159,25 @@ test('a shop owner can create a quick appointment from the daily schedule using 
         ])
         ->fillForm([
             'professional_id' => $professional->id,
-            'service_id' => $service->id,
+            'service_ids' => [$secondService->id, $service->id],
             'scheduled_at' => now()->setTime(14, 0)->toDateTimeString(),
             'client_name' => 'Cliente Balcão',
             'client_phone' => '85999999999',
         ])
         ->callMountedAction();
 
-    $appointment = Appointment::query()->where('client_name', 'Cliente Balcão')->sole();
+    $appointment = Appointment::query()
+        ->with('services')
+        ->where('client_name', 'Cliente Balcão')
+        ->sole();
+
+    $expectedPrice = (float) $secondService->price + (float) $service->price;
 
     expect($appointment->barbershop_id)->toBe($barbershop->id)
         ->and($appointment->professional_id)->toBe($professional->id)
-        ->and($appointment->service_id)->toBe($service->id)
+        ->and($appointment->services->pluck('id')->sort()->values()->all())->toBe(collect([$secondService->id, $service->id])->sort()->values()->all())
+        ->and((float) $appointment->service_price)->toBe($expectedPrice)
         ->and($appointment->scheduled_at->format('H:i'))->toBe('14:00')
-        ->and($appointment->ends_at->format('H:i'))->toBe('14:30')
+        ->and($appointment->ends_at->format('H:i'))->toBe('15:00')
         ->and($appointment->status)->toBe('confirmed');
 });

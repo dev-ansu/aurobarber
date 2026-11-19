@@ -116,18 +116,18 @@ class ForcePasswordChange extends Page implements HasForms
                                 \Filament\Forms\Components\Placeholder::make('security_guidelines')
                                     ->label('Boas Práticas de Proteção e Privacidade')
                                     ->content(new \Illuminate\Support\HtmlString('
-                                        <div style="display: flex; flex-direction: column; gap: 14px; color: #cbd5e1; font-size: 14px; line-height: 1.6; padding: 8px 0;">
-                                            <div style="display: flex; align-items: flex-start; gap: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 14px 18px;">
-                                                <span style="color: #10b981; font-weight: bold; font-size: 16px;">✓</span>
-                                                <div><strong>Complexidade Forte:</strong> Crie uma senha exclusiva combinando letras maiúsculas, minúsculas, números e símbolos especiais (ex: @, #, $, !).</div>
+                                        <div class="flex flex-col gap-3 py-2 text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+                                            <div class="flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/5">
+                                                <span class="text-base font-bold text-success-600 dark:text-success-400">✓</span>
+                                                <div><strong class="text-gray-950 dark:text-white">Complexidade Forte:</strong> Crie uma senha exclusiva combinando letras maiúsculas, minúsculas, números e símbolos especiais (ex: @, #, $, !).</div>
                                             </div>
-                                            <div style="display: flex; align-items: flex-start; gap: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 14px 18px;">
-                                                <span style="color: #10b981; font-weight: bold; font-size: 16px;">✓</span>
-                                                <div><strong>Credencial Pessoal e Exclusiva:</strong> Não compartilhe suas credenciais com terceiros. Cada membro de sua equipe possui acesso próprio parametrizado.</div>
+                                            <div class="flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/5">
+                                                <span class="text-base font-bold text-success-600 dark:text-success-400">✓</span>
+                                                <div><strong class="text-gray-950 dark:text-white">Credencial Pessoal e Exclusiva:</strong> Não compartilhe suas credenciais com terceiros. Cada membro de sua equipe possui acesso próprio parametrizado.</div>
                                             </div>
-                                            <div style="display: flex; align-items: flex-start; gap: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 14px 18px;">
-                                                <span style="color: #10b981; font-weight: bold; font-size: 16px;">✓</span>
-                                                <div><strong>Criptografia no Padrão Bancário:</strong> O AuroBarber protege seus dados com hash unidirecional seguro e auditoria ativa de segurança.</div>
+                                            <div class="flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/5">
+                                                <span class="text-base font-bold text-success-600 dark:text-success-400">✓</span>
+                                                <div><strong class="text-gray-950 dark:text-white">Criptografia no Padrão Bancário:</strong> O AuroBarber protege seus dados com hash unidirecional seguro e auditoria ativa de segurança.</div>
                                             </div>
                                         </div>
                                     '))

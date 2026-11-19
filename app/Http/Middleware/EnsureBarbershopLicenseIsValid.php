@@ -40,9 +40,13 @@ class EnsureBarbershopLicenseIsValid
 
         $user = auth()->user();
 
-        // Rotas liberadas dentro do tenant: tela de bloqueio e logout
+        // Rotas liberadas dentro do tenant: tela de bloqueio, página de assinatura/pagamento e logout
         if ($request->routeIs('filament.admin.tenant.pages.tenant-license-blocked') ||
+            $request->routeIs('filament.admin.pages.client-subscription-page') ||
+            $request->routeIs('tenant.billing.payments.store') ||
             $request->is('*/licenca-bloqueada*') ||
+            $request->is('*/planos-de-licenciamento*') ||
+            $request->is('*/assinatura/comprovante*') ||
             $request->is('*/logout*') ||
             $request->is('logout')
         ) {

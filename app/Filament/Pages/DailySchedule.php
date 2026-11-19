@@ -197,9 +197,9 @@ class DailySchedule extends Page
                 Placeholder::make('client_summary')
                     ->label('Atendimento')
                     ->content(fn ($get) => new HtmlString(
-                        '<div style="font-size: 13px; line-height: 1.6; color: #cbd5e1; background: #0f172a; padding: 12px 16px; border-radius: 12px; border: 1px solid #1e293b;">'
-                        .'<div><strong style="color: #94a3b8;">Cliente:</strong> <span style="color: #ffffff; font-weight: 700;">'.e($get('client_name') ?: '—').'</span></div>'
-                        .'<div><strong style="color: #94a3b8;">Serviço(s):</strong> <span style="color: #fbbf24; font-weight: 700;">'.e($get('services_summary') ?: '—').'</span></div>'
+                        '<div class="space-y-1 rounded-xl border border-gray-200 bg-gray-50 p-3.5 text-sm leading-relaxed text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-gray-300">'
+                        .'<div><strong class="text-gray-500 dark:text-gray-400">Cliente:</strong> <span class="font-semibold text-gray-950 dark:text-white">'.e($get('client_name') ?: '—').'</span></div>'
+                        .'<div><strong class="text-gray-500 dark:text-gray-400">Serviço(s):</strong> <span class="font-semibold text-primary-600 dark:text-primary-400">'.e($get('services_summary') ?: '—').'</span></div>'
                         .'</div>'
                     ))
                     ->columnSpanFull(),
@@ -404,8 +404,8 @@ class DailySchedule extends Page
                                     ->required()
                                     ->columnSpanFull(),
 
-                                Select::make('service_id')
-                                    ->label('Serviço')
+                                Select::make('service_ids')
+                                    ->label('Serviço(s)')
                                     ->options(fn (): array => $this->services
                                         ->mapWithKeys(fn ($service): array => [
                                             $service->id => $service->name
@@ -413,9 +413,41 @@ class DailySchedule extends Page
                                                 .' ('.$service->duration_minutes.' min)',
                                         ])
                                         ->all())
+                                    ->multiple()
                                     ->searchable()
                                     ->dynamicOptions(false)
+                                    ->live()
                                     ->required()
+                                    ->minItems(1)
+                                    ->placeholder('Selecione um ou mais serviços')
+                                    ->helperText('Você pode selecionar mais de um serviço para o mesmo encaixe. O valor e a duração total serão somados automaticamente.')
+                                    ->columnSpanFull(),
+
+                                Placeholder::make('quick_services_summary')
+                                    ->label('Resumo dos serviços selecionados')
+                                    ->content(function (Get $get): HtmlString {
+                                        $selectedIds = collect((array) $get('service_ids'))
+                                            ->map(fn ($id): int => (int) $id)
+                                            ->filter()
+                                            ->unique()
+                                            ->all();
+
+                                        if (empty($selectedIds)) {
+                                            return new HtmlString('<span class="text-xs text-gray-500 dark:text-gray-400">Selecione ao menos um serviço acima.</span>');
+                                        }
+
+                                        $selectedServices = $this->services->whereIn('id', $selectedIds);
+                                        $totalPrice = (float) $selectedServices->sum('price');
+                                        $totalDuration = (int) ($selectedServices->sum('duration_minutes') ?: 30);
+                                        $count = $selectedServices->count();
+
+                                        return new HtmlString(
+                                            '<div class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm dark:border-white/10 dark:bg-white/5">'
+                                            .'<span class="text-gray-600 dark:text-gray-300"><strong>'.$count.'</strong> '.($count === 1 ? 'serviço' : 'serviços').' • Duração total: <strong>'.$totalDuration.' min</strong></span>'
+                                            .'<span class="font-bold text-primary-600 dark:text-primary-400">Total: R$ '.number_format($totalPrice, 2, ',', '.').'</span>'
+                                            .'</div>'
+                                        );
+                                    })
                                     ->columnSpanFull(),
 
                                 DateTimePicker::make('scheduled_at')
@@ -452,10 +484,11 @@ class DailySchedule extends Page
                     ? (int) $arguments['professionalId']
                     : $this->professionals->first()?->id;
                 $defaultTime = $arguments['time'] ?? '14:00';
+                $firstServiceId = $this->services->first()?->id;
 
                 $schema->fill([
                     'professional_id' => $defaultProfessionalId,
-                    'service_id' => $this->services->first()?->id,
+                    'service_ids' => $firstServiceId ? [$firstServiceId] : [],
                     'scheduled_at' => Carbon::parse("{$this->selectedDate} {$defaultTime}"),
                 ]);
             })
@@ -470,10 +503,22 @@ class DailySchedule extends Page
                     return;
                 }
 
-                $service = $tenant->services()->find($data['service_id']);
-                if (! $service) {
+                $serviceIds = collect((array) ($data['service_ids'] ?? []))
+                    ->map(fn ($id): int => (int) $id)
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->all();
+
+                $services = $tenant->services()
+                    ->where('is_active', true)
+                    ->whereIn('id', $serviceIds)
+                    ->orderBy('display_order')
+                    ->get();
+
+                if ($services->isEmpty()) {
                     Notification::make()
-                        ->title('Serviço selecionado inválido ou inativo.')
+                        ->title('Selecione pelo menos um serviço válido e ativo.')
                         ->warning()
                         ->send();
 
@@ -505,35 +550,42 @@ class DailySchedule extends Page
                     return;
                 }
 
+                $primaryService = $services->first();
+                $totalPrice = (float) $services->sum('price');
+                $totalDuration = (int) ($services->sum('duration_minutes') ?: 30);
+
                 $scheduledAt = Carbon::parse($data['scheduled_at']);
                 $commissionRate = $professional->commission_rate ?: 50.00;
-                $commissionAmount = round(((float) $service->price * $commissionRate) / 100, 2);
+                $commissionAmount = round(($totalPrice * $commissionRate) / 100, 2);
 
                 $appointment = Appointment::create([
                     'barbershop_id' => $tenant->id,
                     'professional_id' => $professional->id,
-                    'service_id' => $service->id,
+                    'service_id' => $primaryService->id,
                     'client_name' => trim($data['client_name']),
                     'client_phone' => trim($data['client_phone']),
                     'scheduled_at' => $scheduledAt,
-                    'ends_at' => $scheduledAt->copy()->addMinutes($service->duration_minutes),
+                    'ends_at' => $scheduledAt->copy()->addMinutes($totalDuration),
                     'status' => 'confirmed',
-                    'service_price' => $service->price,
+                    'service_price' => $totalPrice,
                     'commission_rate' => $commissionRate,
                     'commission_amount' => $commissionAmount,
                     'payment_status' => 'pending',
                     'notes' => 'Encaixe rápido realizado via painel',
                 ]);
 
-                $appointment->services()->sync([
-                    $service->id => [
-                        'price' => $service->price,
-                        'duration_minutes' => $service->duration_minutes,
-                    ],
-                ]);
+                $syncData = [];
+                foreach ($services as $srv) {
+                    $syncData[$srv->id] = [
+                        'price' => $srv->price,
+                        'duration_minutes' => $srv->duration_minutes,
+                    ];
+                }
+                $appointment->services()->sync($syncData);
 
                 Notification::make()
                     ->title('Encaixe agendado com sucesso para '.$professional->display_name)
+                    ->body($services->pluck('name')->join(' + ').' • R$ '.number_format($totalPrice, 2, ',', '.'))
                     ->success()
                     ->send();
             });
@@ -564,8 +616,8 @@ class DailySchedule extends Page
                                     ->required()
                                     ->columnSpanFull(),
 
-                                Select::make('service_id')
-                                    ->label('Serviço')
+                                Select::make('service_ids')
+                                    ->label('Serviço(s)')
                                     ->options(fn (): array => $this->services
                                         ->mapWithKeys(fn ($service): array => [
                                             $service->id => $service->name
@@ -573,9 +625,39 @@ class DailySchedule extends Page
                                                 .' ('.$service->duration_minutes.' min)',
                                         ])
                                         ->all())
+                                    ->multiple()
                                     ->searchable()
                                     ->dynamicOptions(false)
+                                    ->live()
                                     ->required()
+                                    ->minItems(1)
+                                    ->columnSpanFull(),
+
+                                Placeholder::make('edit_services_summary')
+                                    ->label('Resumo dos serviços selecionados')
+                                    ->content(function (Get $get): HtmlString {
+                                        $selectedIds = collect((array) $get('service_ids'))
+                                            ->map(fn ($id): int => (int) $id)
+                                            ->filter()
+                                            ->unique()
+                                            ->all();
+
+                                        if (empty($selectedIds)) {
+                                            return new HtmlString('<span class="text-xs text-gray-500 dark:text-gray-400">Selecione ao menos um serviço acima.</span>');
+                                        }
+
+                                        $selectedServices = $this->services->whereIn('id', $selectedIds);
+                                        $totalPrice = (float) $selectedServices->sum('price');
+                                        $totalDuration = (int) ($selectedServices->sum('duration_minutes') ?: 30);
+                                        $count = $selectedServices->count();
+
+                                        return new HtmlString(
+                                            '<div class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm dark:border-white/10 dark:bg-white/5">'
+                                            .'<span class="text-gray-600 dark:text-gray-300"><strong>'.$count.'</strong> '.($count === 1 ? 'serviço' : 'serviços').' • Duração total: <strong>'.$totalDuration.' min</strong></span>'
+                                            .'<span class="font-bold text-primary-600 dark:text-primary-400">Total: R$ '.number_format($totalPrice, 2, ',', '.').'</span>'
+                                            .'</div>'
+                                        );
+                                    })
                                     ->columnSpanFull(),
 
                                 DateTimePicker::make('scheduled_at')
@@ -629,10 +711,16 @@ class DailySchedule extends Page
                     return;
                 }
 
+                $appt->loadMissing('services');
+                $currentServiceIds = $appt->services->pluck('id')->all();
+                if (empty($currentServiceIds) && $appt->service_id) {
+                    $currentServiceIds = [$appt->service_id];
+                }
+
                 $schema->fill([
                     'appointment_id' => $appt->id,
                     'professional_id' => $appt->professional_id,
-                    'service_id' => $appt->service_id,
+                    'service_ids' => $currentServiceIds,
                     'scheduled_at' => $appt->scheduled_at,
                     'client_name' => $appt->client_name,
                     'client_phone' => $appt->client_phone,
@@ -659,40 +747,59 @@ class DailySchedule extends Page
                     return;
                 }
 
-                $service = $tenant->services()->find($data['service_id']);
-                if (! $service) {
-                    Notification::make()->title('Serviço não encontrado.')->warning()->send();
+                $serviceIds = collect((array) ($data['service_ids'] ?? []))
+                    ->map(fn ($id): int => (int) $id)
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->all();
+
+                $services = $tenant->services()
+                    ->whereIn('id', $serviceIds)
+                    ->orderBy('display_order')
+                    ->get();
+
+                if ($services->isEmpty()) {
+                    Notification::make()->title('Selecione pelo menos um serviço válido.')->warning()->send();
+
                     return;
                 }
 
                 $professional = $tenant->professionals()->where('is_active', true)->find($data['professional_id']);
                 if (! $professional) {
                     Notification::make()->title('Barbeiro não encontrado.')->warning()->send();
+
                     return;
                 }
 
+                $primaryService = $services->first();
+                $totalPrice = (float) $services->sum('price');
+                $totalDuration = (int) ($services->sum('duration_minutes') ?: 30);
+
                 $scheduledAt = Carbon::parse($data['scheduled_at']);
                 $commissionRate = $professional->commission_rate ?: 50.00;
-                $commissionAmount = round(((float) $service->price * $commissionRate) / 100, 2);
+                $commissionAmount = round(($totalPrice * $commissionRate) / 100, 2);
 
                 $appt->update([
                     'professional_id' => $professional->id,
-                    'service_id' => $service->id,
+                    'service_id' => $primaryService->id,
                     'client_name' => trim($data['client_name']),
                     'client_phone' => isset($data['client_phone']) ? trim((string) $data['client_phone']) : $appt->client_phone,
                     'scheduled_at' => $scheduledAt,
-                    'ends_at' => $scheduledAt->copy()->addMinutes($service->duration_minutes),
-                    'service_price' => $service->price,
+                    'ends_at' => $scheduledAt->copy()->addMinutes($totalDuration),
+                    'service_price' => $totalPrice,
                     'commission_rate' => $commissionRate,
                     'commission_amount' => $commissionAmount,
                 ]);
 
-                $appt->services()->sync([
-                    $service->id => [
-                        'price' => $service->price,
-                        'duration_minutes' => $service->duration_minutes,
-                    ],
-                ]);
+                $syncData = [];
+                foreach ($services as $srv) {
+                    $syncData[$srv->id] = [
+                        'price' => $srv->price,
+                        'duration_minutes' => $srv->duration_minutes,
+                    ];
+                }
+                $appt->services()->sync($syncData);
 
                 Notification::make()
                     ->title('Agendamento atualizado com sucesso!')

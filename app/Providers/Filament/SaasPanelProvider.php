@@ -8,8 +8,15 @@ use App\Filament\Auth\EditOwnProfile;
 use App\Filament\Pages\Auth\ForcePasswordChange;
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Resources\BarbershopResource;
+use App\Filament\Saas\Pages\SaasBackups;
+use App\Filament\Saas\Pages\SaasBillingSettingsPage;
 use App\Filament\Saas\Pages\SaasDashboard;
+use App\Filament\Saas\Pages\SaasLogs;
 use App\Filament\Saas\Pages\SaasSupportSettings;
+use App\Filament\Saas\Resources\Payments\SaasPaymentSubmissionResource;
+use App\Filament\Saas\Resources\PlanChangeRequests\SaasPlanChangeRequestResource;
+use App\Filament\Saas\Resources\SaasPaymentReceipts\SaasPaymentReceiptResource;
+use App\Filament\Saas\Resources\SaasPlans\SaasPlanResource;
 use App\Http\Middleware\EnsurePasswordIsChanged;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Auth\MultiFactor\Email\EmailAuthentication;
@@ -81,13 +88,18 @@ class SaasPanelProvider extends PanelProvider
             ])
             ->pages([
                 SaasDashboard::class,
-                \App\Filament\Saas\Pages\SaasBackups::class,
-                \App\Filament\Saas\Pages\SaasLogs::class,
+                SaasBillingSettingsPage::class,
+                SaasBackups::class,
+                SaasLogs::class,
                 SaasSupportSettings::class,
                 ForcePasswordChange::class,
             ])
             ->resources([
                 BarbershopResource::class,
+                SaasPlanResource::class,
+                SaasPaymentSubmissionResource::class,
+                SaasPaymentReceiptResource::class,
+                SaasPlanChangeRequestResource::class,
             ])
             ->middleware([
                 EncryptCookies::class,

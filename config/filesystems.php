@@ -38,6 +38,14 @@ return [
             'report' => false,
         ],
 
+        'saas_private' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/saas'),
+            'serve' => false,
+            'throw' => false,
+            'report' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
