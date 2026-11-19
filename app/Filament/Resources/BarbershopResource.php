@@ -69,6 +69,15 @@ class BarbershopResource extends Resource
                                     ->maxLength(255)
                                     ->columnSpanFull(),
 
+                                Forms\Components\Select::make('parent_id')
+                                    ->label('Vínculo de Rede: Barbearia Matriz (Opcional)')
+                                    ->placeholder('Esta unidade é uma Barbearia Matriz / Independente')
+                                    ->relationship('parent', 'name', fn (Builder $query, ?Barbershop $record) => $query->whereNull('parent_id')->when($record, fn ($q) => $q->where('id', '!=', $record->id)))
+                                    ->searchable()
+                                    ->preload()
+                                    ->helperText('Se esta unidade for uma filial de outra barbearia, selecione a matriz aqui. Filiais compartilham a assinatura e limites da matriz.')
+                                    ->columnSpanFull(),
+
                                 Forms\Components\TextInput::make('slug')
                                     ->label('Link Exclusivo (Slug)')
                                     ->prefix('barber.aurosoft.com.br/')
@@ -121,7 +130,7 @@ class BarbershopResource extends Resource
                                         'new' => 'Cadastrar Novo Dono de Barbearia (Gera senha temporária e envia por e-mail)',
                                         'existing' => 'Vincular a Usuário Já Cadastrado no Sistema',
                                     ])
-                                    ->default('new')
+                                    ->default(fn (?Barbershop $record): string => $record?->owner_id ? 'existing' : 'new')
                                     ->live()
                                     ->columnSpanFull(),
 
@@ -165,12 +174,35 @@ class BarbershopResource extends Resource
 
                                 Forms\Components\Select::make('owner_id')
                                     ->label('Selecione o Usuário Proprietário')
-                                    ->relationship('owner', 'name')
+                                    ->relationship(
+                                        name: 'owner',
+                                        titleAttribute: 'name',
+                                        modifyQueryUsing: function (Builder $query, ?Barbershop $record): Builder {
+                                            return $query
+                                                ->where('is_active', true)
+                                                ->whereIn('role', ['owner', 'master_admin'])
+                                                ->whereDoesntHave('professional')
+                                                ->where(function (Builder $sub) use ($record) {
+                                                    $sub->whereHas('ownedBarbershops', fn (Builder $q) => $q->withoutTrashed())
+                                                        ->orWhereHas('barbershops', fn (Builder $q) => $q->withoutTrashed());
+
+                                                    if ($record?->owner_id) {
+                                                        $sub->orWhere('users.id', $record->owner_id);
+                                                    }
+                                                });
+                                        }
+                                    )
                                     ->searchable()
                                     ->preload()
                                     ->required(fn ($get) => $get('owner_type') === 'existing')
                                     ->visible(fn ($get) => $get('owner_type') === 'existing')
-                                    ->getOptionLabelFromRecordUsing(fn (User $record): string => "{$record->name} ({$record->email})")
+                                    ->getOptionLabelFromRecordUsing(function (User $record): string {
+                                        $primaryShop = $record->ownedBarbershops()->withoutTrashed()->first();
+                                        $shopInfo = $primaryShop ? " • Barbearia: {$primaryShop->name}" : '';
+
+                                        return "{$record->name} ({$record->email}){$shopInfo}";
+                                    })
+                                    ->helperText('Apenas proprietários ativos vinculados a barbearias ativas são listados. Profissionais da equipe e contas de testes excluídos são omitidos.')
                                     ->columnSpanFull(),
                             ]),
 
@@ -326,7 +358,38 @@ class BarbershopResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->weight('bold')
-                    ->description(fn (Barbershop $record): string => "barber.aurosoft.com.br/{$record->slug}"),
+                    ->description(function (Barbershop $record): string {
+                        $desc = "barber.aurosoft.com.br/{$record->slug}";
+                        if ($record->isBranch()) {
+                            $parentName = $record->parent?->name ?? 'Matriz';
+                            $desc .= " • ↳ Filial de {$parentName}";
+                        } elseif ($record->relationLoaded('branches') && $record->branches->isNotEmpty()) {
+                            $count = $record->branches->count();
+                            $desc .= " • Matriz com {$count} ".($count === 1 ? 'filial' : 'filiais');
+                        }
+
+                        return $desc;
+                    }),
+
+                Tables\Columns\TextColumn::make('unit_type')
+                    ->label('Tipo')
+                    ->badge()
+                    ->state(function (Barbershop $record): string {
+                        if ($record->isBranch()) {
+                            return 'Filial';
+                        }
+                        $count = $record->relationLoaded('branches')
+                            ? $record->branches->count()
+                            : $record->branches()->count();
+
+                        return $count > 0 ? "Matriz ({$count} filiais)" : 'Matriz';
+                    })
+                    ->color(fn (Barbershop $record): string => match (true) {
+                        $record->isBranch() => 'warning',
+                        ($record->relationLoaded('branches') ? $record->branches->count() : $record->branches()->count()) > 0 => 'info',
+                        default => 'gray',
+                    })
+                    ->description(fn (Barbershop $record): ?string => $record->isBranch() && $record->parent ? "Matriz: {$record->parent->name}" : null),
 
                 Tables\Columns\TextColumn::make('owner.name')
                     ->label('Proprietário')
@@ -395,6 +458,9 @@ class BarbershopResource extends Resource
                     ->label('Unidades')
                     ->badge()
                     ->state(function (Barbershop $record): string {
+                        if ($record->isBranch()) {
+                            return 'Filial (Rede)';
+                        }
                         if ($record->hasUnrestrictedAccess()) {
                             return 'VIP (Ilimitado)';
                         }
@@ -403,19 +469,29 @@ class BarbershopResource extends Resource
 
                         return "{$current}/{$allowed} un.";
                     })
-                    ->color(function (Barbershop $record): string {
-                        if ($record->hasUnrestrictedAccess()) {
-                            return 'success';
+                    ->color(fn (Barbershop $record): string => match (true) {
+                        $record->isBranch() => 'gray',
+                        $record->hasUnrestrictedAccess() => 'success',
+                        default => ($record->getCurrentUnitsCount() >= $record->getAllowedUnits() ? 'warning' : 'info'),
+                    })
+                    ->description(function (Barbershop $record): ?string {
+                        if ($record->isBranch() && $record->parent) {
+                            return "Cota Matriz: {$record->getCurrentUnitsCount()}/{$record->getAllowedUnits()} un.";
                         }
-                        $allowed = $record->getAllowedUnits();
-                        $current = $record->getCurrentUnitsCount();
 
-                        return $current >= $allowed ? 'warning' : 'info';
+                        return null;
                     }),
 
                 Tables\Columns\TextColumn::make('monthly_price')
                     ->label('Mensalidade')
-                    ->money('BRL')
+                    ->formatStateUsing(function (Barbershop $record, $state): string {
+                        if ($record->isBranch()) {
+                            return 'Incluso na Matriz';
+                        }
+
+                        return 'R$ '.number_format((float) $state, 2, ',', '.');
+                    })
+                    ->color(fn (Barbershop $record): ?string => $record->isBranch() ? 'gray' : null)
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('schema_name')
@@ -430,6 +506,29 @@ class BarbershopResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                Tables\Filters\SelectFilter::make('unit_type')
+                    ->label('Tipo de Unidade')
+                    ->options([
+                        'matriz' => 'Apenas Barbearias Matrizes (Independentes)',
+                        'branch' => 'Apenas Filiais de Redes',
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        if (($data['value'] ?? null) === 'matriz') {
+                            return $query->whereNull('parent_id');
+                        }
+                        if (($data['value'] ?? null) === 'branch') {
+                            return $query->whereNotNull('parent_id');
+                        }
+
+                        return $query;
+                    }),
+
+                Tables\Filters\SelectFilter::make('parent_id')
+                    ->label('Filtrar por Matriz')
+                    ->relationship('parent', 'name', fn (Builder $q) => $q->whereNull('parent_id'))
+                    ->searchable()
+                    ->preload(),
+
                 TrashedFilter::make(),
             ])
             ->actions([
@@ -542,15 +641,41 @@ class BarbershopResource extends Resource
 
                 EditAction::make(),
                 DeleteAction::make()
-                    ->label('Lixeira'),
-                RestoreAction::make(),
-                ForceDeleteAction::make(),
+                    ->label('Lixeira')
+                    ->after(function (Barbershop $record): void {
+                        if ($record->owner_id && ($owner = User::find($record->owner_id))) {
+                            $hasOtherActiveShops = $owner->ownedBarbershops()->withoutTrashed()->where('id', '!=', $record->id)->exists()
+                                || $owner->barbershops()->withoutTrashed()->where('barbershops.id', '!=', $record->id)->exists();
+
+                            if (! $hasOtherActiveShops && $owner->role !== 'master_admin') {
+                                $owner->update(['is_active' => false]);
+                            }
+                        }
+                    }),
+                RestoreAction::make()
+                    ->after(function (Barbershop $record): void {
+                        if ($record->owner_id && ($owner = User::find($record->owner_id))) {
+                            $owner->update(['is_active' => true]);
+                        }
+                    }),
+                ForceDeleteAction::make()
+                    ->after(function (Barbershop $record): void {
+                        if ($record->owner_id && ($owner = User::find($record->owner_id))) {
+                            $hasOtherShops = $owner->ownedBarbershops()->withTrashed()->where('id', '!=', $record->id)->exists()
+                                || $owner->barbershops()->withTrashed()->where('barbershops.id', '!=', $record->id)->exists();
+
+                            if (! $hasOtherShops && $owner->role !== 'master_admin') {
+                                $owner->delete();
+                            }
+                        }
+                    }),
             ]);
     }
 
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
+            ->with(['parent', 'branches'])
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);

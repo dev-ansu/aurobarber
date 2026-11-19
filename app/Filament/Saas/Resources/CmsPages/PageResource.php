@@ -104,8 +104,13 @@ class PageResource extends Resource
                                     FileUpload::make('og_image')
                                         ->label('Imagem OpenGraph (Preview Social)')
                                         ->image()
+                                        ->disk('public')
                                         ->directory('cms/og-images')
                                         ->visibility('public')
+                                        ->imageEditor()
+                                        ->openable()
+                                        ->downloadable()
+                                        ->helperText('Recomendado: 1200x630px. Exibida ao compartilhar o link no WhatsApp, Instagram, Facebook e Google.')
                                         ->columnSpan(2),
                                 ])
                                 ->columns(4),
@@ -151,7 +156,7 @@ class PageResource extends Resource
                     ->color('warning')
                     ->searchable()
                     ->sortable()
-                    ->formatStateUsing(fn ($state) => $state === '/' ? '/ (Home)' : '/' . ltrim((string) $state, '/')),
+                    ->formatStateUsing(fn ($state) => $state === '/' ? '/ (Home)' : '/'.ltrim((string) $state, '/')),
                 IconColumn::make('is_published')
                     ->label('Publicado')
                     ->boolean()
@@ -212,8 +217,12 @@ class PageResource extends Resource
                 FileUpload::make('preview_image')
                     ->label('Mockup / Screenshot da Plataforma')
                     ->image()
+                    ->disk('public')
                     ->directory('cms/hero')
                     ->visibility('public')
+                    ->imageEditor()
+                    ->openable()
+                    ->downloadable()
                     ->columnSpanFull(),
                 Repeater::make('highlight_metrics')
                     ->label('Métricas em Destaque no Hero')
@@ -248,7 +257,16 @@ class PageResource extends Resource
                         TextInput::make('title')->label('Título')->required()->columnSpan(2),
                         Textarea::make('description')->label('Descrição')->rows(2)->required()->columnSpanFull(),
                         TagsInput::make('benefits')->label('Pontos Fortes (Checkmarks)')->columnSpanFull(),
-                        FileUpload::make('image')->label('Imagem / Print')->image()->directory('cms/features')->visibility('public')->columnSpanFull(),
+                        FileUpload::make('image')
+                            ->label('Imagem / Print')
+                            ->image()
+                            ->disk('public')
+                            ->directory('cms/features')
+                            ->visibility('public')
+                            ->imageEditor()
+                            ->openable()
+                            ->downloadable()
+                            ->columnSpanFull(),
                     ])
                     ->columns(3)
                     ->columnSpanFull(),

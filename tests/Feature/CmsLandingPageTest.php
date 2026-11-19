@@ -5,19 +5,19 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Barbershop;
-use App\Models\LandingLead;
 use App\Models\Page;
 use App\Models\SaasPlan;
-use App\Models\User;
+use Database\Seeders\CmsInitialContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class CmsLandingPageTest extends TestCase
 {
     use RefreshDatabase;
+
     public function test_home_page_renders_successfully_with_cms_content_and_dynamic_plans(): void
     {
-        $this->seed(\Database\Seeders\CmsInitialContentSeeder::class);
+        $this->seed(CmsInitialContentSeeder::class);
 
         // Garante que existe pelo menos um plano ativo
         $plan = SaasPlan::firstOrCreate(
@@ -98,11 +98,26 @@ class CmsLandingPageTest extends TestCase
     {
         $barbershop = Barbershop::first();
         if ($barbershop) {
-            $response = $this->get('/' . $barbershop->slug);
+            $response = $this->get('/'.$barbershop->slug);
             $response->assertStatus(200);
             $response->assertSee($barbershop->name);
         } else {
             $this->assertTrue(true);
         }
+    }
+
+    public function test_cms_og_image_uses_public_disk_and_renders_in_meta_tags(): void
+    {
+        Page::create([
+            'title' => 'Página com OpenGraph',
+            'slug' => 'pagina-og',
+            'is_published' => true,
+            'og_image' => 'cms/og-images/opengraph-preview.png',
+            'content' => [],
+        ]);
+
+        $response = $this->get('/pagina-og');
+        $response->assertStatus(200);
+        $response->assertSee('storage/cms/og-images/opengraph-preview.png');
     }
 }

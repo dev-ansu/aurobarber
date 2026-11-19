@@ -3,9 +3,11 @@
     try {
         $activeBarbershops = \App\Models\Barbershop::query()
             ->where('is_active', true)
+            ->whereNull('parent_id')
             ->whereNotNull('slug')
+            ->with(['branches' => fn ($q) => $q->where('is_active', true)->whereNotNull('slug')->orderBy('name')])
             ->orderBy('name')
-            ->get(['id', 'name', 'slug', 'city', 'logo_url', 'brand_color']);
+            ->get();
     } catch (\Throwable $e) {
         $activeBarbershops = collect();
     }

@@ -224,6 +224,11 @@ class Barbershop extends Model
      */
     public function effectiveMonthlyPrice(): float
     {
+        // Filiais não pagam mensalidade individual — o faturamento é centralizado na Matriz
+        if ($this->isBranch()) {
+            return (float) ($this->monthly_price ?? 0.0);
+        }
+
         if ((float) $this->monthly_price > 0) {
             return (float) $this->monthly_price;
         }
@@ -233,6 +238,64 @@ class Barbershop extends Model
         }
 
         return 89.90;
+    }
+
+    /**
+     * Informa se este registro é uma filial/unidade de outra barbearia.
+     */
+    public function isBranch(): bool
+    {
+        return ! is_null($this->parent_id);
+    }
+
+    /**
+     * Alias semântico em português para isBranch().
+     */
+    public function isFilial(): bool
+    {
+        return $this->isBranch();
+    }
+
+    /**
+     * Informa se este registro é uma barbearia matriz / autônoma.
+     */
+    public function isMatriz(): bool
+    {
+        return is_null($this->parent_id);
+    }
+
+    /**
+     * Informa se a barbearia possui filiais cadastradas.
+     */
+    public function hasBranches(): bool
+    {
+        return $this->relationLoaded('branches')
+            ? $this->branches->isNotEmpty()
+            : $this->branches()->exists();
+    }
+
+    /**
+     * Scope para filtrar apenas barbearias matrizes (independentes).
+     */
+    public function scopeMatrizes($query)
+    {
+        return $query->whereNull('parent_id');
+    }
+
+    /**
+     * Scope para filtrar apenas filiais.
+     */
+    public function scopeOnlyBranches($query)
+    {
+        return $query->whereNotNull('parent_id');
+    }
+
+    /**
+     * Scope para filtrar apenas filiais (alias em português).
+     */
+    public function scopeFiliais($query)
+    {
+        return $query->whereNotNull('parent_id');
     }
 
     /**

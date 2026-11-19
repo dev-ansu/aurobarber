@@ -14,11 +14,18 @@
         try {
             $shops = \App\Models\Barbershop::query()
                 ->where('is_active', true)
+                ->whereNull('parent_id')
                 ->whereNotNull('slug')
+                ->with(['branches' => fn ($q) => $q->where('is_active', true)->whereNotNull('slug')->orderBy('name')])
                 ->orderBy('name')
-                ->get(['id', 'name', 'slug', 'city', 'logo_url', 'brand_color']);
+                ->get();
         } catch (\Throwable) {
             $shops = collect();
+        }
+    } else {
+        $matrizes = $shops->whereNull('parent_id');
+        if ($matrizes->isNotEmpty()) {
+            $shops = $matrizes;
         }
     }
 @endphp
@@ -67,7 +74,14 @@
                                 </div>
                             @endif
                             <div class="min-w-0">
-                                <h3 class="text-sm font-bold text-white truncate group-hover:text-amber-400 transition">{{ $shop->name }}</h3>
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <h3 class="text-sm font-bold text-white truncate group-hover:text-amber-400 transition">{{ $shop->name }}</h3>
+                                    @if($shop->branches && $shop->branches->isNotEmpty())
+                                        <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                                            Rede • {{ 1 + $shop->branches->count() }} un.
+                                        </span>
+                                    @endif
+                                </div>
                                 @if(!empty($shop->city))
                                     <span class="text-[11px] text-slate-400 block truncate">📍 {{ $shop->city }}</span>
                                 @else

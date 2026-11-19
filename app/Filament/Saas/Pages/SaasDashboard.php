@@ -28,6 +28,12 @@ class SaasDashboard extends Dashboard
 
     public int $totalBarbershops = 0;
 
+    public int $totalMatrizes = 0;
+
+    public int $totalBranches = 0;
+
+    public int $totalUnits = 0;
+
     public int $activeBarbershops = 0;
 
     public int $graceBarbershops = 0;
@@ -107,9 +113,12 @@ class SaasDashboard extends Dashboard
     {
         abort_unless(auth()->user()?->role === 'master_admin', 403);
 
-        $allBarbershops = Barbershop::with('owner')->latest('id')->get();
+        $allBarbershops = Barbershop::with(['owner', 'parent', 'branches'])->latest('id')->get();
 
-        $this->totalBarbershops = $allBarbershops->count();
+        $this->totalMatrizes = $allBarbershops->whereNull('parent_id')->count();
+        $this->totalBranches = $allBarbershops->whereNotNull('parent_id')->count();
+        $this->totalUnits = $allBarbershops->count();
+        $this->totalBarbershops = $this->totalMatrizes;
         $this->activeBarbershops = $allBarbershops->filter(fn ($b) => $b->isLicenseActive() && ! $b->isInGracePeriod())->count();
         $this->graceBarbershops = $allBarbershops->filter(fn ($b) => $b->isInGracePeriod())->count();
         $this->suspendedBarbershops = $allBarbershops->filter(fn ($b) => $b->isSuspended() || ! $b->isLicenseActive())->count();
@@ -124,6 +133,11 @@ class SaasDashboard extends Dashboard
                 'name' => $b->name,
                 'slug' => $b->slug,
                 'city' => $b->city ?? 'Não informada',
+                'is_branch' => (bool) $b->parent_id,
+                'parent_id' => $b->parent_id,
+                'parent_name' => $b->parent?->name,
+                'parent_slug' => $b->parent?->slug,
+                'branches_count' => $b->branches->count(),
                 'owner_name' => $b->owner?->name ?? 'Sem proprietário',
                 'owner_email' => $b->owner?->email ?? '-',
                 'created_at' => $b->created_at?->format('d/m/Y H:i') ?? '-',

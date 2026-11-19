@@ -42,7 +42,7 @@
             <div class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
                 <span class="text-xs font-semibold uppercase tracking-wider text-info-600 dark:text-info-400">Total de Barbearias</span>
                 <div class="mt-2 text-2xl font-bold text-info-600 dark:text-info-400">{{ $totalBarbershops }}</div>
-                <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">clientes na plataforma</span>
+                <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">{{ $totalBranches }} filiais • {{ $totalUnits }} un. totais</span>
             </div>
 
             <div class="col-span-2 rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 lg:col-span-1">
@@ -83,8 +83,24 @@
                         @forelse($recentBarbershops as $shop)
                             <tr class="transition hover:bg-gray-50 dark:hover:bg-white/5">
                                 <td class="whitespace-nowrap px-4 py-3.5">
-                                    <div class="font-semibold text-gray-950 dark:text-white">{{ $shop['name'] }}</div>
-                                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ $shop['slug'] }} • {{ $shop['city'] }}</div>
+                                    <div class="flex items-center gap-1.5 font-semibold text-gray-950 dark:text-white">
+                                        <span>{{ $shop['name'] }}</span>
+                                        @if($shop['is_branch'])
+                                            <span class="inline-flex items-center rounded-md bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-bold text-amber-500 border border-amber-500/20">
+                                                FILIAL
+                                            </span>
+                                        @elseif(($shop['branches_count'] ?? 0) > 0)
+                                            <span class="inline-flex items-center rounded-md bg-primary-500/10 px-1.5 py-0.5 text-[10px] font-bold text-primary-500 border border-primary-500/20">
+                                                MATRIZ ({{ $shop['branches_count'] }} {{ $shop['branches_count'] === 1 ? 'filial' : 'filiais' }})
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                                        {{ $shop['slug'] }} • {{ $shop['city'] }}
+                                        @if($shop['is_branch'] && !empty($shop['parent_name']))
+                                            <span class="block text-[11px] text-amber-600 dark:text-amber-400 font-medium">↳ Filial vinculada à Matriz: {{ $shop['parent_name'] }}</span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="whitespace-nowrap px-4 py-3.5">
                                     <div class="font-medium text-gray-950 dark:text-white">{{ $shop['owner_name'] }}</div>
@@ -113,7 +129,11 @@
                                     @endif
                                 </td>
                                 <td class="whitespace-nowrap px-4 py-3.5 font-semibold text-info-600 dark:text-info-400">
-                                    R$ {{ $shop['monthly_price'] }}
+                                    @if($shop['is_branch'])
+                                        <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">Incluso na Matriz</span>
+                                    @else
+                                        R$ {{ $shop['monthly_price'] }}
+                                    @endif
                                 </td>
                                 <td class="whitespace-nowrap px-4 py-3.5 text-right">
                                     <div class="inline-flex flex-nowrap items-center justify-end gap-2">

@@ -31,33 +31,94 @@
             <p class="text-xs text-slate-400 mt-1">Selecione a unidade para agendamento online ou entre no painel da sua barbearia.</p>
         </div>
 
-        @if($activeBarbershops->isNotEmpty())
+        @php
+            $matrizes = $activeBarbershops->whereNull('parent_id');
+            if ($matrizes->isEmpty() && $activeBarbershops->isNotEmpty()) {
+                $matrizes = $activeBarbershops;
+            }
+        @endphp
+
+        @if($matrizes->isNotEmpty())
             <div class="space-y-2">
-                <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Unidades Ativas:</span>
-                <div class="space-y-2 max-h-52 overflow-y-auto pr-1">
-                    @foreach($activeBarbershops as $shop)
-                        <div class="flex items-center justify-between p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-amber-500/40 transition">
-                            <div class="flex items-center gap-2.5 min-w-0">
-                                <span class="text-base shrink-0">💈</span>
-                                <div class="min-w-0">
-                                    <span class="text-xs font-bold text-white block truncate">{{ $shop->name }}</span>
-                                    <span class="text-[10px] text-slate-400 font-mono truncate block">{{ $shop->city ?: 'Unidade Ativa' }}</span>
+                <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Barbearias & Unidades Ativas:</span>
+                <div class="space-y-2 max-h-64 overflow-y-auto pr-1">
+                    @foreach($matrizes as $shop)
+                        @php
+                            $branches = $shop->branches ?? collect();
+                            $hasBranches = $branches->isNotEmpty();
+                        @endphp
+                        <div class="rounded-2xl bg-slate-950 border border-slate-800 p-3 space-y-2 hover:border-amber-500/40 transition">
+                            {{-- Matriz / Unidade Principal --}}
+                            <div class="flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <span class="text-base shrink-0">💈</span>
+                                    <div class="min-w-0">
+                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                            <span class="text-xs font-bold text-white truncate">{{ $shop->name }}</span>
+                                            @if($hasBranches)
+                                                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                                                    Rede • {{ 1 + $branches->count() }} unidades
+                                                </span>
+                                            @elseif($shop->parent_id)
+                                                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300">
+                                                    Filial
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <span class="text-[10px] text-slate-400 font-mono truncate block">
+                                            {{ $shop->city ?: ($hasBranches ? 'Matriz' : 'Unidade Ativa') }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1.5 shrink-0">
+                                    <a
+                                        href="{{ url('/' . $shop->slug) }}"
+                                        class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 text-[10px] font-bold hover:bg-emerald-500 hover:text-slate-950 transition"
+                                    >
+                                        Agendar
+                                    </a>
+                                    <a
+                                        href="{{ url('/admin/' . $shop->slug) }}"
+                                        class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-[10px] font-bold hover:bg-amber-500 hover:text-slate-950 transition"
+                                    >
+                                        Painel
+                                    </a>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-1.5 shrink-0">
-                                <a
-                                    href="{{ url('/' . $shop->slug) }}"
-                                    class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 text-[10px] font-bold hover:bg-emerald-500 hover:text-slate-950 transition"
-                                >
-                                    Agendar
-                                </a>
-                                <a
-                                    href="{{ url('/admin/' . $shop->slug) }}"
-                                    class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-[10px] font-bold hover:bg-amber-500 hover:text-slate-950 transition"
-                                >
-                                    Painel
-                                </a>
-                            </div>
+
+                            {{-- Filiais da Barbearia --}}
+                            @if($hasBranches)
+                                <div class="pt-2 border-t border-slate-900/80 space-y-1.5 pl-3">
+                                    @foreach($branches as $branch)
+                                        <div class="flex items-center justify-between p-2 rounded-xl bg-slate-900/70 border border-slate-800/80 hover:border-amber-500/30 transition">
+                                            <div class="flex items-center gap-2 min-w-0">
+                                                <span class="text-xs text-amber-400 shrink-0">↳</span>
+                                                <div class="min-w-0">
+                                                    <div class="flex items-center gap-1.5">
+                                                        <span class="text-[11px] font-semibold text-slate-200 truncate">{{ $branch->name }}</span>
+                                                        <span class="text-[9px] font-bold px-1 py-0.2 rounded bg-amber-500/15 text-amber-300">Filial</span>
+                                                    </div>
+                                                    <span class="text-[9px] text-slate-400 font-mono truncate block">{{ $branch->city ?: 'Filial' }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-1 shrink-0">
+                                                <a
+                                                    href="{{ url('/' . $branch->slug) }}"
+                                                    class="px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 text-[9px] font-bold hover:bg-emerald-500 hover:text-slate-950 transition"
+                                                >
+                                                    Agendar
+                                                </a>
+                                                <a
+                                                    href="{{ url('/admin/' . $branch->slug) }}"
+                                                    class="px-2 py-0.5 rounded-lg bg-amber-500/20 text-amber-300 text-[9px] font-bold hover:bg-amber-500 hover:text-slate-950 transition"
+                                                >
+                                                    Painel
+                                                </a>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
                         </div>
                     @endforeach
                 </div>

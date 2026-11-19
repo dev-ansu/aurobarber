@@ -35,8 +35,10 @@ class RegisterBarbershop extends RegisterTenant
             return;
         }
 
-        $primaryShop = $user->barbershops()->whereNull('parent_id')->first()
-            ?? $user->barbershops()->first();
+        $currentTenant = filament()->getTenant();
+        $primaryShop = $currentTenant instanceof Barbershop
+            ? $currentTenant->getPrimaryShop()
+            : ($user->barbershops()->whereNull('parent_id')->first() ?? $user->barbershops()->first());
 
         if ($primaryShop && ! $primaryShop->canAddBranch()) {
             $allowed = $primaryShop->getAllowedUnits();
@@ -151,8 +153,10 @@ class RegisterBarbershop extends RegisterTenant
         }
 
         return DB::transaction(function () use ($user, $data): Model {
-            $primaryBarbershop = $user->barbershops()->whereNull('parent_id')->first()
-                ?? $user->barbershops()->first();
+            $currentTenant = filament()->getTenant();
+            $primaryBarbershop = $currentTenant instanceof Barbershop
+                ? $currentTenant->getPrimaryShop()
+                : ($user->barbershops()->whereNull('parent_id')->first() ?? $user->barbershops()->first());
 
             if ($primaryBarbershop) {
                 // Bloqueio atômico para evitar condições de corrida (race conditions)
@@ -170,6 +174,8 @@ class RegisterBarbershop extends RegisterTenant
                 $data['saas_plan_id'] = $lockedPrimary->saas_plan_id;
                 $data['license_status'] = $lockedPrimary->license_status ?? 'active';
                 $data['license_expires_at'] = $lockedPrimary->license_expires_at;
+                $data['monthly_price'] = 0.00;
+                $data['license_notes'] = "Filial vinculada à Matriz: {$lockedPrimary->name} (#{$lockedPrimary->id})";
             }
 
             $data['owner_id'] = $user->id;

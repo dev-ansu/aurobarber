@@ -35,7 +35,14 @@
             @endif
             <div>
                 <h1 class="text-base sm:text-lg font-black text-white leading-tight">{{ $barbershop->name }}</h1>
-                @if ($barbershop->city)
+                @if ($barbershop->isBranch() && $barbershop->parent)
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="text-[11px] font-semibold text-amber-400">Filial de {{ $barbershop->parent->name }}</span>
+                        @if ($barbershop->city)
+                            <span class="text-xs text-slate-400">&bull; 📍 {{ $barbershop->city }}</span>
+                        @endif
+                    </div>
+                @elseif ($barbershop->city)
                     <span class="text-xs text-slate-400">📍 {{ $barbershop->city }}</span>
                 @endif
             </div>

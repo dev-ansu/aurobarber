@@ -49,9 +49,13 @@ class SaasBackups extends Page
                             $options = [
                                 'GLOBAL' => '🌐 Base Completa do Aurobarber (aurobarber_prod)',
                             ];
-                            $shops = Barbershop::query()->orderBy('name')->get();
+                            $shops = Barbershop::query()->with('parent')->orderBy('name')->get();
                             foreach ($shops as $shop) {
-                                $options[$shop->slug] = "💈 Barbearia: {$shop->name} (/{$shop->slug})";
+                                if ($shop->isBranch()) {
+                                    $options[$shop->slug] = "💈 Filial: {$shop->name} (Matriz: {$shop->parent?->name}) (/{$shop->slug})";
+                                } else {
+                                    $options[$shop->slug] = "💈 Barbearia: {$shop->name} (/{$shop->slug})";
+                                }
                             }
 
                             return $options;
