@@ -1,100 +1,80 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Avaliar Atendimento • {{ $appointment->barbershop?->name ?? 'AuroBarber' }}</title>
-    @if(config('services.turnstile.site_key'))
-        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-    @endif
-</head>
-<body style="margin:0; padding:24px; min-height:100vh; background:#090d16; color:#f8fafc; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display:flex; align-items:center; justify-content:center; box-sizing:border-box;">
-    @php
-        $brandColor = $appointment->barbershop?->brand_color ?: '#d97706';
-    @endphp
-    <div style="width:100%; max-width:460px; background:#111827; border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:32px 26px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.6); text-align:center;">
-        @if($appointment->barbershop?->logo_url)
-            <img src="{{ asset('storage/' . $appointment->barbershop->logo_url) }}" alt="{{ $appointment->barbershop->name }}" style="height:64px; width:auto; border-radius:12px; margin-bottom:14px; object-fit:contain;">
+@php
+    $barbershop = $appointment->barbershop;
+    $brandColor = $barbershop?->brand_color ?: '#d97706';
+@endphp
+
+<x-layouts.auth-card :title="'Avaliar Atendimento • ' . ($barbershop?->name ?? 'AuroBarber')" maxWidth="460px">
+    <x-slot:icon>
+        @if($barbershop?->logo_url)
+            <img src="{{ asset('storage/' . $barbershop->logo_url) }}" alt="{{ $barbershop->name }}" style="height:48px; width:48px; border-radius:12px; object-fit:cover;">
         @else
-            <div style="width:56px; height:56px; border-radius:14px; background:{{ $brandColor }}; color:#090d16; font-weight:800; font-size:24px; display:inline-flex; align-items:center; justify-content:center; margin-bottom:14px;">
-                ✂️
-            </div>
+            ✂️
         @endif
+    </x-slot:icon>
 
-        <h1 style="margin:0 0 6px; font-size:22px; font-weight:800; color:#ffffff;">
-            {{ $appointment->barbershop?->name ?? 'Barbearia' }}
-        </h1>
-        <p style="margin:0 0 22px; font-size:14px; color:#94a3b8;">
-            Atendimento com <strong style="color:#f8fafc;">{{ $appointment->professional?->display_name ?? 'Barbeiro' }}</strong>
-            • {{ $appointment->services_summary }}
-        </p>
+    <x-slot:heading>
+        {{ $barbershop?->name ?? 'Barbearia' }}
+    </x-slot:heading>
 
-        @if(session('rated_success') || $appointment->rating)
-            <div style="background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); border-radius:14px; padding:22px 16px; margin-bottom:20px;">
-                <div style="font-size:28px; margin-bottom:8px;">
-                    {{ str_repeat('⭐', (int) ($appointment->rating ?: 5)) }}
-                </div>
-                <div style="font-size:16px; font-weight:700; color:#34d399; margin-bottom:4px;">
-                    Obrigado pela sua avaliação!
-                </div>
-                <div style="font-size:13px; color:#94a3b8;">
-                    Sua opinião ajuda a manter nosso padrão de excelência.
-                </div>
+    <x-slot:subtitle>
+        Atendimento com <strong>{{ $appointment->professional?->display_name ?? 'Barbeiro' }}</strong><br>
+        <span style="font-size:12px; color:#94a3b8;">{{ $appointment->services_summary }}</span>
+    </x-slot:subtitle>
+
+    @if(session('rated_success') || $appointment->rating)
+        <div style="background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); border-radius:14px; padding:22px 16px; margin-bottom:20px;">
+            <div style="font-size:28px; margin-bottom:8px;">
+                {{ str_repeat('⭐', (int) ($appointment->rating ?: 5)) }}
             </div>
-            @if($appointment->barbershop)
-                <a href="{{ url('/' . $appointment->barbershop->slug) }}" style="display:inline-block; width:100%; box-sizing:border-box; padding:13px 18px; border-radius:12px; background:{{ $brandColor }}; color:#ffffff; font-weight:700; text-decoration:none; font-size:14px;">
-                    Agendar Novo Horário
-                </a>
-            @endif
-        @else
-            <form method="POST" action="{{ route('appointment.rate.submit', $appointment->id) }}">
-                @csrf
-                {{-- Campo Honeypot anti-spam invisível --}}
-                <div style="display:none; position:absolute; left:-9999px;">
-                    <input type="text" name="website_url" tabindex="-1" autocomplete="off">
-                </div>
+            <div style="font-size:16px; font-weight:700; color:#34d399; margin-bottom:4px;">
+                Obrigado pela sua avaliação!
+            </div>
+            <div style="font-size:13px; color:#94a3b8;">
+                Sua opinião ajuda a manter nosso padrão de excelência.
+            </div>
+        </div>
 
-                @if($errors->any())
-                    <div style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); border-radius:10px; padding:10px; margin-bottom:14px; font-size:13px; color:#fca5a5; text-align:left;">
-                        <ul style="margin:0; padding-left:18px;">
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
+        @if($barbershop)
+            <a href="{{ url('/' . $barbershop->slug) }}" class="btn-submit" style="display:inline-block; text-decoration:none; background:{{ $brandColor }}; color:#ffffff;">
+                Agendar Novo Horário
+            </a>
+        @endif
+    @else
+        <form method="POST" action="{{ route('appointment.rate.submit', $appointment->id) }}">
+            @csrf
+            {{-- Campo Honeypot anti-spam invisível --}}
+            <div style="display:none; position:absolute; left:-9999px;">
+                <input type="text" name="website_url" tabindex="-1" autocomplete="off">
+            </div>
 
-                <p style="margin:0 0 12px; font-size:14px; font-weight:600; color:#e2e8f0;">
-                    Que nota você dá para o seu atendimento hoje?
-                </p>
+            <p style="margin:0 0 14px; font-size:14px; font-weight:600; color:#e2e8f0;">
+                Que nota você dá para o seu atendimento hoje?
+            </p>
 
-                <div id="star-container" style="display:flex; justify-content:center; gap:10px; margin-bottom:20px;">
-                    @for($i = 1; $i <= 5; $i++)
-                        <label style="cursor:pointer; font-size:34px; transition:transform 0.15s;" onclick="selectStar({{ $i }})">
-                            <input type="radio" name="rating" value="{{ $i }}" {{ $i === 5 ? 'checked' : '' }} style="display:none;">
-                            <span class="star-icon" data-val="{{ $i }}" style="color:#fbbf24;">★</span>
-                        </label>
-                    @endfor
-                </div>
-
-                <div style="text-align:left; margin-bottom:18px;">
-                    <label style="display:block; font-size:12px; font-weight:600; color:#94a3b8; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.05em;">
-                        Comentário ou Elogio (Opcional)
+            <div id="star-container" style="display:flex; justify-content:center; gap:10px; margin-bottom:20px;">
+                @for($i = 1; $i <= 5; $i++)
+                    <label style="cursor:pointer; font-size:34px; transition:transform 0.15s;" onclick="selectStar({{ $i }})">
+                        <input type="radio" name="rating" value="{{ $i }}" {{ $i === 5 ? 'checked' : '' }} style="display:none;">
+                        <span class="star-icon" data-val="{{ $i }}" style="color:#fbbf24;">★</span>
                     </label>
-                    <textarea name="rating_comment" rows="3" placeholder="Conte como foi sua experiência..." style="width:100%; box-sizing:border-box; background:#1e293b; border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:12px; color:#ffffff; font-size:14px; resize:none;">{{ old('rating_comment') }}</textarea>
-                </div>
+                @endfor
+            </div>
 
-                @if(config('services.turnstile.site_key'))
-                    <div style="display:flex; justify-content:center; margin-bottom:16px;">
-                        <div class="cf-turnstile" data-sitekey="{{ config('services.turnstile.site_key') }}" data-theme="dark" data-action="rating"></div>
-                    </div>
-                @endif
+            <div style="text-align:left; margin-bottom:18px;">
+                <label style="display:block; font-size:12px; font-weight:600; color:#94a3b8; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.05em;">
+                    Comentário ou Elogio (Opcional)
+                </label>
+                <textarea name="rating_comment" rows="3" placeholder="Conte como foi sua experiência..." style="width:100%; box-sizing:border-box; background:#0f172a; border:1px solid #334155; border-radius:10px; padding:12px; color:#ffffff; font-size:14px; resize:none;">{{ old('rating_comment') }}</textarea>
+            </div>
 
-                <button type="submit" style="width:100%; padding:14px 20px; border:none; border-radius:12px; background:{{ $brandColor }}; color:#ffffff; font-weight:700; font-size:15px; cursor:pointer;">
-                    Enviar Avaliação ⭐
-                </button>
-            </form>
+            <x-turnstile action="rating" theme="dark" class="mb-4" />
 
+            <button type="submit" class="btn-submit" style="background:{{ $brandColor }}; color:#ffffff;">
+                Enviar Avaliação ⭐
+            </button>
+        </form>
+
+        <x-slot:scripts>
             <script>
                 function selectStar(val) {
                     document.querySelectorAll('.star-icon').forEach(function(el) {
@@ -103,7 +83,6 @@
                     });
                 }
             </script>
-        @endif
-    </div>
-</body>
-</html>
+        </x-slot:scripts>
+    @endif
+</x-layouts.auth-card>

@@ -24,194 +24,68 @@
     }
     $commercialWhatsapp = $masterPhone ?: env('AUROSOFT_COMMERCIAL_WHATSAPP', '5585999999999');
 @endphp
-<!DOCTYPE html>
-<html lang="pt-BR" class="dark scroll-smooth">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AuroBarber • Sistema de Gestão, Agendamento Online & Fidelização para Barbearias</title>
-    <meta name="description" content="Transforme sua barbearia com agendamento online em 30 segundos, comanda de bar e produtos, cálculo automático de comissões, visão restrita do barbeiro e cartão fidelidade.">
-    <meta name="keywords" content="sistema para barbearia, agendamento online barbearia, controle de comissao barbeiro, software gestao barbearia, comanda barbearia, cartao fidelidade barbearia, aurobarber">
-    <meta name="author" content="Aurosoft Tecnologia">
-    <link rel="canonical" href="https://barber.aurosoft.com.br">
-    <link rel="manifest" href="{{ url('/manifest.json') }}">
-    <meta name="theme-color" content="#020617">
+<x-layouts.app
+    :title="'AuroBarber • Sistema de Gestão, Agendamento Online & Fidelização para Barbearias'"
+    bodyClass="bg-slate-950 text-slate-100 font-sans antialiased selection:bg-amber-500 selection:text-slate-950 min-h-screen flex flex-col justify-between"
+>
+    <x-slot:head>
+        <meta name="description" content="Transforme sua barbearia com agendamento online em 30 segundos, comanda de bar e produtos, cálculo automático de comissões, visão restrita do barbeiro e cartão fidelidade.">
+        <meta name="keywords" content="sistema para barbearia, agendamento online barbearia, controle de comissao barbeiro, software gestao barbearia, comanda barbearia, cartao fidelidade barbearia, aurobarber">
+        <meta name="author" content="Aurosoft Tecnologia">
+        <link rel="canonical" href="https://barber.aurosoft.com.br">
 
-    <!-- Open Graph / WhatsApp -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://barber.aurosoft.com.br">
-    <meta property="og:title" content="AuroBarber • Gestão & Agendamento Inteligente para Barbearias">
-    <meta property="og:description" content="Página exclusiva de agendamento em 30s, comissões com recibo jurídico, comanda de bar/estoque e cartão fidelidade automático.">
-    <meta property="og:locale" content="pt_BR">
-    <meta property="og:site_name" content="AuroBarber">
+        <!-- Open Graph / WhatsApp -->
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="https://barber.aurosoft.com.br">
+        <meta property="og:title" content="AuroBarber • Gestão & Agendamento Inteligente para Barbearias">
+        <meta property="og:description" content="Página exclusiva de agendamento em 30s, comissões com recibo jurídico, comanda de bar/estoque e cartão fidelidade automático.">
+        <meta property="og:locale" content="pt_BR">
+        <meta property="og:site_name" content="AuroBarber">
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+        <!-- Tailwind CDN & Alpine -->
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-                        mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
-                    },
-                    colors: {
-                        amber: {
-                            400: '#fbbf24',
-                            500: '#f59e0b',
-                            600: '#d97706',
-                        }
-                    }
-                }
+        <style>
+            [x-cloak] { display: none !important; }
+            .hero-glow {
+                background: radial-gradient(circle at 50% 0%, rgba(245, 158, 11, 0.20) 0%, rgba(16, 185, 129, 0.06) 45%, transparent 72%);
             }
-        }
-    </script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
-    @if(config('services.turnstile.site_key'))
-        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-    @endif
+            .card-glass {
+                background: rgba(15, 23, 42, 0.78);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+            }
+            .text-gradient-gold {
+                background: linear-gradient(135deg, #fef08a 0%, #fbbf24 50%, #d97706 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+            .metric-box-stable {
+                min-height: 72px;
+            }
+        </style>
+    </x-slot:head>
 
-    <style>
-        [x-cloak] { display: none !important; }
-        .hero-glow {
-            background: radial-gradient(circle at 50% 0%, rgba(245, 158, 11, 0.20) 0%, rgba(16, 185, 129, 0.06) 45%, transparent 72%);
-        }
-        .card-glass {
-            background: rgba(15, 23, 42, 0.78);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-        }
-        .text-gradient-gold {
-            background: linear-gradient(135deg, #fef08a 0%, #fbbf24 50%, #d97706 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .metric-box-stable {
-            min-height: 72px;
-        }
-    </style>
-</head>
-<body class="bg-slate-950 text-slate-100 font-sans antialiased selection:bg-amber-500 selection:text-slate-950 min-h-screen flex flex-col justify-between"
-      x-data="{
-          leadModalOpen: false,
-          leadTab: 'dados',
-          leadName: '',
-          leadShop: '',
-          leadPhone: '',
-          leadCity: '',
-          leadBarbers: '2 a 4 cadeiras',
-          leadChallenge: 'Automatizar agendamentos e controlar comissões',
-          tenantModalOpen: false,
-          tenantTab: 'painel',
-          activeShowcaseTab: 'agenda',
-          calcCutsPerDay: 18,
-          calcAvgTicket: 45,
-          faqOpen: 1,
-          sendWhatsAppLead() {
-              const msg = `Olá! Vim pelo site do *AuroBarber* e quero conhecer o sistema para minha barbearia! 💈✂️\n\n` +
-                  `👤 *Nome:* ${this.leadName || 'Não informado'}\n` +
-                  `💈 *Barbearia:* ${this.leadShop || 'Não informada'}\n` +
-                  `📱 *WhatsApp:* ${this.leadPhone || 'Não informado'}\n` +
-                  `📍 *Cidade:* ${this.leadCity || 'Não informada'}\n` +
-                  `🪑 *Porte:* ${this.leadBarbers}\n` +
-                  `🎯 *Objetivo:* ${this.leadChallenge}`;
-              window.open('https://wa.me/{{ $commercialWhatsapp }}?text=' + encodeURIComponent(msg), '_blank');
-              this.leadModalOpen = false;
-          }
-      }">
-
-    {{-- Top Announcement Bar --}}
-    <div class="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-slate-950 text-xs font-black py-2 px-4 text-center shadow-md select-none flex items-center justify-center gap-2">
-        <span class="inline-flex items-center justify-center h-4 w-4 rounded-full bg-slate-950 text-amber-400 text-[10px] font-black shrink-0">★</span>
-        <span class="truncate">AuroBarber 2.0 Cloud &middot; <strong>Agendamento Online em 30s, Comanda de Bar, Cartão Fidelidade & Visão Restrita do Barbeiro</strong></span>
-        <a href="#recursos" class="hidden md:inline-block underline ml-2 hover:opacity-80 transition font-black whitespace-nowrap">Ver tour interativo &rarr;</a>
-    </div>
-
-    {{-- Navbar Superior --}}
-    <header class="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 transition">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-3 xl:gap-6">
-            {{-- Logo --}}
-            <a href="/" class="flex items-center gap-3 group shrink-0">
-                <div class="h-10 w-10 sm:h-11 sm:w-11 rounded-2xl bg-gradient-to-tr from-amber-600 via-amber-500 to-amber-300 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-amber-500/25 group-hover:scale-105 transition-transform shrink-0">
-                    💈
-                </div>
-                <div>
-                    <span class="text-sm sm:text-base font-black tracking-tight text-white block group-hover:text-amber-400 transition whitespace-nowrap">
-                        Auro<span class="text-amber-400">Barber</span>
-                        <span class="text-amber-400 text-[10px] sm:text-xs font-mono font-bold uppercase ml-1 px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/30">PRO</span>
-                    </span>
-                    <span class="text-[10px] sm:text-[11px] text-slate-400 font-medium block leading-tight whitespace-nowrap">
-                        by Aurosoft Tecnologia
-                    </span>
-                </div>
-            </a>
-
-            {{-- Links de Navegação Desktop --}}
-            <nav class="hidden xl:flex items-center gap-5 xl:gap-6 text-xs font-bold text-slate-300 whitespace-nowrap">
-                <a href="#recursos" class="hover:text-amber-400 transition">Tour pelo Sistema</a>
-                <a href="#modulos" class="hover:text-amber-400 transition">Módulos</a>
-                <a href="#calculadora" class="hover:text-amber-400 transition flex items-center gap-1">
-                    <span>Simulador de Lucro</span>
-                    <span class="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-full font-black">NOVO</span>
-                </a>
-                <a href="#comparativo" class="hover:text-amber-400 transition">Por que o AuroBarber?</a>
-                <a href="#planos" class="hover:text-amber-400 transition">Planos</a>
-                <a href="#faq" class="hover:text-amber-400 transition">Dúvidas</a>
-            </nav>
-
-            {{-- Ações Direitas --}}
-            <div class="hidden sm:flex items-center gap-2 xl:gap-3 shrink-0">
-                <button
-                    type="button"
-                    @click="tenantModalOpen = true"
-                    class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-700 bg-slate-900/80 hover:bg-slate-800 text-slate-200 text-xs font-bold transition shadow-sm whitespace-nowrap shrink-0 cursor-pointer"
-                >
-                    <span>💈</span>
-                    <span>Acessar Barbearia</span>
-                </button>
-
-                <a
-                    href="{{ url('/admin') }}"
-                    class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-amber-500/40 bg-amber-950/30 hover:bg-amber-900/50 text-amber-300 text-xs font-bold transition shadow-sm whitespace-nowrap shrink-0"
-                >
-                    <span>🔐</span>
-                    <span>Login do Painel</span>
-                </a>
-
-                <button
-                    type="button"
-                    @click="leadModalOpen = true"
-                    class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:brightness-110 text-slate-950 text-xs font-black transition shadow-lg shadow-amber-500/25 active:scale-95 whitespace-nowrap shrink-0 cursor-pointer"
-                >
-                    <span>🚀</span>
-                    <span>Criar Minha Barbearia</span>
-                </button>
-            </div>
-
-            {{-- Botões Mobile --}}
-            <div class="flex sm:hidden items-center gap-2">
-                <a
-                    href="{{ url('/admin') }}"
-                    class="px-3 py-2 rounded-xl border border-slate-700 bg-slate-900 text-slate-200 font-bold text-xs"
-                >
-                    Entrar
-                </a>
-                <button
-                    type="button"
-                    @click="leadModalOpen = true"
-                    class="px-3 py-2 rounded-xl bg-amber-500 text-slate-950 font-black text-xs shadow-md shadow-amber-500/20"
-                >
-                    Contratar
-                </button>
-            </div>
+    <div x-data="{
+        leadModalOpen: false,
+        tenantModalOpen: false,
+        activeShowcaseTab: 'agenda',
+        calcCutsPerDay: 18,
+        calcAvgTicket: 45,
+        faqOpen: 1,
+        selectedPlanName: '',
+        selectedPlanId: null
+    }">
+        {{-- Top Announcement Bar --}}
+        <div class="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-slate-950 text-xs font-black py-2 px-4 text-center shadow-md select-none flex items-center justify-center gap-2">
+            <span class="inline-flex items-center justify-center h-4 w-4 rounded-full bg-slate-950 text-amber-400 text-[10px] font-black shrink-0">★</span>
+            <span class="truncate">AuroBarber 2.0 Cloud &middot; <strong>Agendamento Online em 30s, Comanda de Bar, Cartão Fidelidade & Visão Restrita do Barbeiro</strong></span>
+            <a href="#recursos" class="hidden md:inline-block underline ml-2 hover:opacity-80 transition font-black whitespace-nowrap">Ver tour interativo &rarr;</a>
         </div>
-    </header>
 
+        {{-- Navbar Superior Reutilizável --}}
+        <x-landing-navbar :activeBarbershops="$activeBarbershops" />
     <main id="main-content">
         {{-- HERO SECTION --}}
         <section class="relative hero-glow pt-14 pb-20 sm:pt-24 sm:pb-32 overflow-hidden border-b border-slate-800/80">
@@ -1097,313 +971,17 @@
         </section>
     </main>
 
-    {{-- FOOTER --}}
-    <footer class="bg-slate-950 text-slate-400 text-xs py-12 px-4 sm:px-6 lg:px-8 border-t border-slate-800/80">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-            <div class="flex items-center gap-3">
-                <div class="h-9 w-9 rounded-xl bg-amber-500 flex items-center justify-center text-slate-950 font-black text-base shadow-sm">
-                    💈
-                </div>
-                <div>
-                    <span class="font-extrabold text-white text-sm">AuroBarber</span>
-                    <span class="block text-[11px] text-slate-400">Uma solução oficial Aurosoft Tecnologia</span>
-                </div>
-            </div>
+        {{-- Footer Reutilizável com Links Legais e SSL --}}
+        <x-landing-footer />
 
-            <div class="flex flex-wrap items-center justify-center gap-6 text-slate-400">
-                <a href="#recursos" class="hover:text-amber-400 transition">Tour Visual</a>
-                <a href="#modulos" class="hover:text-amber-400 transition">Módulos</a>
-                <a href="#calculadora" class="hover:text-amber-400 transition">Simulador</a>
-                <a href="#planos" class="hover:text-amber-400 transition">Planos</a>
-                <a href="{{ url('/admin') }}" class="hover:text-amber-400 transition">Painel da Barbearia</a>
-                <a href="{{ url('/saas') }}" class="hover:text-amber-400 transition">SaaS Master</a>
-            </div>
+        {{-- Modais Reutilizáveis com Turnstile e Proteção Anti-Bot --}}
+        <x-landing-lead-modal
+            :activeSaasPlans="$activeSaasPlans ?? collect()"
+            :commercialWhatsapp="$commercialWhatsapp"
+        />
 
-            <div class="text-center md:text-right text-[11px] text-slate-400">
-                &copy; {{ date('Y') }} AuroBarber &middot; Desenvolvido por Aurosoft Tecnologia.
-            </div>
-        </div>
-    </footer>
-
-    {{-- ========================================================================= --}}
-    {{-- MODAL 1: ACESSAR MINHA BARBEARIA (EM ABAS + LARGURA TOTAL)                --}}
-    {{-- ========================================================================= --}}
-    <div
-        x-show="tenantModalOpen"
-        x-cloak
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md"
-        @keydown.escape.window="tenantModalOpen = false"
-    >
-        <div class="relative w-full max-w-lg rounded-3xl border border-slate-800 bg-slate-900 p-6 sm:p-8 shadow-2xl space-y-6"
-             @click.away="tenantModalOpen = false">
-            <button
-                type="button"
-                @click="tenantModalOpen = false"
-                class="absolute top-5 right-5 text-slate-400 hover:text-white text-xl cursor-pointer"
-            >
-                ✕
-            </button>
-
-            <div class="space-y-1.5">
-                <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-400 text-2xl border border-amber-500/20">
-                    💈
-                </div>
-                <h3 class="text-xl font-black text-white">Acessar Barbearia</h3>
-                <p class="text-xs text-slate-400 leading-relaxed">
-                    Escolha se deseja entrar no Painel de Gestão (Dono / Barbeiro) ou abrir a Página de Agendamento Online.
-                </p>
-            </div>
-
-            {{-- Abas do Modal --}}
-            <div class="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-slate-950 border border-slate-800">
-                <button
-                    type="button"
-                    @click="tenantTab = 'painel'"
-                    :class="tenantTab === 'painel' ? 'bg-amber-500 text-slate-950 font-black' : 'text-slate-400 hover:text-white font-bold'"
-                    class="py-2.5 rounded-xl text-xs transition cursor-pointer"
-                >
-                    🔐 Painel da Equipe
-                </button>
-                <button
-                    type="button"
-                    @click="tenantTab = 'publica'"
-                    :class="tenantTab === 'publica' ? 'bg-amber-500 text-slate-950 font-black' : 'text-slate-400 hover:text-white font-bold'"
-                    class="py-2.5 rounded-xl text-xs transition cursor-pointer"
-                >
-                    📅 Página de Agendamento
-                </button>
-            </div>
-
-            {{-- Aba 1: Painel Administrativo --}}
-            <div x-show="tenantTab === 'painel'" class="space-y-4">
-                @if($activeBarbershops->isNotEmpty())
-                    <div class="space-y-2">
-                        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Unidades Ativas no AuroBarber:</span>
-                        <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
-                            @foreach($activeBarbershops as $shop)
-                                <a
-                                    href="{{ url('/admin/' . $shop->slug) }}"
-                                    class="w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-amber-500/40 transition"
-                                >
-                                    <div class="flex items-center gap-3">
-                                        <span class="text-base">💈</span>
-                                        <div>
-                                            <span class="text-xs font-bold text-white block">{{ $shop->name }}</span>
-                                            <span class="text-[10px] text-slate-400 font-mono">barber.aurosoft.com.br/admin/{{ $shop->slug }}</span>
-                                        </div>
-                                    </div>
-                                    <span class="text-xs font-bold text-amber-400">Entrar &rarr;</span>
-                                </a>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-
-                <a
-                    href="{{ url('/admin') }}"
-                    class="w-full block text-center rounded-2xl bg-gradient-to-r from-amber-500 to-amber-400 hover:brightness-110 py-3.5 text-xs font-black text-slate-950 transition shadow-lg shadow-amber-500/20"
-                >
-                    Ir para Login Geral do Painel ➔
-                </a>
-            </div>
-
-            {{-- Aba 2: Página Pública de Agendamento --}}
-            <div x-show="tenantTab === 'publica'" x-cloak class="space-y-4">
-                @if($activeBarbershops->isNotEmpty())
-                    <div class="space-y-2">
-                        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Escolha a Barbearia para Agendar:</span>
-                        <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
-                            @foreach($activeBarbershops as $shop)
-                                <a
-                                    href="{{ url('/' . $shop->slug) }}"
-                                    class="w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/40 transition"
-                                >
-                                    <div class="flex items-center gap-3">
-                                        <span class="text-base">✂️</span>
-                                        <div>
-                                            <span class="text-xs font-bold text-white block">{{ $shop->name }}</span>
-                                            <span class="text-[10px] text-slate-400 font-mono">barber.aurosoft.com.br/{{ $shop->slug }}</span>
-                                        </div>
-                                    </div>
-                                    <span class="text-xs font-bold text-emerald-400">Agendar &rarr;</span>
-                                </a>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-
-                <form onsubmit="event.preventDefault(); const s = document.getElementById('barber-slug-input').value.trim().toLowerCase(); if(s) window.location.href = '/' + s;" class="space-y-3 pt-2 border-t border-slate-800">
-                    <label class="text-[11px] font-bold text-slate-300 block">Ou digite o link da barbearia:</label>
-                    <input
-                        id="barber-slug-input"
-                        type="text"
-                        required
-                        placeholder="ex: barbearia-marinho"
-                        class="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-xs text-white focus:border-amber-400 focus:outline-none font-mono"
-                    />
-                    <button
-                        type="submit"
-                        class="w-full rounded-2xl bg-emerald-500 hover:bg-emerald-400 py-3.5 text-xs font-black text-slate-950 transition cursor-pointer"
-                    >
-                        Abrir Página de Agendamento ➔
-                    </button>
-                </form>
-            </div>
-        </div>
+        <x-landing-barbershop-modal
+            :activeBarbershops="$activeBarbershops"
+        />
     </div>
-
-    {{-- ========================================================================= --}}
-    {{-- MODAL 2: SOLICITAR DEMONSTRAÇÃO / CRIAR BARBEARIA (EM ABAS + FULL WIDTH)  --}}
-    {{-- ========================================================================= --}}
-    <div
-        x-show="leadModalOpen"
-        x-cloak
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md"
-        @keydown.escape.window="leadModalOpen = false"
-    >
-        <div class="relative w-full max-w-lg rounded-3xl border border-slate-800 bg-slate-900 p-6 sm:p-8 shadow-2xl space-y-6 max-h-[92vh] overflow-y-auto"
-             @click.away="leadModalOpen = false">
-            <button
-                type="button"
-                @click="leadModalOpen = false"
-                class="absolute top-5 right-5 text-slate-400 hover:text-white text-xl cursor-pointer"
-            >
-                ✕
-            </button>
-
-            <div class="space-y-1.5">
-                <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400 text-2xl border border-emerald-500/20">
-                    🚀
-                </div>
-                <h3 class="text-xl font-black text-white">Implantar AuroBarber na Minha Barbearia</h3>
-                <p class="text-xs text-slate-400 leading-relaxed">
-                    Preencha os dados abaixo para liberarmos seu ambiente personalizado com seu link exclusivo.
-                </p>
-            </div>
-
-            {{-- Abas do Formulário (Padrão Tabs + Full Width) --}}
-            <div class="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-slate-950 border border-slate-800">
-                <button
-                    type="button"
-                    @click="leadTab = 'dados'"
-                    :class="leadTab === 'dados' ? 'bg-amber-500 text-slate-950 font-black' : 'text-slate-400 hover:text-white font-bold'"
-                    class="py-2.5 rounded-xl text-xs transition cursor-pointer"
-                >
-                    1. Dados da Barbearia
-                </button>
-                <button
-                    type="button"
-                    @click="leadTab = 'perfil'"
-                    :class="leadTab === 'perfil' ? 'bg-amber-500 text-slate-950 font-black' : 'text-slate-400 hover:text-white font-bold'"
-                    class="py-2.5 rounded-xl text-xs transition cursor-pointer"
-                >
-                    2. Equipe & Plano
-                </button>
-            </div>
-
-            <form @submit.prevent="sendWhatsAppLead()" class="space-y-4">
-                {{-- ABA 1: DADOS DA BARBEARIA (100% w-full) --}}
-                <div x-show="leadTab === 'dados'" class="space-y-4">
-                    <div class="space-y-1.5 w-full">
-                        <label class="text-xs font-bold text-slate-300 block">Seu Nome Completo *</label>
-                        <input
-                            type="text"
-                            x-model="leadName"
-                            required
-                            placeholder="Ex: Marcos Oliveira"
-                            class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-xs text-white focus:border-amber-400 focus:outline-none"
-                        />
-                    </div>
-
-                    <div class="space-y-1.5 w-full">
-                        <label class="text-xs font-bold text-slate-300 block">Nome da Barbearia *</label>
-                        <input
-                            type="text"
-                            x-model="leadShop"
-                            required
-                            placeholder="Ex: Barbearia Dom Marcos"
-                            class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-xs text-white focus:border-amber-400 focus:outline-none"
-                        />
-                    </div>
-
-                    <div class="space-y-1.5 w-full">
-                        <label class="text-xs font-bold text-slate-300 block">Seu WhatsApp com DDD *</label>
-                        <input
-                            type="tel"
-                            x-model="leadPhone"
-                            required
-                            placeholder="(85) 99999-9999"
-                            class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-xs text-white focus:border-amber-400 focus:outline-none"
-                        />
-                    </div>
-
-                    <div class="pt-2">
-                        <button
-                            type="button"
-                            @click="leadTab = 'perfil'"
-                            class="w-full rounded-2xl bg-amber-500 hover:bg-amber-400 py-3.5 text-xs font-black text-slate-950 transition cursor-pointer"
-                        >
-                            Próximo Passo: Equipe & Plano &rarr;
-                        </button>
-                    </div>
-                </div>
-
-                {{-- ABA 2: EQUIPE & PLANO (100% w-full) --}}
-                <div x-show="leadTab === 'perfil'" x-cloak class="space-y-4">
-                    <div class="space-y-1.5 w-full">
-                        <label class="text-xs font-bold text-slate-300 block">Cidade / Estado</label>
-                        <input
-                            type="text"
-                            x-model="leadCity"
-                            placeholder="Ex: Fortaleza - CE"
-                            class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-xs text-white focus:border-amber-400 focus:outline-none"
-                        />
-                    </div>
-
-                    <div class="space-y-1.5 w-full">
-                        <label class="text-xs font-bold text-slate-300 block">Qual plano deseja contratar?</label>
-                        <select
-                            x-model="leadBarbers"
-                            class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-xs text-white focus:border-amber-400 focus:outline-none"
-                        >
-                            <option value="Plano Mensal (R$ 89,90/mês - Sem fidelidade)">Plano Mensal (R$ 89,90/mês - Sem fidelidade)</option>
-                            <option value="Plano Semestral (R$ 79,90/mês - Economia)">Plano Semestral (R$ 79,90/mês - Economia)</option>
-                            <option value="Plano Anual (R$ 69,90/mês - 2 Meses Grátis)">Plano Anual (R$ 69,90/mês - 2 Meses Grátis)</option>
-                        </select>
-                    </div>
-
-                    <div class="space-y-1.5 w-full">
-                        <label class="text-xs font-bold text-slate-300 block">Principal objetivo com o sistema</label>
-                        <select
-                            x-model="leadChallenge"
-                            class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-xs text-white focus:border-amber-400 focus:outline-none"
-                        >
-                            <option value="Automatizar agendamentos e controlar comissões">Automatizar agendamentos e controlar comissões</option>
-                            <option value="Ter site próprio e fidelizar clientes">Ter link próprio de agendamento e cartão fidelidade</option>
-                            <option value="Controlar estoque de bebidas, produtos e caixa">Controlar estoque de bebidas, produtos e caixa</option>
-                            <option value="Dar acesso restrito individual para cada barbeiro">Dar acesso restrito individual para cada barbeiro</option>
-                        </select>
-                    </div>
-
-                    <div class="flex items-center gap-2 pt-2">
-                        <button
-                            type="button"
-                            @click="leadTab = 'dados'"
-                            class="w-1/3 rounded-2xl border border-slate-700 bg-slate-800 hover:bg-slate-700 py-3.5 text-xs font-bold text-slate-200 transition cursor-pointer"
-                        >
-                            &larr; Voltar
-                        </button>
-                        <button
-                            type="submit"
-                            class="w-2/3 rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-400 hover:brightness-110 py-3.5 text-xs font-black text-slate-950 transition shadow-lg shadow-emerald-500/20 cursor-pointer"
-                        >
-                            💬 Solicitar Liberação no WhatsApp ➔
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
-</body>
-</html>
+</x-layouts.app>

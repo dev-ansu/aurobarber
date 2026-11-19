@@ -173,7 +173,7 @@ Route::get('/{slug}/manifest.json', function (string $slug) {
 
 // Rota de Agendamento / Página Dinâmica CMS (com restrição para evitar colisão com painéis e rotas internas)
 Route::get('/{slug}', [DynamicPageController::class, 'show'])
-    ->where('slug', '^(?!admin$|api$|login$|auth$|saas$|storage$|up$|pwa$|livewire$|termos$|termos-de-uso$|privacidade$|politica-de-privacidade$|[0-9]+$).*$')
+    ->where('slug', '^(?!(admin|api|login|auth|saas|storage|up|pwa|livewire)($|\/)|(termos|termos-de-uso|privacidade|politica-de-privacidade)($|\/)|[0-9]+$).*$')
     ->name('barbershop.show');
 
 Route::get('/{slug}/slots', [BookingController::class, 'getAvailableSlots'])

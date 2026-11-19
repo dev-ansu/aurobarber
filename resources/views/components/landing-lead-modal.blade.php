@@ -115,22 +115,29 @@
 
         {{-- Tela de Sucesso --}}
         <div x-show="success" class="text-center py-6 space-y-4">
-            <div class="w-16 h-16 mx-auto rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-3xl">
+            <div class="w-16 h-16 mx-auto rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-3xl font-bold">
                 ✓
             </div>
             <h3 class="text-xl font-black text-white">Solicitação Recebida com Sucesso!</h3>
-            <p class="text-xs sm:text-sm text-slate-300">
-                Nosso consultor entrará em contato via WhatsApp em poucos minutos para liberar seu ambiente de teste de 7 dias.
+            <p class="text-xs sm:text-sm text-slate-300 max-w-md mx-auto">
+                Recebemos seus dados com sucesso. Nossa equipe comercial já foi notificada e entrará em contato em breve para liberar seu acesso demonstrativo de 7 dias.
             </p>
-            <div class="pt-4">
+            <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <button
+                    type="button"
+                    @click="leadModalOpen = false; success = false;"
+                    class="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:brightness-110 text-slate-950 font-black text-xs transition shadow-lg shadow-amber-500/25 cursor-pointer"
+                >
+                    Concluir
+                </button>
                 <a
-                    :href="'https://wa.me/{{ $commercialWhatsapp }}?text=' + encodeURIComponent('Olá! Acabei de me cadastrar no site do AuroBarber. Meu nome é ' + name + ' da barbearia ' + barbershop_name + '. Gostaria de liberar meu acesso de teste!')"
+                    :href="'https://wa.me/{{ $commercialWhatsapp }}?text=' + encodeURIComponent('Olá! Acabei de me cadastrar no site do AuroBarber. Meu nome é ' + name + ' da barbearia ' + barbershop_name + '. Gostaria de tirar algumas dúvidas!')"
                     target="_blank"
                     rel="noopener"
-                    class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs hover:bg-emerald-400 transition"
+                    class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-slate-700 bg-slate-800 text-emerald-400 font-bold text-xs hover:bg-slate-700 hover:text-emerald-300 transition"
                 >
                     <span>💬</span>
-                    <span>Abrir Conversa no WhatsApp Agora</span>
+                    <span>Falar no WhatsApp agora (Opcional)</span>
                 </a>
             </div>
         </div>

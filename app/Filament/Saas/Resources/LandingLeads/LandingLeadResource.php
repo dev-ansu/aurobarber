@@ -9,6 +9,7 @@ use App\Filament\Saas\Resources\LandingLeads\Pages\ListLandingLeads;
 use App\Models\LandingLead;
 use App\Models\User;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
@@ -155,11 +156,13 @@ class LandingLeadResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->label('Responsável')
+                    ->description(fn (LandingLead $record): string => $record->email)
                     ->searchable()
                     ->sortable()
                     ->weight('bold'),
                 TextColumn::make('barbershop_name')
                     ->label('Barbearia')
+                    ->description(fn (LandingLead $record): ?string => $record->chairs_count ? "{$record->chairs_count} cadeiras" : null)
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('phone')
@@ -171,7 +174,7 @@ class LandingLeadResource extends Resource
                     ->label('Cidade')
                     ->searchable(),
                 TextColumn::make('selected_plan')
-                    ->label('Plano de Interesse')
+                    ->label('Plano')
                     ->badge()
                     ->color('amber'),
                 TextColumn::make('status')
@@ -209,6 +212,19 @@ class LandingLeadResource extends Resource
             ])
             ->defaultSort('created_at', 'desc')
             ->actions([
+                Action::make('whatsapp')
+                    ->label('WhatsApp')
+                    ->icon('heroicon-m-chat-bubble-left-right')
+                    ->color('success')
+                    ->url(fn (LandingLead $record): string => $record->getWhatsAppUrl(), shouldOpenInNewTab: true),
+                Action::make('mark_in_contact')
+                    ->label('Marcar em Contato')
+                    ->icon('heroicon-m-check')
+                    ->color('warning')
+                    ->visible(fn (LandingLead $record): bool => $record->status === 'novo')
+                    ->action(function (LandingLead $record): void {
+                        $record->update(['status' => 'em_contato']);
+                    }),
                 EditAction::make(),
                 DeleteAction::make(),
             ]);
