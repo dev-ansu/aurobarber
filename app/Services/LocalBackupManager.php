@@ -440,6 +440,17 @@ class LocalBackupManager
                     }
                 }
             }
+        } else {
+            // No Linux, prioriza a versão mais recente instalada em /usr/lib/postgresql/*/bin
+            // para evitar falhas do pg_wrapper ao ler cabeçalhos mais recentes (ex: header 1.16 do PG 17).
+            $linuxDirs = glob('/usr/lib/postgresql/*/bin', GLOB_ONLYDIR) ?: [];
+            rsort($linuxDirs, SORT_NATURAL);
+            foreach ($linuxDirs as $dir) {
+                $candidate = $dir.DIRECTORY_SEPARATOR.$binary;
+                if (File::isFile($candidate) && is_executable($candidate)) {
+                    return $candidate;
+                }
+            }
         }
 
         return $binary;
