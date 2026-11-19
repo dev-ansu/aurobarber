@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Models\Barbershop;
 use App\Models\SaasBackupSetting;
 use App\Models\SecurityAccessRule;
+use App\Services\Backup\GoogleDriveStorageService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -361,13 +362,13 @@ class BarberDoctorService
     {
         try {
             $activeRules = SecurityAccessRule::where('is_active', true)->count();
-            $blockedIps = SecurityAccessRule::where('is_active', true)->where('action', 'block')->count();
+            $blockedIps = SecurityAccessRule::where('is_active', true)->where('type', 'blacklist')->count();
 
             return [
                 'category' => 'Segurança & Perímetro',
                 'name' => 'Firewall & Regras de Acesso SaaS',
                 'status' => 'ok',
-                'details' => "{$activeRules} regra(s) ativa(s) ({$blockedIps} bloqueios de IP).",
+                'details' => "{$activeRules} regra(s) ativa(s) ({$blockedIps} bloqueios/blacklist).",
                 'recommendation' => null,
             ];
         } catch (Throwable $e) {

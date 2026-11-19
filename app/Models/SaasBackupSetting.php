@@ -27,4 +27,9 @@ class SaasBackupSetting extends Model
     {
         return static::query()->firstOrCreate(['id' => 1]);
     }
+
+    public static function getGlobal(): self
+    {
+        return static::current();
+    }
 }
