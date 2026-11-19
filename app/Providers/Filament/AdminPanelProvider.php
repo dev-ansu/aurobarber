@@ -6,6 +6,7 @@ use App\Filament\Auth\EditOwnProfile;
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Tenancy\EditBarbershopProfile;
 use App\Filament\Pages\Tenancy\RegisterBarbershop;
+use App\Http\Middleware\CheckSecurityAccessRules;
 use App\Http\Middleware\EnsureBarbershopLicenseIsValid;
 use App\Http\Middleware\EnsurePasswordIsChanged;
 use App\Http\Middleware\ResolveTenantSchema;
@@ -144,6 +145,7 @@ class AdminPanelProvider extends PanelProvider
                     ->pluralModelLabel('Cargos & Permissões'),
             ])
             ->middleware([
+                CheckSecurityAccessRules::class,
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,

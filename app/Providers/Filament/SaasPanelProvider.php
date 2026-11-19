@@ -20,6 +20,8 @@ use App\Filament\Saas\Resources\Payments\SaasPaymentSubmissionResource;
 use App\Filament\Saas\Resources\PlanChangeRequests\SaasPlanChangeRequestResource;
 use App\Filament\Saas\Resources\SaasPaymentReceipts\SaasPaymentReceiptResource;
 use App\Filament\Saas\Resources\SaasPlans\SaasPlanResource;
+use App\Filament\Saas\Resources\SecurityAccessRules\SecurityAccessRuleResource;
+use App\Http\Middleware\CheckSecurityAccessRules;
 use App\Http\Middleware\EnsurePasswordIsChanged;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Auth\MultiFactor\Email\EmailAuthentication;
@@ -111,8 +113,10 @@ class SaasPanelProvider extends PanelProvider
                 SaasPaymentSubmissionResource::class,
                 SaasPaymentReceiptResource::class,
                 SaasPlanChangeRequestResource::class,
+                SecurityAccessRuleResource::class,
             ])
             ->middleware([
+                CheckSecurityAccessRules::class,
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,

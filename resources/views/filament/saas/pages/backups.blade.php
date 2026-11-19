@@ -191,7 +191,9 @@
                                                 color="info"
                                                 outlined
                                                 icon="heroicon-m-beaker"
-                                                wire:click="simulateBackup(@js($item['filename']))"
+                                                wire:click="simulateBackup('{{ $item['filename'] }}')"
+                                                wire:loading.attr="disabled"
+                                                wire:target="simulateBackup('{{ $item['filename'] }}')"
                                             >
                                                 Simular Restore
                                             </x-filament::button>
@@ -200,8 +202,10 @@
                                                 color="warning"
                                                 outlined
                                                 icon="heroicon-m-arrow-uturn-left"
-                                                wire:click="restoreBackup(@js($item['filename']))"
+                                                wire:click="restoreBackup('{{ $item['filename'] }}')"
                                                 wire:confirm="Tem certeza de que deseja restaurar este backup? Uma cópia de segurança preventiva será gerada automaticamente antes da restauração."
+                                                wire:loading.attr="disabled"
+                                                wire:target="restoreBackup('{{ $item['filename'] }}')"
                                             >
                                                 Restaurar
                                             </x-filament::button>
@@ -210,8 +214,10 @@
                                                 color="danger"
                                                 outlined
                                                 icon="heroicon-m-trash"
-                                                wire:click="deleteBackup(@js($item['filename']))"
+                                                wire:click="deleteBackup('{{ $item['filename'] }}')"
                                                 wire:confirm="Excluir este arquivo de backup permanentemente do disco da VPS?"
+                                                wire:loading.attr="disabled"
+                                                wire:target="deleteBackup('{{ $item['filename'] }}')"
                                             >
                                                 Excluir
                                             </x-filament::button>
