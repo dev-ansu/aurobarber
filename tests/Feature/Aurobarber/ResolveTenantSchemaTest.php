@@ -116,3 +116,31 @@ test('resolve tenant schema resolves public booking route slug and switches to t
         ->and(app('current_tenant_barbershop')->id)->toBe($tenant->id)
         ->and($session->get('aurobarber.active_tenant_id'))->toBe(999);
 });
+
+test('resolve tenant schema resolves tenant from path segments when route is not yet bound', function () {
+    $tenant = Barbershop::create([
+        'name' => 'Barbearia Marinho',
+        'slug' => 'marinho',
+        'schema_name' => 'tenant_marinho',
+        'is_active' => true,
+    ]);
+
+    app()->forgetInstance('current_tenant_barbershop');
+
+    $tenantService = Mockery::mock(TenantService::class);
+    $tenantService->shouldReceive('switchToPublic')->once();
+    $tenantService->shouldReceive('resolveTenantFromHost')->once()->andReturnNull();
+    $tenantService->shouldReceive('switchToTenant')->once()->with('tenant_marinho');
+
+    // Request direto sem route binding (simulando pipeline global inicial)
+    $request = Request::create('/admin/marinho/appointments', 'GET');
+    $session = app('session.store');
+    $request->setLaravelSession($session);
+
+    $middleware = new ResolveTenantSchema($tenantService);
+    $middleware->handle($request, fn (): Response => new Response('ok'));
+
+    expect(app()->bound('current_tenant_barbershop'))->toBeTrue()
+        ->and(app('current_tenant_barbershop')->id)->toBe($tenant->id)
+        ->and($session->get('aurobarber.active_tenant_id'))->toBe($tenant->id);
+});

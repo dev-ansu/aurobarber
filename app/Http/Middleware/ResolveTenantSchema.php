@@ -43,15 +43,25 @@ class ResolveTenantSchema
             $routeSlug = $request->route('slug');
             $routeIdentifier = $routeTenant ?? $routeSlug;
 
+            // Fallback imediato via URI Path quando o middleware roda antes da resolução de rotas pelo kernel
+            if (! $routeIdentifier) {
+                if ($request->segment(1) === 'admin' && filled($request->segment(2)) && ! in_array($request->segment(2), ['login', 'logout', 'password-reset'], true)) {
+                    $routeIdentifier = $request->segment(2);
+                    $resolvedFromAdminContext = true;
+                } elseif (! in_array($request->segment(1), ['admin', 'saas', 'livewire', 'up', 'api', 'manifest.json', 'storage', 'build', null], true)) {
+                    $routeIdentifier = $request->segment(1);
+                }
+            }
+
             if ($routeIdentifier instanceof Barbershop) {
                 $tenantBarbershop = $routeIdentifier;
-                $resolvedFromAdminContext = $routeTenant !== null;
+                $resolvedFromAdminContext = $resolvedFromAdminContext || $routeTenant !== null;
             } elseif (is_string($routeIdentifier) && $routeIdentifier !== '') {
                 $tenantBarbershop = Barbershop::where('slug', $routeIdentifier)
                     ->orderByDesc('is_active')
                     ->orderByDesc('id')
                     ->first();
-                $resolvedFromAdminContext = $routeTenant !== null;
+                $resolvedFromAdminContext = $resolvedFromAdminContext || $routeTenant !== null;
             }
         }
 
