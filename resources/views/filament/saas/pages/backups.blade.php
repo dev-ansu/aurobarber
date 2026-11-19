@@ -188,6 +188,18 @@
                                         <div class="inline-flex items-center gap-2">
                                             <x-filament::button
                                                 size="xs"
+                                                color="success"
+                                                outlined
+                                                icon="heroicon-m-shield-check"
+                                                wire:click="createSandbox('{{ $item['filename'] }}')"
+                                                wire:confirm="Deseja inicializar uma Sandbox isolada para validar este backup em um schema seguro? Nenhum dado de produção será alterado."
+                                                wire:loading.attr="disabled"
+                                                wire:target="createSandbox('{{ $item['filename'] }}')"
+                                            >
+                                                Criar Sandbox
+                                            </x-filament::button>
+                                            <x-filament::button
+                                                size="xs"
                                                 color="info"
                                                 outlined
                                                 icon="heroicon-m-beaker"
@@ -230,5 +242,221 @@
                 </div>
             @endif
         </div>
+        {{-- 5. SEÇÃO DE AMBIENTES SANDBOX DE RESTAURAÇÃO (DISASTER RECOVERY) --}}
+        @php
+            $sandboxRuns = $this->activeSandboxRuns;
+        @endphp
+        <div class="space-y-4 pt-4">
+            <x-filament::section>
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <x-filament::badge color="success">Disaster Recovery • Sandbox Isolada</x-filament::badge>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">Schemas temporários auditáveis</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-950 dark:text-white">Ambientes Sandbox de Restauração</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                            Validação prática de restauração em schemas isolados no PostgreSQL. Permite auditar contagens de registros e assinar laudo humano sem tocar em produção.
+                        </p>
+                    </div>
+                </div>
+            </x-filament::section>
+
+            <div class="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
+                @if($sandboxRuns->isEmpty())
+                    <div class="px-6 py-10 text-center">
+                        <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-gray-50 text-gray-400 dark:bg-white/5 dark:text-gray-500">
+                            <x-filament::icon icon="heroicon-o-shield-check" class="h-6 w-6" />
+                        </div>
+                        <p class="text-sm font-semibold text-gray-950 dark:text-white">Nenhum ambiente sandbox ativo no momento.</p>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Clique em "Criar Sandbox" na tabela de backups acima para testar uma restauração isolada.</p>
+                    </div>
+                @else
+                    <div class="overflow-x-auto">
+                        <table class="w-full divide-y divide-gray-200 text-left text-sm dark:divide-white/5">
+                            <thead class="bg-gray-50 dark:bg-white/5">
+                                <tr>
+                                    <th class="whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Schema / Alvo</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Backup Origem</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Status</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Smoke Test</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Laudo Humano</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Criado em</th>
+                                    <th class="whitespace-nowrap px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 dark:divide-white/5">
+                                @foreach($sandboxRuns as $run)
+                                    @php
+                                        $runStatusColor = match($run->status) {
+                                            'ready' => 'success',
+                                            'running' => 'warning',
+                                            'failed' => 'danger',
+                                            'cleaned' => 'gray',
+                                            default => 'info',
+                                        };
+                                        $runStatusLabel = match($run->status) {
+                                            'ready' => 'Pronta / Ativa',
+                                            'running' => 'Restaurando...',
+                                            'failed' => 'Falha',
+                                            'cleaned' => 'Destruída',
+                                            default => $run->status,
+                                        };
+                                        $humanColor = match($run->human_validation_status) {
+                                            'approved' => 'success',
+                                            'rejected' => 'danger',
+                                            default => 'warning',
+                                        };
+                                        $humanLabel = match($run->human_validation_status) {
+                                            'approved' => '✓ Aprovado',
+                                            'rejected' => '✗ Rejeitado',
+                                            default => '⏳ Pendente',
+                                        };
+                                        $tableCount = $run->automated_check_results['table_count'] ?? 0;
+                                    @endphp
+                                    <tr class="transition hover:bg-gray-50 dark:hover:bg-white/5">
+                                        <td class="whitespace-nowrap px-4 py-3.5 font-mono text-xs font-bold text-gray-950 dark:text-white">
+                                            {{ $run->target_schema ?? 'N/A' }}
+                                        </td>
+                                        <td class="px-4 py-3.5 font-mono text-xs text-gray-600 dark:text-gray-300">
+                                            {{ $run->backup_file }}
+                                        </td>
+                                        <td class="whitespace-nowrap px-4 py-3.5">
+                                            <x-filament::badge :color="$runStatusColor" size="xs">
+                                                {{ $runStatusLabel }}
+                                            </x-filament::badge>
+                                        </td>
+                                        <td class="whitespace-nowrap px-4 py-3.5 text-xs text-gray-600 dark:text-gray-300">
+                                            @if($run->automated_check_status === 'passed')
+                                                <span class="text-success-600 dark:text-success-400 font-semibold">{{ $tableCount }} tabelas</span>
+                                            @else
+                                                <span class="text-gray-400">{{ $run->automated_check_status }}</span>
+                                            @endif
+                                        </td>
+                                        <td class="whitespace-nowrap px-4 py-3.5">
+                                            <x-filament::badge :color="$humanColor" size="xs">
+                                                {{ $humanLabel }}
+                                            </x-filament::badge>
+                                        </td>
+                                        <td class="whitespace-nowrap px-4 py-3.5 text-xs text-gray-500 dark:text-gray-400">
+                                            {{ $run->created_at?->format('d/m/Y H:i') }}
+                                        </td>
+                                        <td class="whitespace-nowrap px-4 py-3.5 text-right">
+                                            <div class="inline-flex items-center gap-2">
+                                                <x-filament::button
+                                                    size="xs"
+                                                    color="info"
+                                                    outlined
+                                                    icon="heroicon-m-clipboard-document-check"
+                                                    wire:click="openAuditModal({{ $run->id }})"
+                                                >
+                                                    Auditoria
+                                                </x-filament::button>
+
+                                                @if($run->status === 'ready')
+                                                    <x-filament::button
+                                                        size="xs"
+                                                        color="danger"
+                                                        outlined
+                                                        icon="heroicon-m-trash"
+                                                        wire:click="cleanupSandbox({{ $run->id }})"
+                                                        wire:confirm="Deseja destruir este schema sandbox e liberar espaço em disco?"
+                                                        wire:loading.attr="disabled"
+                                                        wire:target="cleanupSandbox({{ $run->id }})"
+                                                    >
+                                                        Destruir
+                                                    </x-filament::button>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        {{-- MODAL DE AUDITORIA & LAUDO DA SANDBOX --}}
+        @if($showAuditModal && $this->selectedSandbox)
+            @php
+                $sandbox = $this->selectedSandbox;
+                $results = $sandbox->automated_check_results ?? [];
+                $entities = $results['entities'] ?? [];
+            @endphp
+            <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-950/60 backdrop-blur-sm">
+                <div class="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-gray-950/10 dark:bg-gray-900 dark:ring-white/10 space-y-5 p-6">
+                    <div class="flex items-center justify-between border-b border-gray-100 pb-4 dark:border-white/10">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <x-filament::badge color="success">Sandbox Auditada</x-filament::badge>
+                                <span class="font-mono text-xs text-gray-500 dark:text-gray-400">{{ $sandbox->target_schema }}</span>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-950 dark:text-white">Laudo Clínico de Restauração</h3>
+                        </div>
+                        <button wire:click="closeAuditModal" type="button" class="text-gray-400 hover:text-gray-600 dark:hover:text-white">
+                            <x-filament::icon icon="heroicon-m-x-mark" class="h-6 w-6" />
+                        </button>
+                    </div>
+
+                    {{-- Resultados da Restauração --}}
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div class="p-3 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-center">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Tabelas</span>
+                            <div class="text-xl font-bold text-gray-950 dark:text-white mt-1">{{ $results['table_count'] ?? 0 }}</div>
+                        </div>
+                        <div class="p-3 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-center">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Barbearias</span>
+                            <div class="text-xl font-bold text-success-600 dark:text-success-400 mt-1">{{ $entities['barbershops'] ?? 0 }}</div>
+                        </div>
+                        <div class="p-3 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-center">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Usuários</span>
+                            <div class="text-xl font-bold text-info-600 dark:text-info-400 mt-1">{{ $entities['users'] ?? 0 }}</div>
+                        </div>
+                        <div class="p-3 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-center">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Agendamentos</span>
+                            <div class="text-xl font-bold text-warning-600 dark:text-warning-400 mt-1">{{ $entities['appointments'] ?? 0 }}</div>
+                        </div>
+                    </div>
+
+                    <div class="text-xs text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-white/5 p-3.5 rounded-xl border border-gray-200 dark:border-white/10 leading-relaxed">
+                        {{ $results['summary'] ?? $sandbox->message }}
+                    </div>
+
+                    {{-- Formulário de Laudo Humano --}}
+                    <div class="space-y-3 pt-2 border-t border-gray-100 dark:border-white/10">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
+                            Parecer do Auditor (Validação Humana)
+                        </label>
+                        <div class="flex gap-4">
+                            <label class="flex items-center gap-2 text-xs text-gray-800 dark:text-gray-200 cursor-pointer">
+                                <input type="radio" wire:model.live="validationStatus" value="approved" class="text-success-600 focus:ring-success-500">
+                                <span class="font-semibold text-success-600 dark:text-success-400">Aprovar Restauração (Íntegro)</span>
+                            </label>
+                            <label class="flex items-center gap-2 text-xs text-gray-800 dark:text-gray-200 cursor-pointer">
+                                <input type="radio" wire:model.live="validationStatus" value="rejected" class="text-danger-600 focus:ring-danger-500">
+                                <span class="font-semibold text-danger-600 dark:text-danger-400">Rejeitar (Inconsistência)</span>
+                            </label>
+                        </div>
+                        <textarea
+                            wire:model.defer="validationNotes"
+                            rows="2"
+                            placeholder="Adicione observações da auditoria (ex: todos os agendamentos e cadastros foram preservados)..."
+                            class="w-full text-xs rounded-xl border-gray-300 dark:border-white/10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-primary-500 focus:border-primary-500"
+                        ></textarea>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-3 pt-3 border-t border-gray-100 dark:border-white/10">
+                        <x-filament::button size="sm" color="gray" wire:click="closeAuditModal">
+                            Fechar
+                        </x-filament::button>
+                        <x-filament::button size="sm" color="primary" wire:click="submitValidation" icon="heroicon-m-check">
+                            Salvar Laudo de Auditoria
+                        </x-filament::button>
+                    </div>
+                </div>
+            </div>
+        @endif
     </div>
 </x-filament-panels::page>

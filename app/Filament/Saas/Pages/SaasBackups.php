@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Filament\Saas\Pages;
 
 use App\Models\Barbershop;
+use App\Models\SaasRestoreTestRun;
 use App\Services\LocalBackupManager;
 use App\Services\SaasGoogleDriveBackupService;
+use App\Services\SaasRestoreTestService;
 use BackedEnum;
 use Carbon\Carbon;
 use Filament\Actions\Action;
@@ -36,6 +38,14 @@ class SaasBackups extends Page
     }
 
     public string $filterScope = 'all'; // 'all', 'global', 'tenants'
+
+    public ?int $selectedSandboxId = null;
+
+    public string $validationStatus = 'approved';
+
+    public ?string $validationNotes = null;
+
+    public bool $showAuditModal = false;
 
     public function getHeaderActions(): array
     {
@@ -269,6 +279,109 @@ class SaasBackups extends Page
                 ->persistent()
                 ->send();
         }
+    }
+
+    public function createSandbox(string $filename, SaasRestoreTestService $service): void
+    {
+        abort_unless(auth()->user()?->role === 'master_admin', 403);
+
+        try {
+            $run = $service->createSandbox($filename, auth()->id());
+
+            $tableCount = $run->automated_check_results['table_count'] ?? 0;
+
+            Notification::make()
+                ->title('🛡️ Sandbox de Restauração Criada com Sucesso!')
+                ->body("Ambiente isolado '{$run->target_schema}' provisionado. {$tableCount} tabelas restauradas sem alterar dados de produção.")
+                ->success()
+                ->persistent()
+                ->send();
+        } catch (\Throwable $e) {
+            Notification::make()
+                ->title('Falha ao Criar Sandbox')
+                ->body($e->getMessage())
+                ->danger()
+                ->persistent()
+                ->send();
+        }
+    }
+
+    public function cleanupSandbox(int $runId, SaasRestoreTestService $service): void
+    {
+        abort_unless(auth()->user()?->role === 'master_admin', 403);
+
+        try {
+            $run = SaasRestoreTestRun::findOrFail($runId);
+            $service->cleanupSandbox($run);
+
+            Notification::make()
+                ->title('Sandbox Destruída com Sucesso')
+                ->body("O schema '{$run->target_schema}' foi removido e recursos liberados.")
+                ->success()
+                ->send();
+        } catch (\Throwable $e) {
+            Notification::make()
+                ->title('Erro ao Limpar Sandbox')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+        }
+    }
+
+    public function openAuditModal(int $runId): void
+    {
+        $this->selectedSandboxId = $runId;
+        $run = SaasRestoreTestRun::find($runId);
+        $this->validationStatus = $run?->human_validation_status === 'pending' ? 'approved' : ($run?->human_validation_status ?? 'approved');
+        $this->validationNotes = $run?->human_validation_notes;
+        $this->showAuditModal = true;
+    }
+
+    public function closeAuditModal(): void
+    {
+        $this->showAuditModal = false;
+        $this->selectedSandboxId = null;
+    }
+
+    public function submitValidation(SaasRestoreTestService $service): void
+    {
+        abort_unless(auth()->user()?->role === 'master_admin', 403);
+
+        if (! $this->selectedSandboxId) {
+            return;
+        }
+
+        try {
+            $run = SaasRestoreTestRun::findOrFail($this->selectedSandboxId);
+            $service->submitHumanValidation($run, $this->validationStatus, $this->validationNotes, auth()->id());
+
+            Notification::make()
+                ->title('Laudo de Auditoria Registrado!')
+                ->body('O status de validação humana foi gravado no histórico de auditoria.')
+                ->success()
+                ->send();
+
+            $this->closeAuditModal();
+        } catch (\Throwable $e) {
+            Notification::make()
+                ->title('Erro ao Salvar Laudo')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+        }
+    }
+
+    public function getActiveSandboxRunsProperty(): Collection
+    {
+        return SaasRestoreTestRun::query()
+            ->latest()
+            ->take(8)
+            ->get();
+    }
+
+    public function getSelectedSandboxProperty(): ?SaasRestoreTestRun
+    {
+        return $this->selectedSandboxId ? SaasRestoreTestRun::find($this->selectedSandboxId) : null;
     }
 
     public function deleteBackup(string $filename): void
