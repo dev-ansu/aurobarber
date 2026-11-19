@@ -42,7 +42,7 @@ class Login extends BaseLogin
             return null;
         }
 
-        if (config('services.turnstile.site_key')) {
+        if (blank($this->userUndertakingMultiFactorAuthentication) && config('services.turnstile.site_key')) {
             $token = $this->turnstileToken
                 ?? request()->input('cf-turnstile-response')
                 ?? request()->input('serverMemo.data.turnstileToken');
