@@ -9,6 +9,7 @@ use App\Filament\Resources\Roles\Pages\EditRole;
 use App\Filament\Resources\Roles\Pages\ListRoles;
 use App\Filament\Resources\Roles\Pages\ViewRole;
 use App\Models\Role;
+use BezhanSalleh\FilamentShield\Facades\FilamentShield;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use BezhanSalleh\FilamentShield\Support\Utils;
 use BezhanSalleh\FilamentShield\Traits\HasShieldFormComponents;
@@ -29,6 +30,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
@@ -145,6 +147,7 @@ class RoleResource extends Resource
                         if ($record && method_exists($record, 'getFriendlyName')) {
                             return $record->getFriendlyName();
                         }
+
                         return match ($state) {
                             'super_admin' => 'Super Administrador (SaaS Master)',
                             'barbershop_owner' => 'Proprietário (Dono da Barbearia)',
@@ -189,6 +192,7 @@ class RoleResource extends Resource
                         if (filled($record->description)) {
                             return $record->description;
                         }
+
                         return match ($record->name) {
                             'super_admin' => 'Administração técnica global. Acesso irrestrito a toda a plataforma Aurobarber, múltiplos estabelecimentos e suporte do sistema.',
                             'barbershop_owner' => 'Acesso total e irrestrito. Gerencia financeiro da barbearia (faturamento e despesas), relatórios de lucro, fechamento de comissões da equipe, catálogo de serviços, controle de estoque e configurações do estabelecimento.',
@@ -253,11 +257,11 @@ class RoleResource extends Resource
      */
     public static function getResourceEntitiesSchema(): ?array
     {
-        return collect(\BezhanSalleh\FilamentShield\Facades\FilamentShield::getResources())
+        return collect(FilamentShield::getResources())
             ->map(function (array $entity): Section {
                 $sectionLabel = strval(
                     static::shield()->hasLocalizedPermissionLabels()
-                        ? \BezhanSalleh\FilamentShield\Facades\FilamentShield::getLocalizedResourceLabel($entity['resourceFqcn'])
+                        ? FilamentShield::getLocalizedResourceLabel($entity['resourceFqcn'])
                         : $entity['model']
                 );
 
@@ -300,7 +304,7 @@ class RoleResource extends Resource
     }
 
     #[Override]
-    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
             ->whereNotIn('name', ['super_admin', 'master_admin']);

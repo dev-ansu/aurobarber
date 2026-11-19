@@ -3,9 +3,14 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Auth\EditOwnProfile;
+use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Tenancy\EditBarbershopProfile;
 use App\Filament\Pages\Tenancy\RegisterBarbershop;
+use App\Http\Middleware\EnsureBarbershopLicenseIsValid;
+use App\Http\Middleware\EnsurePasswordIsChanged;
+use App\Http\Middleware\ResolveTenantSchema;
 use App\Models\Barbershop;
+use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Auth\MultiFactor\Email\EmailAuthentication;
 use Filament\Http\Middleware\Authenticate;
@@ -25,6 +30,7 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
@@ -35,7 +41,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login(\App\Filament\Pages\Auth\Login::class)
+            ->login(Login::class)
             ->passwordReset()
             ->profile(EditOwnProfile::class, isSimple: false)
             ->multiFactorAuthentication([
@@ -51,7 +57,7 @@ class AdminPanelProvider extends PanelProvider
                     ->visible(fn (): bool => auth()->check()),
             ])
             ->brandName(fn (): string => filament()->getTenant()?->name ?? 'AuroBarber')
-            ->brandLogo(fn (): ?string => filament()->getTenant()?->logo_url ? asset('storage/' . filament()->getTenant()->logo_url) : null)
+            ->brandLogo(fn (): ?string => filament()->getTenant()?->logo_url ? asset('storage/'.filament()->getTenant()->logo_url) : null)
             ->brandLogoHeight('2.25rem')
             ->colors([
                 'primary' => Color::Amber,
@@ -77,13 +83,13 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
-                fn () => new \Illuminate\Support\HtmlString(
-                    '<link rel="manifest" href="' . url('/manifest.json' . (filament()->getTenant() ? '?tenant=' . filament()->getTenant()->slug : '')) . '">' .
-                    '<meta name="theme-color" content="' . (filament()->getTenant()?->brand_color ?: '#020617') . '">' .
-                    '<meta name="apple-mobile-web-app-capable" content="yes">' .
-                    '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">' .
-                    '<meta name="apple-mobile-web-app-title" content="' . e(filament()->getTenant()?->name ?? 'AuroBarber') . '">' .
-                    '<link rel="apple-touch-icon" href="' . (filament()->getTenant()?->logo_url ? asset('storage/' . filament()->getTenant()->logo_url) : asset('pwa-icon.svg')) . '">' .
+                fn () => new HtmlString(
+                    '<link rel="manifest" href="'.url('/manifest.json'.(filament()->getTenant() ? '?tenant='.filament()->getTenant()->slug : '')).'">'.
+                    '<meta name="theme-color" content="'.(filament()->getTenant()?->brand_color ?: '#020617').'">'.
+                    '<meta name="apple-mobile-web-app-capable" content="yes">'.
+                    '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">'.
+                    '<meta name="apple-mobile-web-app-title" content="'.e(filament()->getTenant()?->name ?? 'AuroBarber').'">'.
+                    '<link rel="apple-touch-icon" href="'.(filament()->getTenant()?->logo_url ? asset('storage/'.filament()->getTenant()->logo_url) : asset('pwa-icon.svg')).'">'.
                     '<script>
                         window.deferredPwaPrompt = null;
                         window.addEventListener("beforeinstallprompt", function(e) {
@@ -102,6 +108,10 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(
                 PanelsRenderHook::GLOBAL_SEARCH_AFTER,
                 fn () => view('filament.components.public-page-button')
+            )
+            ->renderHook(
+                PanelsRenderHook::AUTH_LOGIN_FORM_AFTER,
+                fn () => view('filament.auth.turnstile')
             )
             ->navigationGroups([
                 NavigationGroup::make('Atendimento')->collapsible(),
@@ -125,7 +135,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->plugins([
-                \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make()
+                FilamentShieldPlugin::make()
                     ->navigationGroup('Equipe')
                     ->navigationLabel('Cargos & Permissões')
                     ->navigationIcon('heroicon-o-shield-check')
@@ -146,11 +156,11 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-                \App\Http\Middleware\EnsurePasswordIsChanged::class,
+                EnsurePasswordIsChanged::class,
             ])
             ->tenantMiddleware([
-                \App\Http\Middleware\ResolveTenantSchema::class,
-                \App\Http\Middleware\EnsureBarbershopLicenseIsValid::class,
+                ResolveTenantSchema::class,
+                EnsureBarbershopLicenseIsValid::class,
             ], isPersistent: true);
     }
 }

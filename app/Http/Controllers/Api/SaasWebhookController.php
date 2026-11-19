@@ -15,6 +15,7 @@ use App\Services\TenantService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -97,7 +98,7 @@ class SaasWebhookController extends Controller
                 }
             }
 
-            $schemaName = 'tenant_' . str_replace('-', '_', $slug);
+            $schemaName = 'tenant_'.str_replace('-', '_', $slug);
 
             // 2. Cria ou atualiza a Barbearia
             $barbershop = Barbershop::updateOrCreate(
@@ -151,7 +152,7 @@ class SaasWebhookController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao provisionar barbearia: ' . $e->getMessage(),
+                'message' => 'Erro ao provisionar barbearia: '.$e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -377,7 +378,7 @@ class SaasWebhookController extends Controller
         } catch (Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Falha ao gerar backup: ' . $e->getMessage(),
+                'message' => 'Falha ao gerar backup: '.$e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -397,7 +398,7 @@ class SaasWebhookController extends Controller
             return response()->json(['success' => false, 'message' => 'Barbearia não encontrada.'], Response::HTTP_NOT_FOUND);
         }
 
-        $schemaName = $barbershop->schema_name ?: ('tenant_' . str_replace('-', '_', $barbershop->slug));
+        $schemaName = $barbershop->schema_name ?: ('tenant_'.str_replace('-', '_', $barbershop->slug));
 
         try {
             $filename = $this->backupManager->create(safetyCopy: false, schema: $schemaName);
@@ -416,7 +417,7 @@ class SaasWebhookController extends Controller
         } catch (Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => "Falha ao gerar backup do schema: " . $e->getMessage(),
+                'message' => 'Falha ao gerar backup do schema: '.$e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -453,7 +454,7 @@ class SaasWebhookController extends Controller
         } catch (Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Falha ao restaurar backup: ' . $e->getMessage(),
+                'message' => 'Falha ao restaurar backup: '.$e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -463,7 +464,7 @@ class SaasWebhookController extends Controller
      */
     protected function clearLandingCache(): JsonResponse
     {
-        \Illuminate\Support\Facades\Cache::forget('aurobarber_landing_cms');
+        Cache::forget('aurobarber_landing_cms');
 
         return response()->json([
             'success' => true,

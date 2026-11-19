@@ -22,7 +22,7 @@ return new class extends Migration
             ->get();
 
         foreach ($owners as $owner) {
-            if (!$owner->hasRole('super_admin')) {
+            if (! $owner->hasRole('super_admin')) {
                 $owner->assignRole($superAdmin);
             }
         }
@@ -37,7 +37,7 @@ return new class extends Migration
                 '--panel' => 'admin',
                 '--no-interaction' => true,
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // Ignora falha silenciosa caso executado fora do contexto HTTP/CLI completo
         }
     }

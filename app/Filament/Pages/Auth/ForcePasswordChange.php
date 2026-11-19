@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages\Auth;
 
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -12,13 +13,14 @@ use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\HtmlString;
 use Illuminate\Validation\Rules\Password;
 
 class ForcePasswordChange extends Page implements HasForms
 {
     use InteractsWithForms;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-key';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-key';
 
     protected static ?string $title = 'Redefinição Obrigatória de Senha';
 
@@ -29,15 +31,17 @@ class ForcePasswordChange extends Page implements HasForms
     protected string $view = 'filament.pages.auth.force-password-change';
 
     public ?string $current_password = '';
+
     public ?string $password = '';
+
     public ?string $password_confirmation = '';
 
-    public function getMaxContentWidth(): Width | string | null
+    public function getMaxContentWidth(): Width|string|null
     {
         return 'full';
     }
 
-    public function getMaxWidth(): Width | string | null
+    public function getMaxWidth(): Width|string|null
     {
         return 'full';
     }
@@ -51,13 +55,15 @@ class ForcePasswordChange extends Page implements HasForms
     {
         $user = auth()->user();
 
-        if (!$user || !(bool) $user->must_change_password) {
+        if (! $user || ! (bool) $user->must_change_password) {
             if ($user && $user->role === 'master_admin') {
                 $this->redirect(url('/saas'));
+
                 return;
             }
 
             $this->redirect(filament()->getUrl());
+
             return;
         }
 
@@ -113,9 +119,9 @@ class ForcePasswordChange extends Page implements HasForms
                         Tab::make('Diretrizes & Segurança da Conta')
                             ->icon('heroicon-o-shield-exclamation')
                             ->schema([
-                                \Filament\Forms\Components\Placeholder::make('security_guidelines')
+                                Placeholder::make('security_guidelines')
                                     ->label('Boas Práticas de Proteção e Privacidade')
-                                    ->content(new \Illuminate\Support\HtmlString('
+                                    ->content(new HtmlString('
                                         <div class="flex flex-col gap-3 py-2 text-sm leading-relaxed text-gray-700 dark:text-gray-300">
                                             <div class="flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/5">
                                                 <span class="text-base font-bold text-success-600 dark:text-success-400">✓</span>
@@ -157,6 +163,7 @@ class ForcePasswordChange extends Page implements HasForms
 
         if ($user->role === 'master_admin') {
             $this->redirect(url('/saas'));
+
             return;
         }
 

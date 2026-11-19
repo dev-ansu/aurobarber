@@ -6,9 +6,11 @@ use App\Filament\Resources\BarbershopResource;
 use App\Models\Service;
 use App\Models\User;
 use App\Notifications\NewBarbershopWelcomeNotification;
+use App\Services\TenantService;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class CreateBarbershop extends CreateRecord
@@ -69,8 +71,8 @@ class CreateBarbershop extends CreateRecord
             ]);
         }
 
-        $tenantService = app(\App\Services\TenantService::class);
-        if (\Illuminate\Support\Facades\DB::connection()->getDriverName() === 'pgsql' && ! app()->runningUnitTests() && empty($barbershop->schema_name)) {
+        $tenantService = app(TenantService::class);
+        if (DB::connection()->getDriverName() === 'pgsql' && ! app()->runningUnitTests() && empty($barbershop->schema_name)) {
             try {
                 $schemaName = $tenantService->createTenant($barbershop->slug);
                 $barbershop->update(['schema_name' => $schemaName]);

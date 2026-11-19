@@ -6,8 +6,10 @@ use App\Models\Barbershop;
 use BezhanSalleh\FilamentShield\Resources\Roles\RoleResource;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -90,5 +92,27 @@ class AppServiceProvider extends ServiceProvider
         if (class_exists(RoleResource::class)) {
             RoleResource::scopeToTenant(false);
         }
+
+        RateLimiter::for('booking-submission', function (Request $request) {
+            return Limit::perMinutes(10, 5)->by($request->ip())->response(function () {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Muitas tentativas de agendamento em curto período. Por favor, aguarde alguns minutos e tente novamente.',
+                ], 429);
+            });
+        });
+
+        RateLimiter::for('booking-slots', function (Request $request) {
+            return Limit::perMinute(30)->by($request->ip())->response(function () {
+                return response()->json([
+                    'slots' => [],
+                    'message' => 'Limite temporário de consultas de horários atingido. Aguarde alguns instantes.',
+                ], 429);
+            });
+        });
+
+        RateLimiter::for('public-rating', function (Request $request) {
+            return Limit::perMinute(5)->by($request->ip());
+        });
     }
 }

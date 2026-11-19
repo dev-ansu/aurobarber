@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         // 1. Tabela de Vendas de Produtos (Avulso no Balcão ou comissionado a Barbeiro)
-        if (!Schema::hasTable('product_sales')) {
+        if (! Schema::hasTable('product_sales')) {
             Schema::create('product_sales', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('barbershop_id')->constrained('barbershops')->cascadeOnDelete();
@@ -37,7 +37,7 @@ return new class extends Migration
 
         // 2. Discriminativo de Produtos em Recibos de Fechamento de Comissão
         Schema::table('commission_payouts', function (Blueprint $table) {
-            if (!Schema::hasColumn('commission_payouts', 'services_gross')) {
+            if (! Schema::hasColumn('commission_payouts', 'services_gross')) {
                 $table->decimal('services_gross', 10, 2)->default(0.00)->after('appointments_count');
                 $table->decimal('services_commission', 10, 2)->default(0.00)->after('services_gross');
                 $table->decimal('products_gross', 10, 2)->default(0.00)->after('services_commission');
@@ -48,7 +48,7 @@ return new class extends Migration
 
         // 3. Coluna de Comissão sobre Produtos no Atendimento
         Schema::table('appointments', function (Blueprint $table) {
-            if (!Schema::hasColumn('appointments', 'products_commission_amount')) {
+            if (! Schema::hasColumn('appointments', 'products_commission_amount')) {
                 $table->decimal('products_commission_amount', 10, 2)->default(0.00)->after('products_total');
             }
         });

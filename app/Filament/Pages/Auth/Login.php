@@ -5,24 +5,33 @@ declare(strict_types=1);
 namespace App\Filament\Pages\Auth;
 
 use App\Models\User;
+use App\Rules\Turnstile;
 use App\Services\TwoFactorAuthService;
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 use Filament\Actions\Action;
 use Filament\Auth\Http\Responses\Contracts\LoginResponse;
 use Filament\Auth\MultiFactor\Contracts\HasBeforeChallengeHook;
+use Filament\Auth\MultiFactor\Contracts\MultiFactorAuthenticationProvider;
 use Filament\Auth\Pages\Login as BaseLogin;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Component;
+use Filament\Schemas\Components\Group;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Illuminate\Auth\SessionGuard;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Timebox;
 
 class Login extends BaseLogin
 {
+    public ?string $turnstileToken = null;
+
     public function authenticate(): ?LoginResponse
     {
         try {
@@ -31,6 +40,28 @@ class Login extends BaseLogin
             $this->getRateLimitedNotification($exception)?->send();
 
             return null;
+        }
+
+        if (config('services.turnstile.site_key')) {
+            $token = $this->turnstileToken
+                ?? request()->input('cf-turnstile-response')
+                ?? request()->input('serverMemo.data.turnstileToken');
+
+            $turnstileValidator = Validator::make(
+                ['turnstile_token' => $token],
+                ['turnstile_token' => ['required', new Turnstile('login')]],
+                ['turnstile_token.required' => 'Por favor, complete a validação de segurança antes de entrar.']
+            );
+
+            if ($turnstileValidator->fails()) {
+                Notification::make()
+                    ->title('Verificação de Segurança')
+                    ->body($turnstileValidator->errors()->first('turnstile_token'))
+                    ->danger()
+                    ->send();
+
+                return null;
+            }
         }
 
         $data = $this->form->getState();
@@ -144,17 +175,17 @@ class Login extends BaseLogin
 
                 $enabledMultiFactorAuthenticationProviders = array_filter(
                     Filament::getMultiFactorAuthenticationProviders(),
-                    fn (\Filament\Auth\MultiFactor\Contracts\MultiFactorAuthenticationProvider $multiFactorAuthenticationProvider): bool => $multiFactorAuthenticationProvider->isEnabled($user)
+                    fn (MultiFactorAuthenticationProvider $multiFactorAuthenticationProvider): bool => $multiFactorAuthenticationProvider->isEnabled($user)
                 );
 
                 return [
-                    ...\Illuminate\Support\Arr::wrap($this->getMultiFactorProviderFormComponent()),
+                    ...Arr::wrap($this->getMultiFactorProviderFormComponent()),
                     ...collect($enabledMultiFactorAuthenticationProviders)
-                        ->map(fn (\Filament\Auth\MultiFactor\Contracts\MultiFactorAuthenticationProvider $multiFactorAuthenticationProvider): Component => \Filament\Schemas\Components\Group::make($multiFactorAuthenticationProvider->getChallengeFormComponents($user))
+                        ->map(fn (MultiFactorAuthenticationProvider $multiFactorAuthenticationProvider): Component => Group::make($multiFactorAuthenticationProvider->getChallengeFormComponents($user))
                             ->statePath($multiFactorAuthenticationProvider->getId())
                             ->when(
                                 count($enabledMultiFactorAuthenticationProviders) > 1,
-                                fn (\Filament\Schemas\Components\Group $group) => $group->visible(fn (\Filament\Schemas\Components\Utilities\Get $get): bool => $get('provider') === $multiFactorAuthenticationProvider->getId())
+                                fn (Group $group) => $group->visible(fn (Get $get): bool => $get('provider') === $multiFactorAuthenticationProvider->getId())
                             ))
                         ->all(),
                     Checkbox::make('trust_device')
@@ -165,21 +196,21 @@ class Login extends BaseLogin
             ->statePath('data.multiFactor');
     }
 
-    public function getTitle(): string | Htmlable
+    public function getTitle(): string|Htmlable
     {
         return Filament::getCurrentPanel()?->getId() === 'saas'
             ? 'Acesso SaaS Master • AuroBarber'
             : 'Acesso Administrativo • AuroBarber';
     }
 
-    public function getHeading(): string | Htmlable | null
+    public function getHeading(): string|Htmlable|null
     {
         return Filament::getCurrentPanel()?->getId() === 'saas'
             ? 'AuroBarber SaaS Master'
             : 'Painel da Barbearia';
     }
 
-    public function getSubheading(): string | Htmlable | null
+    public function getSubheading(): string|Htmlable|null
     {
         return Filament::getCurrentPanel()?->getId() === 'saas'
             ? 'Acesso restrito ao Administrador Global da Plataforma.'

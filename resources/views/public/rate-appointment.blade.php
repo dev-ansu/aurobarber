@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Avaliar Atendimento • {{ $appointment->barbershop?->name ?? 'AuroBarber' }}</title>
+    @if(config('services.turnstile.site_key'))
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    @endif
 </head>
 <body style="margin:0; padding:24px; min-height:100vh; background:#090d16; color:#f8fafc; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display:flex; align-items:center; justify-content:center; box-sizing:border-box;">
     @php
@@ -46,6 +49,21 @@
         @else
             <form method="POST" action="{{ route('appointment.rate.submit', $appointment->id) }}">
                 @csrf
+                {{-- Campo Honeypot anti-spam invisível --}}
+                <div style="display:none; position:absolute; left:-9999px;">
+                    <input type="text" name="website_url" tabindex="-1" autocomplete="off">
+                </div>
+
+                @if($errors->any())
+                    <div style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); border-radius:10px; padding:10px; margin-bottom:14px; font-size:13px; color:#fca5a5; text-align:left;">
+                        <ul style="margin:0; padding-left:18px;">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 <p style="margin:0 0 12px; font-size:14px; font-weight:600; color:#e2e8f0;">
                     Que nota você dá para o seu atendimento hoje?
                 </p>
@@ -63,8 +81,14 @@
                     <label style="display:block; font-size:12px; font-weight:600; color:#94a3b8; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.05em;">
                         Comentário ou Elogio (Opcional)
                     </label>
-                    <textarea name="rating_comment" rows="3" placeholder="Conte como foi sua experiência..." style="width:100%; box-sizing:border-box; background:#1e293b; border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:12px; color:#ffffff; font-size:14px; resize:none;"></textarea>
+                    <textarea name="rating_comment" rows="3" placeholder="Conte como foi sua experiência..." style="width:100%; box-sizing:border-box; background:#1e293b; border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:12px; color:#ffffff; font-size:14px; resize:none;">{{ old('rating_comment') }}</textarea>
                 </div>
+
+                @if(config('services.turnstile.site_key'))
+                    <div style="display:flex; justify-content:center; margin-bottom:16px;">
+                        <div class="cf-turnstile" data-sitekey="{{ config('services.turnstile.site_key') }}" data-theme="dark" data-action="rating"></div>
+                    </div>
+                @endif
 
                 <button type="submit" style="width:100%; padding:14px 20px; border:none; border-radius:12px; background:{{ $brandColor }}; color:#ffffff; font-weight:700; font-size:15px; cursor:pointer;">
                     Enviar Avaliação ⭐

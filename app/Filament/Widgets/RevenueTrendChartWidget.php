@@ -3,7 +3,6 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Appointment;
-use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
 
 class RevenueTrendChartWidget extends ChartWidget
@@ -28,7 +27,7 @@ class RevenueTrendChartWidget extends ChartWidget
     protected function getData(): array
     {
         $tenant = filament()->getTenant();
-        if (!$tenant) {
+        if (! $tenant) {
             return ['datasets' => [], 'labels' => []];
         }
 

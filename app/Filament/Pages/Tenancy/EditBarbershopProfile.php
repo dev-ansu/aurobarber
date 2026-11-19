@@ -17,6 +17,7 @@ use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rules\Unique;
 
 class EditBarbershopProfile extends EditTenantProfile
@@ -26,7 +27,7 @@ class EditBarbershopProfile extends EditTenantProfile
         return 'Configurações da Barbearia';
     }
 
-    public static function canView(\Illuminate\Database\Eloquent\Model $tenant): bool
+    public static function canView(Model $tenant): bool
     {
         $user = auth()->user();
         if (! $user) {
@@ -39,7 +40,7 @@ class EditBarbershopProfile extends EditTenantProfile
             || (method_exists($user, 'hasRole') && $user->hasRole('super_admin'));
     }
 
-    public function getMaxWidth(): Width | string | null
+    public function getMaxWidth(): Width|string|null
     {
         return '5xl';
     }

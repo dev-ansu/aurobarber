@@ -65,5 +65,3 @@ class EnsureLivewireChildrenMemoExists
         return $next($request);
     }
 }
-
-

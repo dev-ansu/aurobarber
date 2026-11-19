@@ -23,6 +23,9 @@
     <link href="https://fonts.bunny.net/css?family=figtree:400,600,700,900&display=swap" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    @if(config('services.turnstile.site_key'))
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    @endif
     <script>
         window.deferredPwaPrompt = null;
         window.addEventListener('beforeinstallprompt', function(e) {
@@ -467,6 +470,23 @@
                                 </div>
                             </div>
 
+                            {{-- CAMPO HONEYPOT ANTI-SPAM (invisível para humanos) --}}
+                            <div style="display:none; position:absolute; left:-9999px;">
+                                <input type="text" x-model="websiteUrl" name="website_url" tabindex="-1" autocomplete="off" />
+                            </div>
+
+                            {{-- CLOUDFLARE TURNSTILE (DESAFIO ANTI-BOT) --}}
+                            @if(config('services.turnstile.site_key'))
+                                <div class="my-2 flex justify-center">
+                                    <div class="cf-turnstile"
+                                         data-sitekey="{{ config('services.turnstile.site_key') }}"
+                                         data-action="booking"
+                                         data-theme="dark"
+                                         data-callback="onBookingTurnstileSuccess"
+                                         data-expired-callback="onBookingTurnstileExpired"></div>
+                                </div>
+                            @endif
+
                             {{-- BOTÃO FINAL DE CONFIRMAÇÃO --}}
                             <button
                                 type="button"
@@ -548,8 +568,15 @@
         <p>Desenvolvido com tecnologia <a href="https://barber.aurosoft.com.br" class="text-slate-400 hover:text-white font-bold">AuroBarber</a> &middot; Gestão de Barbearias</p>
     </footer>
 
-    {{-- SCRIPT ALPINE JS COM SUPORTE A MÚLTIPLOS SERVIÇOS --}}
+    {{-- SCRIPT ALPINE JS COM SUPORTE A MÚLTIPLOS SERVIÇOS E SEGURANÇA TURNSTILE --}}
     <script>
+        window.onBookingTurnstileSuccess = function(token) {
+            window.dispatchEvent(new CustomEvent('turnstile-booking-success', { detail: token }));
+        };
+        window.onBookingTurnstileExpired = function() {
+            window.dispatchEvent(new CustomEvent('turnstile-booking-expired'));
+        };
+
         function bookingApp(barbershopSlug) {
             return {
                 slug: barbershopSlug,
@@ -564,6 +591,8 @@
                 slotsMessage: '',
                 clientName: '',
                 clientPhone: '',
+                websiteUrl: '',
+                turnstileToken: '{{ config('services.turnstile.site_key') ? '' : 'bypass' }}',
                 isSubmitting: false,
                 errorMessage: '',
                 confirmedData: null,
@@ -571,6 +600,13 @@
                 init() {
                     this.generateNextDates();
                     this.selectedDate = this.availableDates[0].date;
+
+                    window.addEventListener('turnstile-booking-success', (e) => {
+                        this.turnstileToken = e.detail;
+                    });
+                    window.addEventListener('turnstile-booking-expired', () => {
+                        this.turnstileToken = '';
+                    });
                 },
 
                 generateNextDates() {
@@ -676,6 +712,19 @@
                         return;
                     }
 
+                    @if(config('services.turnstile.site_key'))
+                    if (!this.turnstileToken) {
+                        const input = document.querySelector('[name="cf-turnstile-response"]');
+                        if (input && input.value) {
+                            this.turnstileToken = input.value;
+                        }
+                    }
+                    if (!this.turnstileToken) {
+                        this.errorMessage = 'Por favor, complete a verificação de segurança antes de confirmar.';
+                        return;
+                    }
+                    @endif
+
                     this.isSubmitting = true;
                     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
@@ -686,6 +735,8 @@
                         time: this.selectedTime,
                         client_name: this.clientName,
                         client_phone: this.clientPhone,
+                        website_url: this.websiteUrl,
+                        turnstile_token: this.turnstileToken,
                     };
 
                     try {
@@ -703,6 +754,10 @@
 
                         if (!res.ok) {
                             this.errorMessage = data.message || 'Erro ao realizar o agendamento. Escolha outro horário.';
+                            if (window.turnstile && typeof window.turnstile.reset === 'function') {
+                                try { window.turnstile.reset(); } catch(e){}
+                                this.turnstileToken = '';
+                            }
                             this.fetchAvailableSlots();
                             return;
                         }

@@ -36,10 +36,11 @@ class SaasMigrateTenantsCommand extends Command
 
         if (empty($schemas)) {
             $this->info('Nenhum schema de barbearia encontrado para migrar.');
+
             return self::SUCCESS;
         }
 
-        $this->info('Iniciando atualização de ' . count($schemas) . ' schema(s) de barbearia...');
+        $this->info('Iniciando atualização de '.count($schemas).' schema(s) de barbearia...');
 
         $successCount = 0;
         $failCount = 0;
@@ -64,7 +65,7 @@ class SaasMigrateTenantsCommand extends Command
                     $failCount++;
                 }
             } catch (Throwable $e) {
-                $this->error("  ✗ Exceção no schema '{$schema}': " . $e->getMessage());
+                $this->error("  ✗ Exceção no schema '{$schema}': ".$e->getMessage());
                 $failCount++;
             } finally {
                 $tenantService->switchToPublic();

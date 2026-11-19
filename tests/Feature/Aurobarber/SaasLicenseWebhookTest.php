@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature\Aurobarber;
 
 use App\Models\Barbershop;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class SaasLicenseWebhookTest extends TestCase
@@ -190,8 +190,8 @@ class SaasLicenseWebhookTest extends TestCase
 
     public function test_can_clear_landing_cache_via_webhook(): void
     {
-        \Illuminate\Support\Facades\Cache::put('aurobarber_landing_cms', ['dummy' => true]);
-        $this->assertTrue(\Illuminate\Support\Facades\Cache::has('aurobarber_landing_cms'));
+        Cache::put('aurobarber_landing_cms', ['dummy' => true]);
+        $this->assertTrue(Cache::has('aurobarber_landing_cms'));
 
         $response = $this->withHeader('X-Auro-Secret', $this->secret)
             ->postJson('/api/v1/saas/license-webhook', [
@@ -203,6 +203,6 @@ class SaasLicenseWebhookTest extends TestCase
                 'success' => true,
             ]);
 
-        $this->assertFalse(\Illuminate\Support\Facades\Cache::has('aurobarber_landing_cms'));
+        $this->assertFalse(Cache::has('aurobarber_landing_cms'));
     }
 }

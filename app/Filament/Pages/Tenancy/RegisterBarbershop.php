@@ -23,7 +23,7 @@ class RegisterBarbershop extends RegisterTenant
         return 'Nova Unidade / Filial';
     }
 
-    public function getMaxWidth(): Width | string | null
+    public function getMaxWidth(): Width|string|null
     {
         return '3xl';
     }

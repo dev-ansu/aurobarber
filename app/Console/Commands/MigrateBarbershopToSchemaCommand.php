@@ -26,10 +26,11 @@ class MigrateBarbershopToSchemaCommand extends Command
         $barbershop = Barbershop::where('slug', $slug)->first();
         if (! $barbershop) {
             $this->error("Barbearia com slug '{$slug}' não foi encontrada.");
+
             return self::FAILURE;
         }
 
-        $targetSchema = $tenantService->sanitizeSchemaName('tenant_' . $barbershop->slug);
+        $targetSchema = $tenantService->sanitizeSchemaName('tenant_'.$barbershop->slug);
         $this->info("Iniciando migração da barbearia '{$barbershop->name}' (ID #{$barbershop->id}) para o schema: \"{$targetSchema}\"...");
 
         if ($isDryRun) {
@@ -38,12 +39,13 @@ class MigrateBarbershopToSchemaCommand extends Command
 
         if (DB::connection()->getDriverName() !== 'pgsql') {
             $this->error('Esta operação requer conexão com PostgreSQL.');
+
             return self::FAILURE;
         }
 
         $tablesToMigrate = [
             'barbershops' => "id = {$barbershop->id}",
-            'users' => ($barbershop->owner_id ? "id = {$barbershop->owner_id} OR " : '') . "barbershop_id = {$barbershop->id} OR id IN (SELECT user_id FROM public.barbershop_user WHERE barbershop_id = {$barbershop->id}) OR id IN (SELECT user_id FROM public.professionals WHERE barbershop_id = {$barbershop->id} AND user_id IS NOT NULL)",
+            'users' => ($barbershop->owner_id ? "id = {$barbershop->owner_id} OR " : '')."barbershop_id = {$barbershop->id} OR id IN (SELECT user_id FROM public.barbershop_user WHERE barbershop_id = {$barbershop->id}) OR id IN (SELECT user_id FROM public.professionals WHERE barbershop_id = {$barbershop->id} AND user_id IS NOT NULL)",
             'professionals' => "barbershop_id = {$barbershop->id}",
             'services' => "barbershop_id = {$barbershop->id}",
             'appointments' => "barbershop_id = {$barbershop->id}",
@@ -73,6 +75,7 @@ class MigrateBarbershopToSchemaCommand extends Command
 
         if ($isDryRun) {
             $this->info('[DRY-RUN] Simulação concluída com sucesso. Todos os registros foram mapeados.');
+
             return self::SUCCESS;
         }
 
@@ -83,7 +86,7 @@ class MigrateBarbershopToSchemaCommand extends Command
             $this->line('');
             $this->info("Criando schema \"{$targetSchema}\" e rodando migrações isoladas...");
             DB::statement("CREATE SCHEMA IF NOT EXISTS \"{$targetSchema}\"");
-            
+
             $tenantService->migrateSchema($targetSchema);
 
             // 3. Copiar os dados com integridade referencial mantida
@@ -93,7 +96,7 @@ class MigrateBarbershopToSchemaCommand extends Command
             try {
                 foreach ($tablesToMigrate as $table => $condition) {
                     $hasInPublic = DB::selectOne("SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = ?", [$table]) !== null;
-                    $hasInTenant = DB::selectOne("SELECT 1 FROM information_schema.tables WHERE table_schema = ? AND table_name = ?", [$targetSchema, $table]) !== null;
+                    $hasInTenant = DB::selectOne('SELECT 1 FROM information_schema.tables WHERE table_schema = ? AND table_name = ?', [$targetSchema, $table]) !== null;
 
                     if ($hasInPublic && $hasInTenant) {
                         $originalCount = $counts[$table] ?? 0;
@@ -138,15 +141,16 @@ class MigrateBarbershopToSchemaCommand extends Command
             DB::commit();
 
             $this->line('');
-            $this->info("=================================================================");
+            $this->info('=================================================================');
             $this->info(" SUCESSO! A barbearia '{$barbershop->name}' agora opera no schema: \"{$targetSchema}\"");
             $this->info(" Os dados no schema 'public' continuam preservados como cópia de segurança.");
-            $this->info("=================================================================");
+            $this->info('=================================================================');
 
             return self::SUCCESS;
         } catch (Throwable $e) {
             DB::rollBack();
-            $this->error('Erro durante a migração: ' . $e->getMessage());
+            $this->error('Erro durante a migração: '.$e->getMessage());
+
             return self::FAILURE;
         }
     }

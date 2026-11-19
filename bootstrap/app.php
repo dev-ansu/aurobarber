@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureLivewireChildrenMemoExists;
+use App\Http\Middleware\ResolveTenantSchema;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -69,12 +70,12 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->web(prepend: [
             EnsureLivewireChildrenMemoExists::class,
-            \App\Http\Middleware\ResolveTenantSchema::class,
+            ResolveTenantSchema::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*') || $request->hasHeader('X-Livewire'),
+            fn (Request $request) => $request->expectsJson() || $request->is('api/*') || $request->hasHeader('X-Livewire'),
         );
 
         $exceptions->render(function (Throwable $e, Request $request) {

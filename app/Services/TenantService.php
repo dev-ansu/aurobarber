@@ -86,7 +86,7 @@ class TenantService
             if ($exitCode !== 0) {
                 $output = trim(Artisan::output());
                 throw new RuntimeException(
-                    "Falha nas migrations do schema '{$schema}': " . ($output !== '' ? $output : "código de saída {$exitCode}.")
+                    "Falha nas migrations do schema '{$schema}': ".($output !== '' ? $output : "código de saída {$exitCode}.")
                 );
             }
         } finally {
@@ -241,7 +241,7 @@ class TenantService
         }
 
         if (is_numeric($sanitized[0])) {
-            $sanitized = 'tenant_' . $sanitized;
+            $sanitized = 'tenant_'.$sanitized;
         }
 
         return $sanitized;
@@ -278,7 +278,7 @@ class TenantService
 
             // 3. Subdomínio em produção na nuvem (*.aurobarber.com.br)
             $rootDomain = strtolower((string) config('app.saas_domain', env('SAAS_DOMAIN', 'aurobarber.com.br')));
-            if ($rootDomain && str_ends_with($cleanHost, '.' . $rootDomain)) {
+            if ($rootDomain && str_ends_with($cleanHost, '.'.$rootDomain)) {
                 $subdomain = substr($cleanHost, 0, -(strlen($rootDomain) + 1));
                 $parts = explode('.', $subdomain);
                 $slug = end($parts);

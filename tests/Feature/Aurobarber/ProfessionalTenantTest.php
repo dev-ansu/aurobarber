@@ -1,5 +1,6 @@
 <?php
 
+use App\Filament\Resources\ProfessionalResource;
 use App\Filament\Resources\ProfessionalResource\Pages\CreateProfessional;
 use App\Models\Barbershop;
 use App\Models\Professional;
@@ -52,6 +53,6 @@ test('professional catalog only returns professionals for the authorized active 
 
     Filament::setTenant($tenant1, isQuiet: true);
 
-    expect(\App\Filament\Resources\ProfessionalResource::getEloquentQuery()->pluck('id')->all())
+    expect(ProfessionalResource::getEloquentQuery()->pluck('id')->all())
         ->toBe([$pro1->id]);
 });

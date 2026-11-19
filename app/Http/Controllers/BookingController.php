@@ -6,6 +6,7 @@ use App\Models\Appointment;
 use App\Models\Barbershop;
 use App\Models\Professional;
 use App\Models\Service;
+use App\Rules\Turnstile;
 use App\Services\TenantService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -231,7 +232,31 @@ class BookingController extends Controller
      */
     public function store(Request $request, string $slug): JsonResponse
     {
+        // 1. Verificação Honeypot anti-bot
+        if (! empty($request->input('website_url'))) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Agendamento registrado com sucesso.',
+                'appointment' => [
+                    'id' => 999999,
+                    'services_summary' => 'Atendimento',
+                    'professional_name' => 'Equipe',
+                    'date' => $request->input('date'),
+                    'time' => $request->input('time'),
+                    'price' => 'R$ 0,00',
+                ],
+            ]);
+        }
+
+        // Normaliza token do Turnstile se enviado com nomes alternativos
+        $turnstileToken = $request->input('turnstile_token') ?? $request->input('cf-turnstile-response');
+        $request->merge(['turnstile_token' => $turnstileToken]);
+
         $validated = $request->validate([
+            'turnstile_token' => [
+                config('services.turnstile.site_key') ? 'required' : 'nullable',
+                new Turnstile('booking'),
+            ],
             'service_id' => 'nullable|integer',
             'service_ids' => 'nullable|array',
             'professional_id' => 'nullable|string',
@@ -240,6 +265,8 @@ class BookingController extends Controller
             'client_name' => 'required|string|min:2|max:255',
             'client_phone' => 'required|string|min:8|max:20',
             'notes' => 'nullable|string|max:500',
+        ], [
+            'turnstile_token.required' => 'A verificação de segurança é obrigatória. Por favor, confirme o desafio.',
         ]);
 
         $barbershop = $this->resolveActiveBarbershop($slug);

@@ -7,7 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 it('sanitizes schema names correctly', function () {
-    $service = new TenantService();
+    $service = new TenantService;
 
     expect($service->sanitizeSchemaName('Barbearia Marinho'))
         ->toBe('barbearia_marinho')
@@ -18,7 +18,7 @@ it('sanitizes schema names correctly', function () {
 });
 
 it('resolves tenant barbershop from subdomain host', function () {
-    $service = new TenantService();
+    $service = new TenantService;
 
     $shop = Barbershop::create([
         'name' => 'Barbearia Alvorada',
@@ -34,7 +34,7 @@ it('resolves tenant barbershop from subdomain host', function () {
 });
 
 it('resolves tenant barbershop from custom domain host', function () {
-    $service = new TenantService();
+    $service = new TenantService;
 
     $shop = Barbershop::create([
         'name' => 'Navalha de Ouro',

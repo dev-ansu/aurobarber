@@ -10,7 +10,7 @@ return new class extends Migration
     {
         // 1. Intervalo de Almoço dos Profissionais
         Schema::table('professionals', function (Blueprint $table) {
-            if (!Schema::hasColumn('professionals', 'has_lunch_break')) {
+            if (! Schema::hasColumn('professionals', 'has_lunch_break')) {
                 $table->boolean('has_lunch_break')->default(false)->after('work_end_time');
                 $table->time('lunch_start_time')->nullable()->default('12:00:00')->after('has_lunch_break');
                 $table->time('lunch_end_time')->nullable()->default('13:00:00')->after('lunch_start_time');
@@ -19,7 +19,7 @@ return new class extends Migration
 
         // 2. Configurações de Fidelidade e Retorno na Barbearia
         Schema::table('barbershops', function (Blueprint $table) {
-            if (!Schema::hasColumn('barbershops', 'loyalty_enabled')) {
+            if (! Schema::hasColumn('barbershops', 'loyalty_enabled')) {
                 $table->boolean('loyalty_enabled')->default(true)->after('is_active');
                 $table->integer('loyalty_target_cuts')->default(10)->after('loyalty_enabled');
                 $table->integer('return_reminder_days')->default(20)->after('loyalty_target_cuts');
@@ -27,7 +27,7 @@ return new class extends Migration
         });
 
         // 3. Produtos e Estoque (Bar / Cosméticos)
-        if (!Schema::hasTable('products')) {
+        if (! Schema::hasTable('products')) {
             Schema::create('products', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('barbershop_id')->constrained('barbershops')->cascadeOnDelete();
@@ -44,7 +44,7 @@ return new class extends Migration
         }
 
         // 4. Consumo de Produtos na Comanda do Agendamento
-        if (!Schema::hasTable('appointment_products')) {
+        if (! Schema::hasTable('appointment_products')) {
             Schema::create('appointment_products', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('appointment_id')->constrained('appointments')->cascadeOnDelete();
@@ -58,7 +58,7 @@ return new class extends Migration
 
         // 5. Campos de Consumo, Bloqueio de Agenda e Avaliação no Agendamento
         Schema::table('appointments', function (Blueprint $table) {
-            if (!Schema::hasColumn('appointments', 'products_total')) {
+            if (! Schema::hasColumn('appointments', 'products_total')) {
                 $table->decimal('products_total', 10, 2)->default(0)->after('service_price');
                 $table->boolean('is_blocked_slot')->default(false)->after('status');
                 $table->unsignedTinyInteger('rating')->nullable()->after('notes');
@@ -68,7 +68,7 @@ return new class extends Migration
         });
 
         // 6. CRM de Clientes da Barbearia (Retorno, Aniversariantes e Fidelidade)
-        if (!Schema::hasTable('barbershop_clients')) {
+        if (! Schema::hasTable('barbershop_clients')) {
             Schema::create('barbershop_clients', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('barbershop_id')->constrained('barbershops')->cascadeOnDelete();

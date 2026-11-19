@@ -12,7 +12,7 @@ class TodayAppointmentsTableWidget extends BaseWidget
 {
     protected static ?int $sort = 3;
 
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
     protected function getTableHeading(): string
     {
@@ -78,7 +78,7 @@ class TodayAppointmentsTableWidget extends BaseWidget
                     ->label(fn (): string => auth()->user()?->isRestrictedBarber()
                         ? 'Abrir Minha Agenda Diária ➔'
                         : 'Abrir Agenda Diária da Equipe ➔')
-                    ->url(fn (): string => filament()->getTenant() ? url('/admin/' . filament()->getTenant()->slug . '/daily-schedule') : url('/admin'))
+                    ->url(fn (): string => filament()->getTenant() ? url('/admin/'.filament()->getTenant()->slug.'/daily-schedule') : url('/admin'))
                     ->color('primary'),
             ])
             ->paginated([5, 10, 25])

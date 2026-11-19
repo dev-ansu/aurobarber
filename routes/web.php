@@ -4,8 +4,10 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\SaasPaymentProofController;
 use App\Http\Controllers\TenantSaasPaymentController;
 use App\Models\Appointment;
+use App\Models\Barbershop;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 
 // Redirecionamentos de conveniência e proteção de rotas
 Route::redirect('/admin/saas', '/saas');
@@ -20,7 +22,7 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::get('/admin/force-password-change', function () {
-    if (!auth()->check()) {
+    if (! auth()->check()) {
         return redirect('/saas/login');
     }
     if (auth()->user()->role === 'master_admin') {
@@ -28,8 +30,9 @@ Route::get('/admin/force-password-change', function () {
     }
     $tenant = auth()->user()->tenants()->first();
     if ($tenant) {
-        return redirect('/admin/' . $tenant->slug . '/force-password-change');
+        return redirect('/admin/'.$tenant->slug.'/force-password-change');
     }
+
     return redirect('/saas/login');
 });
 
@@ -41,10 +44,10 @@ Route::get('/', function () {
 // 1.1 Web App Manifest (PWA) — Painel Administrativo / Equipe
 Route::get('/manifest.json', function (Request $request) {
     $tenantSlug = $request->query('tenant');
-    $shop = $tenantSlug ? \App\Models\Barbershop::where('slug', $tenantSlug)->first() : null;
+    $shop = $tenantSlug ? Barbershop::where('slug', $tenantSlug)->first() : null;
 
     $name = $shop ? "{$shop->name} • Gestão" : 'AuroBarber • Gestão';
-    $shortName = $shop ? \Illuminate\Support\Str::limit($shop->name, 14, '') : 'AuroBarber';
+    $shortName = $shop ? Str::limit($shop->name, 14, '') : 'AuroBarber';
     $startUrl = $shop ? "/admin/{$shop->slug}" : '/admin';
     $themeColor = ($shop && ! empty($shop->brand_color)) ? $shop->brand_color : '#d97706';
 
@@ -58,7 +61,7 @@ Route::get('/manifest.json', function (Request $request) {
     ];
 
     if ($shop && ! empty($shop->logo_url)) {
-        $logoUrl = str_starts_with($shop->logo_url, 'http') ? $shop->logo_url : asset('storage/' . $shop->logo_url);
+        $logoUrl = str_starts_with($shop->logo_url, 'http') ? $shop->logo_url : asset('storage/'.$shop->logo_url);
         array_unshift($icons, [
             'src' => $logoUrl,
             'sizes' => '192x192 512x512',
@@ -84,13 +87,25 @@ Route::get('/manifest.json', function (Request $request) {
 // 2. Avaliação Pós-Atendimento (1 a 5 Estrelas)
 Route::get('/avaliar/{appointment}', function (Appointment $appointment) {
     $appointment->load(['barbershop', 'professional', 'service', 'services']);
+
     return view('public.rate-appointment', compact('appointment'));
-})->name('appointment.rate.show');
+})->middleware(['throttle:public-rating'])->name('appointment.rate.show');
 
 Route::post('/avaliar/{appointment}', function (Request $request, Appointment $appointment) {
+    if ($appointment->rated_at !== null) {
+        return back()->with('rated_success', true)->with('already_rated', true);
+    }
+
     $validated = $request->validate([
         'rating' => 'required|integer|min:1|max:5',
         'rating_comment' => 'nullable|string|max:500',
+        'website_url' => 'nullable|string|max:0', // Honeypot
+        'cf-turnstile-response' => [
+            config('services.turnstile.site_key') ? 'required' : 'nullable',
+            new \App\Rules\Turnstile('rating'),
+        ],
+    ], [
+        'cf-turnstile-response.required' => 'A verificação de segurança é obrigatória.',
     ]);
 
     $appointment->update([
@@ -100,11 +115,11 @@ Route::post('/avaliar/{appointment}', function (Request $request, Appointment $a
     ]);
 
     return back()->with('rated_success', true);
-})->name('appointment.rate.submit');
+})->middleware(['throttle:public-rating'])->name('appointment.rate.submit');
 
 // 3. Rotas Públicas de Agendamento da Barbearia (ex: barber.aurosoft.com.br/marinho)
 Route::get('/{slug}/manifest.json', function (string $slug) {
-    $shop = \App\Models\Barbershop::where('slug', $slug)->firstOrFail();
+    $shop = Barbershop::where('slug', $slug)->firstOrFail();
     $themeColor = ! empty($shop->brand_color) ? $shop->brand_color : '#d97706';
 
     $icons = [
@@ -117,7 +132,7 @@ Route::get('/{slug}/manifest.json', function (string $slug) {
     ];
 
     if (! empty($shop->logo_url)) {
-        $logoUrl = str_starts_with($shop->logo_url, 'http') ? $shop->logo_url : asset('storage/' . $shop->logo_url);
+        $logoUrl = str_starts_with($shop->logo_url, 'http') ? $shop->logo_url : asset('storage/'.$shop->logo_url);
         array_unshift($icons, [
             'src' => $logoUrl,
             'sizes' => '192x192 512x512',
@@ -128,7 +143,7 @@ Route::get('/{slug}/manifest.json', function (string $slug) {
 
     return response()->json([
         'name' => "{$shop->name} • Agendamento Online",
-        'short_name' => \Illuminate\Support\Str::limit($shop->name, 14, ''),
+        'short_name' => Str::limit($shop->name, 14, ''),
         'description' => $shop->headline ?: "Agende seu horário online na {$shop->name}",
         'start_url' => "/{$shop->slug}",
         'scope' => "/{$shop->slug}",
@@ -141,5 +156,9 @@ Route::get('/{slug}/manifest.json', function (string $slug) {
 })->name('barbershop.manifest');
 
 Route::get('/{slug}', [BookingController::class, 'show'])->name('barbershop.show');
-Route::get('/{slug}/slots', [BookingController::class, 'getAvailableSlots'])->name('barbershop.slots');
-Route::post('/{slug}/book', [BookingController::class, 'store'])->name('barbershop.book');
+Route::get('/{slug}/slots', [BookingController::class, 'getAvailableSlots'])
+    ->middleware('throttle:booking-slots')
+    ->name('barbershop.slots');
+Route::post('/{slug}/book', [BookingController::class, 'store'])
+    ->middleware('throttle:booking-submission')
+    ->name('barbershop.book');

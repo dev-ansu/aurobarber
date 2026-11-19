@@ -66,23 +66,23 @@ class PayablesOverviewWidget extends BaseWidget
         $monthPaidTotal = (float) $monthPaidQuery->sum('amount');
 
         return [
-            Stat::make('Contas Vencidas', 'R$ ' . number_format($overdueTotal, 2, ',', '.'))
+            Stat::make('Contas Vencidas', 'R$ '.number_format($overdueTotal, 2, ',', '.'))
                 ->description($overdueCount > 0 ? "{$overdueCount} conta(s) em atraso" : 'Nenhuma conta atrasada')
                 ->descriptionIcon($overdueCount > 0 ? 'heroicon-m-exclamation-triangle' : 'heroicon-m-check-circle')
                 ->color($overdueCount > 0 ? 'danger' : 'success'),
 
-            Stat::make('Vencendo em 7 Dias', 'R$ ' . number_format($upcomingTotal, 2, ',', '.'))
+            Stat::make('Vencendo em 7 Dias', 'R$ '.number_format($upcomingTotal, 2, ',', '.'))
                 ->description("{$upcomingCount} compromisso(s) para esta semana")
                 ->descriptionIcon('heroicon-m-clock')
                 ->color($upcomingCount > 0 ? 'warning' : 'gray'),
 
-            Stat::make('A Pagar no Mês', 'R$ ' . number_format($monthPendingTotal, 2, ',', '.'))
-                ->description("{$monthPendingCount} conta(s) para " . now()->translatedFormat('F'))
+            Stat::make('A Pagar no Mês', 'R$ '.number_format($monthPendingTotal, 2, ',', '.'))
+                ->description("{$monthPendingCount} conta(s) para ".now()->translatedFormat('F'))
                 ->descriptionIcon('heroicon-m-calendar-days')
                 ->color('info'),
 
-            Stat::make('Contas Pagas no Mês', 'R$ ' . number_format($monthPaidTotal, 2, ',', '.'))
-                ->description("{$monthPaidCount} despesa(s) quitada(s) em " . now()->translatedFormat('F'))
+            Stat::make('Contas Pagas no Mês', 'R$ '.number_format($monthPaidTotal, 2, ',', '.'))
+                ->description("{$monthPaidCount} despesa(s) quitada(s) em ".now()->translatedFormat('F'))
                 ->descriptionIcon('heroicon-m-check-badge')
                 ->color('success'),
         ];

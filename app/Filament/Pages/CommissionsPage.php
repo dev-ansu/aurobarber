@@ -6,7 +6,6 @@ use App\Models\Appointment;
 use App\Models\CommissionPayout;
 use App\Models\ProductSale;
 use App\Models\Professional;
-use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
@@ -20,9 +19,9 @@ use Illuminate\Support\HtmlString;
 
 class CommissionsPage extends Page
 {
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-banknotes';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-banknotes';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Financeiro';
+    protected static string|\UnitEnum|null $navigationGroup = 'Financeiro';
 
     protected static ?string $navigationLabel = 'Comissões da Equipe';
 
@@ -32,26 +31,34 @@ class CommissionsPage extends Page
 
     protected string $view = 'filament.pages.commissions-page';
 
-    public function getMaxContentWidth(): Width | string | null
+    public function getMaxContentWidth(): Width|string|null
     {
         return 'full';
     }
 
     // Filtros
     public ?int $selectedProfessionalId = null;
+
     public string $periodPreset = 'week'; // today, week, month, custom
+
     public string $startDate = '';
+
     public string $endDate = '';
+
     public string $statusFilter = 'pending'; // pending, paid, all
+
     public string $activeTab = 'appointments'; // appointments, history
 
     // Modal de Liquidação / Pagamento de Comissão
     public bool $payoutModalOpen = false;
+
     public string $payoutMethod = 'pix'; // pix, dinheiro, transferencia
+
     public string $payoutNotes = '';
 
     // Modal de Impressão do Recibo de Comissão
     public bool $printPayoutModalOpen = false;
+
     public ?CommissionPayout $selectedPayoutToPrint = null;
 
     public function mount(): void
@@ -91,7 +98,7 @@ class CommissionsPage extends Page
     public function getProfessionalsProperty(): Collection
     {
         $tenant = filament()->getTenant();
-        if (!$tenant) {
+        if (! $tenant) {
             return collect();
         }
 
@@ -109,10 +116,11 @@ class CommissionsPage extends Page
     {
         if (auth()->user()?->isRestrictedBarber()) {
             $proId = auth()->user()->resolveProfessionalId();
+
             return $proId ? Professional::find($proId) : null;
         }
 
-        if (!$this->selectedProfessionalId) {
+        if (! $this->selectedProfessionalId) {
             return null;
         }
 
@@ -122,7 +130,7 @@ class CommissionsPage extends Page
     public function getAppointmentsProperty(): Collection
     {
         $tenant = filament()->getTenant();
-        if (!$tenant) {
+        if (! $tenant) {
             return collect();
         }
 
@@ -154,7 +162,7 @@ class CommissionsPage extends Page
     public function getProductSalesProperty(): Collection
     {
         $tenant = filament()->getTenant();
-        if (!$tenant) {
+        if (! $tenant) {
             return collect();
         }
 
@@ -220,7 +228,7 @@ class CommissionsPage extends Page
     public function getPayoutsHistoryProperty(): Collection
     {
         $tenant = filament()->getTenant();
-        if (!$tenant) {
+        if (! $tenant) {
             return collect();
         }
 
@@ -263,10 +271,10 @@ class CommissionsPage extends Page
 
                         return new HtmlString(
                             '<div class="space-y-1 rounded-xl border border-gray-200 bg-gray-50 p-3.5 text-sm leading-relaxed text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-gray-300">'
-                            .'<div><strong class="text-gray-950 dark:text-white">Profissional:</strong> ' . e($prof?->name ?? '—') . '</div>'
-                            .'<div><strong class="text-gray-950 dark:text-white">Comissão de Cortes:</strong> R$ ' . number_format($servicesCommission, 2, ',', '.') . ' (' . $appts->count() . ' atendimentos)</div>'
-                            .'<div><strong class="text-gray-950 dark:text-white">Comissão de Produtos:</strong> R$ ' . number_format($productsCommission, 2, ',', '.') . ' (' . (int) $prodSales->sum('quantity') . ' un.)</div>'
-                            .'<div class="mt-2 border-t border-gray-200 pt-2 text-base dark:border-white/10"><strong class="text-success-600 dark:text-success-400">Total Líquido a Pagar: R$ ' . number_format($totalCommission, 2, ',', '.') . '</strong></div>'
+                            .'<div><strong class="text-gray-950 dark:text-white">Profissional:</strong> '.e($prof?->name ?? '—').'</div>'
+                            .'<div><strong class="text-gray-950 dark:text-white">Comissão de Cortes:</strong> R$ '.number_format($servicesCommission, 2, ',', '.').' ('.$appts->count().' atendimentos)</div>'
+                            .'<div><strong class="text-gray-950 dark:text-white">Comissão de Produtos:</strong> R$ '.number_format($productsCommission, 2, ',', '.').' ('.(int) $prodSales->sum('quantity').' un.)</div>'
+                            .'<div class="mt-2 border-t border-gray-200 pt-2 text-base dark:border-white/10"><strong class="text-success-600 dark:text-success-400">Total Líquido a Pagar: R$ '.number_format($totalCommission, 2, ',', '.').'</strong></div>'
                             .'</div>'
                         );
                     })
@@ -305,6 +313,7 @@ class CommissionsPage extends Page
                         ->title('Não há comissões pendentes para este profissional.')
                         ->warning()
                         ->send();
+
                     return;
                 }
 
@@ -372,11 +381,12 @@ class CommissionsPage extends Page
         if (auth()->user()?->isRestrictedBarber()) {
             return;
         }
-        if (!$this->selectedProfessionalId) {
+        if (! $this->selectedProfessionalId) {
             Notification::make()
                 ->title('Selecione um barbeiro específico para realizar o fechamento.')
                 ->warning()
                 ->send();
+
             return;
         }
 
@@ -388,6 +398,7 @@ class CommissionsPage extends Page
                 ->title('Não há comissões em aberto (cortes ou produtos) para liquidar no período selecionado.')
                 ->warning()
                 ->send();
+
             return;
         }
 
@@ -401,7 +412,7 @@ class CommissionsPage extends Page
         $tenant = filament()->getTenant();
         $prof = $this->selectedProfessional;
 
-        if (!$tenant || !$prof) {
+        if (! $tenant || ! $prof) {
             return;
         }
 
@@ -410,6 +421,7 @@ class CommissionsPage extends Page
 
         if ($pendingAppts->isEmpty() && $pendingProdSales->isEmpty()) {
             $this->payoutModalOpen = false;
+
             return;
         }
 

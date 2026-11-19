@@ -49,7 +49,7 @@ class EditOwnProfile extends EditProfile
         return 'Meu Perfil & Segurança';
     }
 
-    public function getMaxWidth(): Width | string | null
+    public function getMaxWidth(): Width|string|null
     {
         return '5xl';
     }

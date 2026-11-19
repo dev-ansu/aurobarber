@@ -4,7 +4,6 @@ namespace App\Filament\Widgets;
 
 use App\Models\Appointment;
 use App\Models\ProductSale;
-use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -17,7 +16,7 @@ class BarbershopStatsOverviewWidget extends BaseWidget
     protected function getStats(): array
     {
         $tenant = filament()->getTenant();
-        if (!$tenant) {
+        if (! $tenant) {
             return [];
         }
 
@@ -74,22 +73,22 @@ class BarbershopStatsOverviewWidget extends BaseWidget
             $pendingCommission += $pendingBalcaoComm;
 
             return [
-                Stat::make('Minha Comissão Hoje', 'R$ ' . number_format($todayCommission, 2, ',', '.'))
+                Stat::make('Minha Comissão Hoje', 'R$ '.number_format($todayCommission, 2, ',', '.'))
                     ->description('Sua comissão acumulada hoje')
                     ->descriptionIcon('heroicon-m-currency-dollar')
                     ->color('success'),
 
-                Stat::make('Meus Atendimentos Hoje', $todayCount . ' cliente(s)')
+                Stat::make('Meus Atendimentos Hoje', $todayCount.' cliente(s)')
                     ->description("{$todayCompleted} concluído(s) · {$todayInProgress} na cadeira")
                     ->descriptionIcon('heroicon-m-calendar-days')
                     ->color('primary'),
 
-                Stat::make('Minha Comissão no Mês', 'R$ ' . number_format($monthCommission, 2, ',', '.'))
-                    ->description('Mês atual (' . now()->translatedFormat('F') . ')')
+                Stat::make('Minha Comissão no Mês', 'R$ '.number_format($monthCommission, 2, ',', '.'))
+                    ->description('Mês atual ('.now()->translatedFormat('F').')')
                     ->descriptionIcon('heroicon-m-arrow-trending-up')
                     ->color('info'),
 
-                Stat::make('Pendente a Receber', 'R$ ' . number_format($pendingCommission, 2, ',', '.'))
+                Stat::make('Pendente a Receber', 'R$ '.number_format($pendingCommission, 2, ',', '.'))
                     ->description('Comissões em aberto para acerto')
                     ->descriptionIcon('heroicon-m-banknotes')
                     ->color('warning'),
@@ -131,23 +130,23 @@ class BarbershopStatsOverviewWidget extends BaseWidget
         $avgTicket = $monthCount > 0 ? $monthRevenue / $monthCount : 0.00;
 
         return [
-            Stat::make('Faturamento Hoje', 'R$ ' . number_format($todayRevenue, 2, ',', '.'))
-                ->description("Recebido em cortes hoje")
+            Stat::make('Faturamento Hoje', 'R$ '.number_format($todayRevenue, 2, ',', '.'))
+                ->description('Recebido em cortes hoje')
                 ->descriptionIcon('heroicon-m-currency-dollar')
                 ->chart($sparkline)
                 ->color('success'),
 
-            Stat::make('Atendimentos Hoje', $todayCount . ' cliente(s)')
+            Stat::make('Atendimentos Hoje', $todayCount.' cliente(s)')
                 ->description("{$todayCompleted} concluído(s) · {$todayInProgress} na cadeira")
                 ->descriptionIcon('heroicon-m-calendar-days')
                 ->color('primary'),
 
-            Stat::make('Faturamento no Mês', 'R$ ' . number_format($monthRevenue, 2, ',', '.'))
-                ->description('Mês atual (' . now()->translatedFormat('F') . ')')
+            Stat::make('Faturamento no Mês', 'R$ '.number_format($monthRevenue, 2, ',', '.'))
+                ->description('Mês atual ('.now()->translatedFormat('F').')')
                 ->descriptionIcon('heroicon-m-arrow-trending-up')
                 ->color('info'),
 
-            Stat::make('Ticket Médio', 'R$ ' . number_format($avgTicket, 2, ',', '.'))
+            Stat::make('Ticket Médio', 'R$ '.number_format($avgTicket, 2, ',', '.'))
                 ->description('Média por cliente concluído')
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color('warning'),

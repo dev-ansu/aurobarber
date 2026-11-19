@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -19,7 +20,7 @@ return new class extends Migration
         });
 
         // Atualiza todas as barbearias existentes com 30 dias de validade inicial e status ativo
-        \Illuminate\Support\Facades\DB::table('barbershops')->update([
+        DB::table('barbershops')->update([
             'license_status' => 'active',
             'license_expires_at' => now()->addDays(30),
             'grace_period_days' => 5,

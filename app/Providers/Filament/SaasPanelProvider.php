@@ -13,6 +13,8 @@ use App\Filament\Saas\Pages\SaasBillingSettingsPage;
 use App\Filament\Saas\Pages\SaasDashboard;
 use App\Filament\Saas\Pages\SaasLogs;
 use App\Filament\Saas\Pages\SaasSupportSettings;
+use App\Filament\Saas\Resources\CmsPages\PageResource;
+use App\Filament\Saas\Resources\LandingLeads\LandingLeadResource;
 use App\Filament\Saas\Resources\Payments\SaasPaymentSubmissionResource;
 use App\Filament\Saas\Resources\PlanChangeRequests\SaasPlanChangeRequestResource;
 use App\Filament\Saas\Resources\SaasPaymentReceipts\SaasPaymentReceiptResource;
@@ -28,6 +30,7 @@ use Filament\Navigation\MenuItem;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -86,6 +89,10 @@ class SaasPanelProvider extends PanelProvider
                 'primary' => Color::Amber,
                 'gray' => Color::Slate,
             ])
+            ->renderHook(
+                PanelsRenderHook::AUTH_LOGIN_FORM_AFTER,
+                fn () => view('filament.auth.turnstile')
+            )
             ->pages([
                 SaasDashboard::class,
                 SaasBillingSettingsPage::class,
@@ -97,6 +104,8 @@ class SaasPanelProvider extends PanelProvider
             ->resources([
                 BarbershopResource::class,
                 SaasPlanResource::class,
+                PageResource::class,
+                LandingLeadResource::class,
                 SaasPaymentSubmissionResource::class,
                 SaasPaymentReceiptResource::class,
                 SaasPlanChangeRequestResource::class,

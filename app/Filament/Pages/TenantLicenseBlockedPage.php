@@ -11,7 +11,7 @@ use Filament\Support\Enums\Width;
 
 class TenantLicenseBlockedPage extends Page
 {
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-lock-closed';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-lock-closed';
 
     protected static ?string $title = 'Licença Suspensa';
 
@@ -21,7 +21,7 @@ class TenantLicenseBlockedPage extends Page
 
     protected string $view = 'filament.pages.tenant-license-blocked';
 
-    public function getMaxContentWidth(): Width | string | null
+    public function getMaxContentWidth(): Width|string|null
     {
         return 'full';
     }
@@ -34,6 +34,7 @@ class TenantLicenseBlockedPage extends Page
     public function getBarbershop(): ?Barbershop
     {
         $tenant = Filament::getTenant();
+
         return $tenant instanceof Barbershop ? $tenant : null;
     }
 }
