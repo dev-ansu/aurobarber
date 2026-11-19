@@ -32,11 +32,13 @@ class Turnstile implements ValidationRule
 
             Log::error('Cloudflare Turnstile secret key is not configured in production.');
             $fail('O serviço de verificação de segurança está temporariamente indisponível.');
+
             return;
         }
 
         if (empty($value) || ! is_string($value)) {
             $fail('A verificação de segurança é obrigatória.');
+
             return;
         }
 
@@ -55,6 +57,7 @@ class Turnstile implements ValidationRule
                     'body' => $response->body(),
                 ]);
                 $fail('Não foi possível verificar a segurança do formulário. Tente novamente.');
+
                 return;
             }
 
@@ -66,6 +69,7 @@ class Turnstile implements ValidationRule
                     'error_codes' => $data['error-codes'] ?? [],
                 ]);
                 $fail('A verificação de segurança falhou. Por favor, recarregue e tente novamente.');
+
                 return;
             }
 

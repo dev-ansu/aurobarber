@@ -6,10 +6,12 @@ namespace App\Filament\Saas\Pages;
 
 use App\Models\Barbershop;
 use App\Services\LocalBackupManager;
+use App\Services\SaasGoogleDriveBackupService;
 use BackedEnum;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
@@ -38,6 +40,87 @@ class SaasBackups extends Page
     public function getHeaderActions(): array
     {
         return [
+            Action::make('configureGoogleDrive')
+                ->label(fn (): string => app(SaasGoogleDriveBackupService::class)->isEnabled() ? 'Google Drive: Ativo' : 'Configurar Google Drive')
+                ->icon('heroicon-o-cloud-arrow-up')
+                ->color(fn (): string => app(SaasGoogleDriveBackupService::class)->isEnabled() ? 'success' : 'gray')
+                ->url(fn (): string => SaasBackupCloudSettings::getUrl()),
+
+            Action::make('restoreCloudBackup')
+                ->label('Restaurar do Google Drive')
+                ->icon('heroicon-o-cloud-arrow-down')
+                ->color('danger')
+                ->visible(fn (): bool => app(SaasGoogleDriveBackupService::class)->isConfigured())
+                ->form([
+                    Select::make('drive_file')
+                        ->label('Backup Criptografado no Google Drive')
+                        ->options(function (): array {
+                            try {
+                                $files = app(SaasGoogleDriveBackupService::class)->listEncryptedBackups();
+                                $options = [];
+                                foreach ($files as $file) {
+                                    $sizeMb = round(($file['size'] ?? 0) / 1048576, 2).' MB';
+                                    $date = ! empty($file['created_at'])
+                                        ? Carbon::parse($file['created_at'])->format('d/m/Y H:i')
+                                        : 'Data n/d';
+                                    $label = ($file['is_global'] ? '🌐 GLOBAL' : "💈 Barbearia ({$file['scope']})")." — {$date} ({$sizeMb})";
+                                    $options[$file['id'].'|'.$file['name']] = $label;
+                                }
+
+                                return $options;
+                            } catch (\Throwable $e) {
+                                return [];
+                            }
+                        })
+                        ->searchable()
+                        ->required(),
+                    TextInput::make('confirmation')
+                        ->label('Confirmação obrigatória')
+                        ->placeholder('RESTAURAR BACKUP DA NUVEM')
+                        ->helperText('Digite exatamente RESTAURAR BACKUP DA NUVEM para confirmar a operação.')
+                        ->required(),
+                ])
+                ->modalHeading('Restaurar Backup Criptografado do Google Drive')
+                ->modalDescription('O backup selecionado será baixado do Google Drive e descriptografado usando o APP_KEY deste servidor. Antes da restauração, uma cópia preventiva de segurança local será gerada automaticamente.')
+                ->modalSubmitActionLabel('Baixar, Descriptografar e Restaurar')
+                ->action(function (array $data, LocalBackupManager $backupManager, SaasGoogleDriveBackupService $driveService): void {
+                    if (trim((string) ($data['confirmation'] ?? '')) !== 'RESTAURAR BACKUP DA NUVEM') {
+                        Notification::make()
+                            ->title('Confirmação textual incorreta')
+                            ->body('A restauração foi cancelada por segurança. Nenhuma alteração foi realizada.')
+                            ->danger()
+                            ->send();
+
+                        return;
+                    }
+
+                    [$fileId, $filename] = array_pad(explode('|', (string) ($data['drive_file'] ?? ''), 2), 2, '');
+                    if (empty($fileId) || empty($filename)) {
+                        Notification::make()->title('Arquivo inválido selecionado')->danger()->send();
+
+                        return;
+                    }
+
+                    try {
+                        $decryptedPath = $driveService->downloadAndDecryptBackup($fileId, $filename);
+                        $backupManager->restoreFromPath($decryptedPath);
+
+                        Notification::make()
+                            ->title('Backup do Google Drive restaurado com sucesso!')
+                            ->body("O arquivo '{$filename}' foi baixado, autenticado e restaurado com sucesso.")
+                            ->success()
+                            ->persistent()
+                            ->send();
+                    } catch (\Throwable $e) {
+                        Notification::make()
+                            ->title('Falha ao restaurar backup do Google Drive')
+                            ->body($e->getMessage())
+                            ->danger()
+                            ->persistent()
+                            ->send();
+                    }
+                }),
+
             Action::make('createBackup')
                 ->label('Gerar Novo Backup')
                 ->icon('heroicon-o-plus-circle')

@@ -7,6 +7,7 @@ use App\Http\Controllers\SaasPaymentProofController;
 use App\Http\Controllers\TenantSaasPaymentController;
 use App\Models\Appointment;
 use App\Models\Barbershop;
+use App\Rules\Turnstile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
@@ -118,7 +119,7 @@ Route::post('/avaliar/{appointment}', function (Request $request, Appointment $a
         'website_url' => 'nullable|string|max:0', // Honeypot
         'cf-turnstile-response' => [
             config('services.turnstile.site_key') ? 'required' : 'nullable',
-            new \App\Rules\Turnstile('rating'),
+            new Turnstile('rating'),
         ],
     ], [
         'cf-turnstile-response.required' => 'A verificação de segurança é obrigatória.',

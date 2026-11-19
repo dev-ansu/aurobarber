@@ -104,7 +104,7 @@ test('commissions page accurately calculates 50 percent commission over 130 gros
     $this->actingAs($owner);
     Filament::setTenant($barbershop);
 
-    $page = new CommissionsPage();
+    $page = new CommissionsPage;
     $page->selectedProfessionalId = (string) $professional->id;
     $page->applyPreset('week');
 

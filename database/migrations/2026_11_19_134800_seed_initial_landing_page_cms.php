@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Models\Page;
 use Database\Seeders\CmsInitialContentSeeder;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
@@ -19,8 +18,8 @@ return new class extends Migration
 
         if (Schema::hasTable('pages')) {
             try {
-                (new CmsInitialContentSeeder())->run();
-            } catch (\Throwable $e) {
+                (new CmsInitialContentSeeder)->run();
+            } catch (Throwable $e) {
                 report($e);
             }
         }

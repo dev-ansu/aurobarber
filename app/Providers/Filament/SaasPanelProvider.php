@@ -8,6 +8,7 @@ use App\Filament\Auth\EditOwnProfile;
 use App\Filament\Pages\Auth\ForcePasswordChange;
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Resources\BarbershopResource;
+use App\Filament\Saas\Pages\SaasBackupCloudSettings;
 use App\Filament\Saas\Pages\SaasBackups;
 use App\Filament\Saas\Pages\SaasBillingSettingsPage;
 use App\Filament\Saas\Pages\SaasDashboard;
@@ -97,6 +98,7 @@ class SaasPanelProvider extends PanelProvider
                 SaasDashboard::class,
                 SaasBillingSettingsPage::class,
                 SaasBackups::class,
+                SaasBackupCloudSettings::class,
                 SaasLogs::class,
                 SaasSupportSettings::class,
                 ForcePasswordChange::class,

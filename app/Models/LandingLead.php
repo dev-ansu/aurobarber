@@ -52,7 +52,7 @@ class LandingLead extends Model
     {
         $clean = preg_replace('/[^0-9]/', '', (string) $this->phone);
         if (strlen($clean) <= 11 && ! str_starts_with($clean, '55')) {
-            $clean = '55' . $clean;
+            $clean = '55'.$clean;
         }
 
         return $clean;

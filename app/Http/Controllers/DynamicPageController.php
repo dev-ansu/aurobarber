@@ -19,7 +19,7 @@ class DynamicPageController extends Controller
         $normalizedSlug = ($normalizedSlug === '' || $normalizedSlug === 'home') ? '/' : $normalizedSlug;
 
         // Se for um slug diferente de "/", checa se é uma página publicada do CMS primeiro
-        $cacheKey = 'cms_page_' . md5($normalizedSlug);
+        $cacheKey = 'cms_page_'.md5($normalizedSlug);
         $cachedData = null;
 
         try {
@@ -32,7 +32,7 @@ class DynamicPageController extends Controller
         $page = null;
 
         if (is_array($cachedData)) {
-            $page = new Page();
+            $page = new Page;
             $page->setRawAttributes($cachedData, true);
         } elseif ($cachedData instanceof Page) {
             $page = $cachedData;
@@ -123,7 +123,7 @@ class DynamicPageController extends Controller
             if ($rawPhone) {
                 $digits = preg_replace('/\D/', '', (string) $rawPhone);
                 if (strlen($digits) >= 10) {
-                    return str_starts_with($digits, '55') ? $digits : '55' . $digits;
+                    return str_starts_with($digits, '55') ? $digits : '55'.$digits;
                 }
             }
         } catch (\Throwable) {

@@ -84,6 +84,12 @@ class LocalBackupManager
 
             $this->applyRetention(10);
 
+            try {
+                app(SaasGoogleDriveBackupService::class)->uploadIfEnabled($archivePath);
+            } catch (\Throwable) {
+                // Falhas transitórias no Drive não devem impedir a gravação do backup local
+            }
+
             return $filename;
         } catch (\Throwable $exception) {
             if (is_string($archivePath)) {

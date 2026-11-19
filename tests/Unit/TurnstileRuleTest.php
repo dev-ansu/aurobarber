@@ -12,7 +12,7 @@ test('turnstile allows validation when secret is missing in local or testing env
 
     $validator = Validator::make(
         ['token' => 'any-token'],
-        ['token' => [new Turnstile()]]
+        ['token' => [new Turnstile]]
     );
 
     expect($validator->passes())->toBeTrue();
@@ -23,7 +23,7 @@ test('turnstile fails when token is empty and secret is configured', function ()
 
     $validator = Validator::make(
         ['token' => ''],
-        ['token' => [new Turnstile()]]
+        ['token' => [new Turnstile]]
     );
 
     expect($validator->fails())->toBeTrue()
@@ -60,7 +60,7 @@ test('turnstile fails when cloudflare api rejects token', function () {
 
     $validator = Validator::make(
         ['token' => 'invalid-token'],
-        ['token' => [new Turnstile()]]
+        ['token' => [new Turnstile]]
     );
 
     expect($validator->fails())->toBeTrue()

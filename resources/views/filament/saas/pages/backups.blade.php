@@ -30,7 +30,7 @@
         </x-filament::section>
 
         {{-- 2. CARDS DE KPIS --}}
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
             {{-- Card 1: Total de Backups --}}
             <div class="flex items-center justify-between gap-4 rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
                 <div class="space-y-1">
@@ -59,7 +59,27 @@
                 </div>
             </div>
 
-            {{-- Card 3: Último Backup --}}
+            {{-- Card 3: Google Drive Nuvem --}}
+            @php
+                $driveService = app(\App\Services\SaasGoogleDriveBackupService::class);
+                $isDriveActive = $driveService->isEnabled();
+            @endphp
+            <div class="flex items-center justify-between gap-4 rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
+                <div class="space-y-1">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">Nuvem Google Drive</span>
+                    <div class="text-2xl font-bold {{ $isDriveActive ? 'text-success-600 dark:text-success-400' : 'text-gray-500 dark:text-gray-400' }}">
+                        {{ $isDriveActive ? 'Conectado' : 'Desativado' }}
+                    </div>
+                    <span class="block text-xs text-gray-500 dark:text-gray-400">
+                        {{ $isDriveActive ? 'Criptografia SecretStream ativa' : 'Configurar credenciais no topo' }}
+                    </span>
+                </div>
+                <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border {{ $isDriveActive ? 'border-success-500/25 bg-success-50 text-success-600 dark:bg-success-500/10 dark:text-success-400' : 'border-gray-300 bg-gray-50 text-gray-400 dark:border-white/10 dark:bg-white/5' }}">
+                    <x-filament::icon icon="heroicon-o-cloud-arrow-up" class="h-6 w-6" />
+                </div>
+            </div>
+
+            {{-- Card 4: Último Backup --}}
             <div class="flex items-center justify-between gap-4 rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
                 <div class="min-w-0 space-y-1">
                     <span class="text-xs font-semibold uppercase tracking-wider text-info-600 dark:text-info-400">Último Arquivo Gerado</span>

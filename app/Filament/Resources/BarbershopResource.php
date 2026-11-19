@@ -27,6 +27,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Unique;
+use Illuminate\Validation\ValidationException;
 
 class BarbershopResource extends Resource
 {
@@ -642,6 +643,43 @@ class BarbershopResource extends Resource
                 EditAction::make(),
                 DeleteAction::make()
                     ->label('Lixeira')
+                    ->modalHeading(fn (Barbershop $record): string => "Exclusão Administrativa: {$record->name}")
+                    ->modalDescription(fn (Barbershop $record): string => "Esta ação moverá a barbearia {$record->name} para a lixeira e desativará os acessos. Antes da exclusão, um BACKUP PREVENTIVO COMPLETO será gerado automaticamente. Para prosseguir, confirme o impacto e digite exatamente: EXCLUIR ".($record->slug ?: 'BARBEARIA'))
+                    ->modalSubmitActionLabel('Gerar Backup e Mover para Lixeira')
+                    ->form(fn (Barbershop $record): array => [
+                        Forms\Components\Checkbox::make('understands_impact')
+                            ->label('Entendo que o lojista, profissionais e clientes perderão acesso imediato ao painel.')
+                            ->accepted()
+                            ->required()
+                            ->columnSpanFull(),
+                        Forms\Components\TextInput::make('confirmation_text')
+                            ->label('Confirmação textual obrigatória')
+                            ->placeholder('EXCLUIR '.($record->slug ?: 'BARBEARIA'))
+                            ->helperText('Digite a frase indicada acima diferenciando maiúsculas de minúsculas.')
+                            ->required()
+                            ->columnSpanFull(),
+                    ])
+                    ->before(function (array $data, Barbershop $record): void {
+                        $expected = 'EXCLUIR '.($record->slug ?: 'BARBEARIA');
+                        if (! hash_equals($expected, trim((string) ($data['confirmation_text'] ?? '')))) {
+                            throw ValidationException::withMessages([
+                                'confirmation_text' => 'O texto digitado não corresponde à frase de confirmação.',
+                            ]);
+                        }
+
+                        try {
+                            $schema = ! empty($record->schema_name) ? $record->schema_name : null;
+                            $filename = app(LocalBackupManager::class)->create(false, $schema);
+                            Notification::make()
+                                ->title('Backup preventivo gerado antes da exclusão!')
+                                ->body("Arquivo de segurança salvo: {$filename}. Pode ser restaurado na lixeira a qualquer momento.")
+                                ->success()
+                                ->persistent()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            throw new \RuntimeException('Falha ao gerar o backup preventivo obrigatório: '.$e->getMessage().'. A exclusão foi abortada por segurança.');
+                        }
+                    })
                     ->after(function (Barbershop $record): void {
                         if ($record->owner_id && ($owner = User::find($record->owner_id))) {
                             $hasOtherActiveShops = $owner->ownedBarbershops()->withoutTrashed()->where('id', '!=', $record->id)->exists()

@@ -45,15 +45,15 @@ class Page extends Model
         static::saved(function (Page $page): void {
             $normalizedSlug = trim((string) $page->slug, '/');
             $normalizedSlug = ($normalizedSlug === '' || $normalizedSlug === 'home') ? '/' : $normalizedSlug;
-            Cache::forget('cms_page_' . md5($normalizedSlug));
-            Cache::forget('cms_page_' . md5('/'));
+            Cache::forget('cms_page_'.md5($normalizedSlug));
+            Cache::forget('cms_page_'.md5('/'));
         });
 
         static::deleted(function (Page $page): void {
             $normalizedSlug = trim((string) $page->slug, '/');
             $normalizedSlug = ($normalizedSlug === '' || $normalizedSlug === 'home') ? '/' : $normalizedSlug;
-            Cache::forget('cms_page_' . md5($normalizedSlug));
-            Cache::forget('cms_page_' . md5('/'));
+            Cache::forget('cms_page_'.md5($normalizedSlug));
+            Cache::forget('cms_page_'.md5('/'));
         });
     }
 

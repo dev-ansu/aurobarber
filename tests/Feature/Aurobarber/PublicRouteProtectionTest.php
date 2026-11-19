@@ -44,6 +44,7 @@ beforeEach(function () {
     $tenantService = new class extends TenantService
     {
         public function switchToTenant(string $name): void {}
+
         public function switchToPublic(): void {}
     };
 
