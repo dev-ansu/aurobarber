@@ -8,6 +8,7 @@ use App\Filament\Auth\EditOwnProfile;
 use App\Filament\Pages\Auth\ForcePasswordChange;
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Resources\BarbershopResource;
+use App\Filament\Saas\Pages\BarberDoctorPage;
 use App\Filament\Saas\Pages\SaasBackupCloudSettings;
 use App\Filament\Saas\Pages\SaasBackups;
 use App\Filament\Saas\Pages\SaasBillingSettingsPage;
@@ -98,6 +99,7 @@ class SaasPanelProvider extends PanelProvider
             )
             ->pages([
                 SaasDashboard::class,
+                BarberDoctorPage::class,
                 SaasBillingSettingsPage::class,
                 SaasBackups::class,
                 SaasBackupCloudSettings::class,
