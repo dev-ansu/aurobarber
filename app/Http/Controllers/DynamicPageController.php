@@ -39,16 +39,20 @@ class DynamicPageController extends Controller
         }
 
         if (! $page) {
-            $page = Page::query()
-                ->published()
-                ->bySlug($normalizedSlug)
-                ->first();
+            try {
+                $page = Page::query()
+                    ->published()
+                    ->bySlug($normalizedSlug)
+                    ->first();
 
-            if ($page) {
-                try {
-                    Cache::put($cacheKey, $page->getAttributes(), 86400);
-                } catch (\Throwable) {
+                if ($page) {
+                    try {
+                        Cache::put($cacheKey, $page->getAttributes(), 86400);
+                    } catch (\Throwable) {
+                    }
                 }
+            } catch (\Throwable) {
+                $page = null;
             }
         }
 
