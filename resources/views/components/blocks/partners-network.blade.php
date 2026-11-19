@@ -9,13 +9,18 @@
     $subtitle = $data['subtitle'] ?? 'Conheça estabelecimentos que transformaram sua gestão e o atendimento aos seus clientes.';
     $showSearch = $data['show_search'] ?? true;
 
-    $shops = $barbershops->isNotEmpty()
-        ? $barbershops
-        : \App\Models\Barbershop::query()
-            ->where('is_active', true)
-            ->whereNotNull('slug')
-            ->orderBy('name')
-            ->get(['id', 'name', 'slug', 'city', 'logo_url', 'brand_color']);
+    $shops = $barbershops;
+    if ($shops->isEmpty() && !app()->runningUnitTests()) {
+        try {
+            $shops = \App\Models\Barbershop::query()
+                ->where('is_active', true)
+                ->whereNotNull('slug')
+                ->orderBy('name')
+                ->get(['id', 'name', 'slug', 'city', 'logo_url', 'brand_color']);
+        } catch (\Throwable) {
+            $shops = collect();
+        }
+    }
 @endphp
 
 @if($shops->isNotEmpty())

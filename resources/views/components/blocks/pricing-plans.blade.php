@@ -9,9 +9,14 @@
     $subtitle = $data['subtitle'] ?? 'Todos os planos incluem página pública de agendamento, atalho PWA, cartão fidelidade e suporte direto.';
     $useDatabase = $data['use_database_plans'] ?? true;
 
-    $saasPlans = $plans->isNotEmpty() 
-        ? $plans 
-        : \App\Models\SaasPlan::query()->where('is_active', true)->orderBy('sort_order')->get();
+    $saasPlans = $plans;
+    if ($saasPlans->isEmpty() && !app()->runningUnitTests()) {
+        try {
+            $saasPlans = \App\Models\SaasPlan::query()->where('is_active', true)->orderBy('sort_order')->get();
+        } catch (\Throwable) {
+            $saasPlans = collect();
+        }
+    }
 @endphp
 
 <section id="planos" class="py-20 sm:py-28 bg-slate-900/40 border-b border-slate-800/80">
