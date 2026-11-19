@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\DynamicPageController;
+use App\Http\Controllers\LandingLeadController;
 use App\Http\Controllers\SaasPaymentProofController;
 use App\Http\Controllers\TenantSaasPaymentController;
 use App\Models\Appointment;
@@ -36,12 +38,15 @@ Route::get('/admin/force-password-change', function () {
     return redirect('/saas/login');
 });
 
-// 1. Landing Page Principal do AuroBarber (SaaS B2B)
-Route::get('/', function () {
-    return view('welcome-aurobarber');
-})->name('home');
+// 1. Landing Page Principal Dinâmica (CMS AuroBarber SaaS)
+Route::get('/', [DynamicPageController::class, 'show'])->name('home');
 
-// 1.1 Web App Manifest (PWA) — Painel Administrativo / Equipe
+// 1.1 Captura de Leads Comerciais da Landing Page
+Route::post('/landing/lead', [LandingLeadController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('landing.lead.store');
+
+// 1.2 Web App Manifest (PWA) — Painel Administrativo / Equipe
 Route::get('/manifest.json', function (Request $request) {
     $tenantSlug = $request->query('tenant');
     $shop = $tenantSlug ? Barbershop::where('slug', $tenantSlug)->first() : null;
@@ -155,10 +160,15 @@ Route::get('/{slug}/manifest.json', function (string $slug) {
     ])->header('Content-Type', 'application/manifest+json');
 })->name('barbershop.manifest');
 
-Route::get('/{slug}', [BookingController::class, 'show'])->name('barbershop.show');
+// Rota de Agendamento / Página Dinâmica CMS (com restrição para evitar colisão com painéis e rotas internas)
+Route::get('/{slug}', [DynamicPageController::class, 'show'])
+    ->where('slug', '^(?!admin|api|login|auth|saas|storage|up|pwa|livewire|[0-9]+$).*$')
+    ->name('barbershop.show');
+
 Route::get('/{slug}/slots', [BookingController::class, 'getAvailableSlots'])
     ->middleware('throttle:booking-slots')
     ->name('barbershop.slots');
+
 Route::post('/{slug}/book', [BookingController::class, 'store'])
     ->middleware('throttle:booking-submission')
     ->name('barbershop.book');

@@ -168,6 +168,15 @@ class PageResource extends Resource
             ]);
     }
 
+    public static function getPages(): array
+    {
+        return [
+            'index' => ListPage::route('/'),
+            'create' => CreatePage::route('/create'),
+            'edit' => EditPage::route('/{record}/edit'),
+        ];
+    }
+
     protected static function getHeroBlock(): Block
     {
         return Block::make('hero')
