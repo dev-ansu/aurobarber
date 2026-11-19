@@ -21,7 +21,7 @@ class BarberDoctorPage extends Page
 
     protected static ?int $navigationSort = 2;
 
-    protected static string $routePath = '/doctor';
+    protected static ?string $slug = 'doctor';
 
     protected string $view = 'filament.saas.pages.barber-doctor';
 
