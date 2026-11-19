@@ -41,10 +41,21 @@ Route::get('/admin/force-password-change', function () {
 // 1. Landing Page Principal Dinâmica (CMS AuroBarber SaaS)
 Route::get('/', [DynamicPageController::class, 'show'])->name('home');
 
-// 1.1 Captura de Leads Comerciais da Landing Page
+// 1.1 Captura de Leads Comerciais da Landing Page (Blindada com Turnstile + Honeypot + Rate Limit)
 Route::post('/landing/lead', [LandingLeadController::class, 'store'])
-    ->middleware('throttle:10,1')
+    ->middleware('throttle:landing-leads')
     ->name('landing.lead.store');
+
+// 1.2 Páginas Legais Institucionais (Termos de Uso e Política de Privacidade LGPD)
+Route::get('/termos', function () {
+    return view('legal.terms');
+})->name('terms');
+Route::redirect('/termos-de-uso', '/termos');
+
+Route::get('/privacidade', function () {
+    return view('legal.privacy');
+})->name('privacy');
+Route::redirect('/politica-de-privacidade', '/privacidade');
 
 // 1.2 Web App Manifest (PWA) — Painel Administrativo / Equipe
 Route::get('/manifest.json', function (Request $request) {
@@ -162,7 +173,7 @@ Route::get('/{slug}/manifest.json', function (string $slug) {
 
 // Rota de Agendamento / Página Dinâmica CMS (com restrição para evitar colisão com painéis e rotas internas)
 Route::get('/{slug}', [DynamicPageController::class, 'show'])
-    ->where('slug', '^(?!admin|api|login|auth|saas|storage|up|pwa|livewire|[0-9]+$).*$')
+    ->where('slug', '^(?!admin$|api$|login$|auth$|saas$|storage$|up$|pwa$|livewire$|termos$|termos-de-uso$|privacidade$|politica-de-privacidade$|[0-9]+$).*$')
     ->name('barbershop.show');
 
 Route::get('/{slug}/slots', [BookingController::class, 'getAvailableSlots'])

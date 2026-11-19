@@ -3,6 +3,15 @@
     'commercialWhatsapp' => env('AUROSOFT_COMMERCIAL_WHATSAPP', '5585999999999'),
 ])
 
+<script>
+    window.onLeadTurnstileSuccess = function(token) {
+        window.dispatchEvent(new CustomEvent('turnstile-lead-success', { detail: token }));
+    };
+    window.onLeadTurnstileExpired = function() {
+        window.dispatchEvent(new CustomEvent('turnstile-lead-expired'));
+    };
+</script>
+
 <div
     x-show="leadModalOpen"
     x-cloak
@@ -25,12 +34,36 @@
             city: '',
             chairs_count: '2 a 4',
             message: '',
+            websiteUrl: '',
+            turnstileToken: '{{ config('services.turnstile.site_key') ? '' : 'bypass' }}',
             submitting: false,
             success: false,
             errorMessage: '',
+            init() {
+                window.addEventListener('turnstile-lead-success', (e) => {
+                    this.turnstileToken = e.detail;
+                });
+                window.addEventListener('turnstile-lead-expired', () => {
+                    this.turnstileToken = '';
+                });
+            },
             submitForm() {
-                this.submitting = true;
                 this.errorMessage = '';
+
+                @if(config('services.turnstile.site_key'))
+                if (!this.turnstileToken) {
+                    const input = document.querySelector('[name=\"cf-turnstile-response\"]');
+                    if (input && input.value) {
+                        this.turnstileToken = input.value;
+                    }
+                }
+                if (!this.turnstileToken) {
+                    this.errorMessage = 'Por favor, complete a verificação de segurança antes de prosseguir.';
+                    return;
+                }
+                @endif
+
+                this.submitting = true;
                 fetch('{{ route('landing.lead.store') }}', {
                     method: 'POST',
                     headers: {
@@ -47,7 +80,9 @@
                         chairs_count: this.chairs_count,
                         selected_plan: selectedPlanName || 'Demonstração Geral',
                         selected_plan_id: selectedPlanId || null,
-                        message: this.message
+                        message: this.message,
+                        website_url: this.websiteUrl,
+                        turnstile_token: this.turnstileToken
                     })
                 })
                 .then(res => res.json())
@@ -57,6 +92,10 @@
                         this.success = true;
                     } else {
                         this.errorMessage = data.message || 'Erro ao enviar. Tente novamente ou chame no WhatsApp.';
+                        if (window.turnstile && typeof window.turnstile.reset === 'function') {
+                            try { window.turnstile.reset(); } catch(e){}
+                            this.turnstileToken = '';
+                        }
                     }
                 })
                 .catch(() => {
@@ -177,6 +216,23 @@
                         <option value="Mais de 8 Barbeiros">Mais de 8 Barbeiros / Rede</option>
                     </select>
                 </div>
+
+                {{-- Campo Honeypot anti-spam invisível --}}
+                <div style="display:none; position:absolute; left:-9999px;">
+                    <input type="text" x-model="websiteUrl" name="website_url" tabindex="-1" autocomplete="off" />
+                </div>
+
+                {{-- Cloudflare Turnstile anti-bot --}}
+                @if(config('services.turnstile.site_key'))
+                    <div class="my-2 flex justify-center">
+                        <div class="cf-turnstile"
+                             data-sitekey="{{ config('services.turnstile.site_key') }}"
+                             data-action="landing_lead"
+                             data-theme="dark"
+                             data-callback="onLeadTurnstileSuccess"
+                             data-expired-callback="onLeadTurnstileExpired"></div>
+                    </div>
+                @endif
 
                 <button
                     type="submit"

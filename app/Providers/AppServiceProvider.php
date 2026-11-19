@@ -114,5 +114,14 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('public-rating', function (Request $request) {
             return Limit::perMinute(5)->by($request->ip());
         });
+
+        RateLimiter::for('landing-leads', function (Request $request) {
+            return Limit::perMinutes(10, 5)->by($request->ip())->response(function () {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Muitas tentativas em curto período. Por favor, aguarde alguns minutos antes de solicitar novamente.',
+                ], 429);
+            });
+        });
     }
 }

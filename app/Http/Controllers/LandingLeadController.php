@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\LandingLead;
+use App\Rules\Turnstile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -13,7 +14,22 @@ class LandingLeadController extends Controller
 {
     public function store(Request $request): JsonResponse
     {
+        // 1. Armadilha Honeypot anti-spam
+        if (! empty($request->input('website_url'))) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Solicitação registrada com sucesso! Entraremos em contato via WhatsApp.',
+            ]);
+        }
+
+        $turnstileToken = $request->input('turnstile_token') ?? $request->input('cf-turnstile-response');
+        $request->merge(['turnstile_token' => $turnstileToken]);
+
         $validated = $request->validate([
+            'turnstile_token' => [
+                config('services.turnstile.site_key') ? 'required' : 'nullable',
+                new Turnstile('landing_lead'),
+            ],
             'name' => 'required|string|max:120',
             'barbershop_name' => 'required|string|max:160',
             'phone' => 'required|string|max:40',
@@ -23,6 +39,8 @@ class LandingLeadController extends Controller
             'selected_plan' => 'nullable|string|max:100',
             'selected_plan_id' => 'nullable|integer|exists:saas_plans,id',
             'message' => 'nullable|string|max:1000',
+        ], [
+            'turnstile_token.required' => 'A verificação de segurança é obrigatória. Por favor, complete o desafio.',
         ]);
 
         try {

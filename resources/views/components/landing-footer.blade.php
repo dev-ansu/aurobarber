@@ -25,9 +25,13 @@
                 &copy; {{ date('Y') }} AuroBarber &bull; Uma solução <strong class="text-slate-400">Aurosoft Tecnologia</strong>. Todos os direitos reservados.
             </div>
             <div class="flex items-center gap-4">
-                <span>Ambiente Seguro SSL 256-bit</span>
+                <a href="{{ route('terms') }}" class="hover:text-amber-400 transition">Termos de Uso</a>
                 <span>•</span>
-                <span>Conformidade com a Lei do Salão Parceiro</span>
+                <a href="{{ route('privacy') }}" class="hover:text-amber-400 transition">Privacidade (LGPD)</a>
+                <span>•</span>
+                <span>SSL 256-bit</span>
+                <span>•</span>
+                <span>Lei do Salão Parceiro</span>
             </div>
         </div>
     </div>
