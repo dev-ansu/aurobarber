@@ -67,6 +67,7 @@ class SaasRestoreTestService
 
             $dumpPath = $workDir.'/database.dump';
             $driver = DB::getDriverName();
+            $sourceSchema = (string) ($manifest['schema'] ?? 'public');
 
             $onProgress?->__invoke(40, 'Provisionando schema PostgreSQL isolado');
             $run->update([
@@ -77,7 +78,7 @@ class SaasRestoreTestService
             $checkResults = [];
 
             if ($driver === 'pgsql') {
-                $this->restoreToPgsqlSchema($dumpPath, $targetSchema);
+                $this->restoreToPgsqlSchema($dumpPath, $targetSchema, $sourceSchema);
                 $onProgress?->__invoke(70, 'Executando auditoria automatizada (Smoke Test)');
                 $checkResults = $this->runAutomatedHealthCheckPgsql($targetSchema);
             } else {
@@ -177,12 +178,10 @@ class SaasRestoreTestService
         ]);
     }
 
-    private function restoreToPgsqlSchema(string $dumpPath, string $targetSchema): void
+    private function restoreToPgsqlSchema(string $dumpPath, string $targetSchema, string $sourceSchema = 'public'): void
     {
-        $cleanSchema = preg_replace('/[^a-zA-Z0-9_]/', '', $targetSchema);
-
-        // 1. Criar o schema isolado
-        DB::statement("CREATE SCHEMA IF NOT EXISTS \"{$cleanSchema}\"");
+        $cleanTarget = preg_replace('/[^a-zA-Z0-9_]/', '', $targetSchema);
+        $cleanSource = preg_replace('/[^a-zA-Z0-9_]/', '', $sourceSchema);
 
         $manager = app(LocalBackupManager::class);
         $reflection = new \ReflectionClass($manager);
@@ -195,11 +194,9 @@ class SaasRestoreTestService
         $pgsqlConnMethod->setAccessible(true);
         $connection = $pgsqlConnMethod->invoke($manager);
 
-        // 2. Extrair SQL do dump
-        $tempSql = tempnam(storage_path('app/private/backups'), 'dump_sql_');
-        if ($tempSql === false) {
-            throw new RuntimeException('Não foi possível criar arquivo SQL temporário.');
-        }
+        // 1. Extrair SQL do dump
+        $tempSql = tempnam(storage_path('app/private/backups'), 'dump_raw_');
+        $rewrittenSql = tempnam(storage_path('app/private/backups'), 'dump_rewritten_');
 
         try {
             $restoreProc = new Process([
@@ -218,21 +215,29 @@ class SaasRestoreTestService
                 throw new RuntimeException('Falha na conversão do dump: '.$restoreProc->getErrorOutput());
             }
 
-            // Prepara SQL com o search_path redirecionado para a sandbox
-            $header = "SET search_path TO \"{$cleanSchema}\", public;\n";
-            $sqlContent = File::get($tempSql);
-            // Remove comandos explícitos de criação de schema public
-            $sqlContent = preg_replace('/CREATE SCHEMA public;/i', '', $sqlContent);
-            File::put($tempSql, $header.$sqlContent);
+            $serverVersionNum = 170000;
+            try {
+                $serverVersionNum = (int) DB::scalar('SHOW server_version_num');
+            } catch (Throwable) {
+            }
 
-            // 3. Executa o psql no schema isolado
+            $this->rewriteDumpSchemaFile(
+                $tempSql,
+                $rewrittenSql,
+                $cleanSource,
+                $cleanTarget,
+                $serverVersionNum < 170000,
+            );
+
+            // 2. Executa o psql com o SQL remapeado
             $psqlProc = new Process([
                 $psql,
+                '--set=ON_ERROR_STOP=0',
                 '--host='.$connection['host'],
                 '--port='.$connection['port'],
                 '--username='.$connection['username'],
                 '--dbname='.$connection['database'],
-                '--file='.$tempSql,
+                '--file='.$rewrittenSql,
             ], null, [
                 'PGPASSWORD' => $connection['password'],
             ]);
@@ -242,6 +247,100 @@ class SaasRestoreTestService
             if (File::isFile($tempSql)) {
                 File::delete($tempSql);
             }
+            if (File::isFile($rewrittenSql)) {
+                File::delete($rewrittenSql);
+            }
+        }
+    }
+
+    private function rewriteDumpSchemaFile(
+        string $sourcePath,
+        string $targetPath,
+        string $sourceSchema,
+        string $targetSchema,
+        bool $removeTransactionTimeout,
+    ): void {
+        $source = fopen($sourcePath, 'rb');
+        $target = fopen($targetPath, 'wb');
+        if (! is_resource($source) || ! is_resource($target)) {
+            if (is_resource($source)) {
+                fclose($source);
+            }
+            if (is_resource($target)) {
+                fclose($target);
+            }
+            throw new RuntimeException('Não foi possível abrir os arquivos SQL temporários para remapeamento.');
+        }
+
+        $insideCopy = false;
+        $schemaDeclaration = '/^\s*CREATE\s+SCHEMA\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:"'.preg_quote($targetSchema, '/').'"|'.preg_quote($targetSchema, '/').')(?:\s+AUTHORIZATION\s+[^;]+)?\s*;\s*$/i';
+
+        try {
+            if (fwrite($target, "CREATE SCHEMA IF NOT EXISTS \"{$targetSchema}\";\nSET search_path TO \"{$targetSchema}\";\n") === false) {
+                throw new RuntimeException('Não foi possível iniciar o SQL remapeado.');
+            }
+
+            while (($line = fgets($source)) !== false) {
+                if ($insideCopy) {
+                    if (fwrite($target, $line) === false) {
+                        throw new RuntimeException('Não foi possível gravar o SQL remapeado.');
+                    }
+                    if (trim($line) === '\\.') {
+                        $insideCopy = false;
+                    }
+
+                    continue;
+                }
+
+                $line = preg_replace_callback(
+                    '/("(?:""|[^"])*"|\'(?:\'\'|[^\'])*\'|--[^\r\n]*|\/\*.*?\*\/|[A-Za-z_][A-Za-z0-9_$]*)/s',
+                    static function (array $match) use ($sourceSchema, $targetSchema): string {
+                        $token = $match[0];
+                        if (str_starts_with($token, "'")) {
+                            $quotedPrefix = "'".$sourceSchema;
+                            if (str_starts_with($token, $quotedPrefix)
+                                && in_array($token[strlen($quotedPrefix)] ?? "'", ['.', ',', "'"], true)) {
+                                return "'".$targetSchema.substr($token, strlen($quotedPrefix));
+                            }
+
+                            return $token;
+                        }
+                        if (str_starts_with($token, '--') || str_starts_with($token, '/*')) {
+                            return $token;
+                        }
+                        if (str_starts_with($token, '"')) {
+                            return trim($token, '"') === $sourceSchema ? '"'.$targetSchema.'"' : $token;
+                        }
+
+                        return $token === $sourceSchema ? $targetSchema : $token;
+                    },
+                    $line,
+                ) ?? $line;
+
+                if ($removeTransactionTimeout && preg_match('/^\s*SET\s+transaction_timeout\s*=\s*0\s*;\s*$/i', $line) === 1) {
+                    continue;
+                }
+
+                if (preg_match($schemaDeclaration, $line) === 1) {
+                    continue;
+                }
+
+                if (fwrite($target, $line) === false) {
+                    throw new RuntimeException('Não foi possível gravar o SQL remapeado.');
+                }
+
+                if (preg_match('/^COPY\s+(?:"?'.preg_quote($targetSchema, '/').'"?)\./i', ltrim($line)) === 1
+                    && str_contains($line, ' FROM stdin;')) {
+                    $insideCopy = true;
+                }
+            }
+
+            if (! feof($source)) {
+                throw new RuntimeException('Falha ao ler o dump SQL durante o remapeamento.');
+            }
+        } finally {
+            fclose($source);
+            fclose($target);
         }
     }
 
