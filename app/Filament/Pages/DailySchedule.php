@@ -159,6 +159,9 @@ class DailySchedule extends Page
     public function updateStatus(int $appointmentId, string $status): void
     {
         $appt = $this->findAccessibleAppointment($appointmentId);
+        if (! $appt) {
+            return;
+        }
 
         if (in_array($appt->status, ['completed', 'cancelled', 'no_show'], true)) {
             Notification::make()
@@ -300,6 +303,11 @@ class DailySchedule extends Page
                 }
 
                 $appt = $this->findAccessibleAppointment($appointmentId);
+                if (! $appt) {
+                    $action->cancel();
+
+                    return;
+                }
 
                 if (in_array($appt->status, ['completed', 'cancelled', 'no_show'], true)) {
                     Notification::make()
@@ -327,9 +335,19 @@ class DailySchedule extends Page
             ->action(function (array $data, Action $action): void {
                 $arguments = $action->getArguments();
                 $appointmentId = (int) ($arguments['appointmentId'] ?? $data['appointment_id'] ?? 0);
-                abort_unless($appointmentId > 0, 404);
+                if ($appointmentId <= 0) {
+                    Notification::make()
+                        ->title('Identificador do agendamento inválido.')
+                        ->warning()
+                        ->send();
+
+                    return;
+                }
 
                 $appt = $this->findAccessibleAppointment($appointmentId);
+                if (! $appt) {
+                    return;
+                }
 
                 if (in_array($appt->status, ['completed', 'cancelled', 'no_show'], true)) {
                     Notification::make()
@@ -430,8 +448,9 @@ class DailySchedule extends Page
             ])
             ->mountUsing(function (Schema $schema, Action $action): void {
                 $arguments = $action->getArguments();
-                $defaultProfessionalId = $arguments['professionalId']
-                    ?? $this->professionals->first()?->id;
+                $defaultProfessionalId = ! empty($arguments['professionalId'])
+                    ? (int) $arguments['professionalId']
+                    : $this->professionals->first()?->id;
                 $defaultTime = $arguments['time'] ?? '14:00';
 
                 $schema->fill([
@@ -442,21 +461,48 @@ class DailySchedule extends Page
             })
             ->action(function (array $data): void {
                 $tenant = filament()->getTenant();
-                abort_unless(
-                    $tenant instanceof Barbershop && auth()->user()?->canAccessTenant($tenant),
-                    403,
-                );
+                if (! ($tenant instanceof Barbershop) || ! auth()->user()?->canAccessTenant($tenant)) {
+                    Notification::make()
+                        ->title('Acesso não autorizado para esta unidade.')
+                        ->danger()
+                        ->send();
 
-                $service = $tenant->services()->findOrFail($data['service_id']);
+                    return;
+                }
+
+                $service = $tenant->services()->find($data['service_id']);
+                if (! $service) {
+                    Notification::make()
+                        ->title('Serviço selecionado inválido ou inativo.')
+                        ->warning()
+                        ->send();
+
+                    return;
+                }
+
                 $professional = $tenant->professionals()
                     ->where('is_active', true)
-                    ->findOrFail($data['professional_id']);
+                    ->find($data['professional_id']);
+
+                if (! $professional) {
+                    Notification::make()
+                        ->title('Barbeiro selecionado não encontrado ou inativo.')
+                        ->warning()
+                        ->send();
+
+                    return;
+                }
 
                 if (
                     auth()->user()?->isRestrictedBarber()
                     && (int) $professional->getKey() !== (int) (auth()->user()?->resolveProfessionalId($tenant->id) ?? 0)
                 ) {
-                    abort(403);
+                    Notification::make()
+                        ->title('Barbeiros só podem agendar encaixes na sua própria agenda.')
+                        ->danger()
+                        ->send();
+
+                    return;
                 }
 
                 $scheduledAt = Carbon::parse($data['scheduled_at']);
@@ -566,6 +612,11 @@ class DailySchedule extends Page
                 }
 
                 $appt = $this->findAccessibleAppointment($appointmentId);
+                if (! $appt) {
+                    $action->cancel();
+
+                    return;
+                }
 
                 if (in_array($appt->status, ['completed', 'cancelled', 'no_show'], true)) {
                     Notification::make()
@@ -590,16 +641,36 @@ class DailySchedule extends Page
             ->action(function (array $data, Action $action): void {
                 $arguments = $action->getArguments();
                 $appointmentId = (int) ($arguments['appointmentId'] ?? $data['appointment_id'] ?? 0);
-                abort_unless($appointmentId > 0, 404);
+                if ($appointmentId <= 0) {
+                    return;
+                }
 
                 $appt = $this->findAccessibleAppointment($appointmentId);
+                if (! $appt) {
+                    return;
+                }
+
                 if (in_array($appt->status, ['completed', 'cancelled', 'no_show'], true)) {
                     return;
                 }
 
                 $tenant = filament()->getTenant();
-                $service = $tenant->services()->findOrFail($data['service_id']);
-                $professional = $tenant->professionals()->where('is_active', true)->findOrFail($data['professional_id']);
+                if (! ($tenant instanceof Barbershop)) {
+                    return;
+                }
+
+                $service = $tenant->services()->find($data['service_id']);
+                if (! $service) {
+                    Notification::make()->title('Serviço não encontrado.')->warning()->send();
+                    return;
+                }
+
+                $professional = $tenant->professionals()->where('is_active', true)->find($data['professional_id']);
+                if (! $professional) {
+                    Notification::make()->title('Barbeiro não encontrado.')->warning()->send();
+                    return;
+                }
+
                 $scheduledAt = Carbon::parse($data['scheduled_at']);
                 $commissionRate = $professional->commission_rate ?: 50.00;
                 $commissionAmount = round(((float) $service->price * $commissionRate) / 100, 2);
@@ -641,9 +712,15 @@ class DailySchedule extends Page
             ->action(function (Action $action): void {
                 $arguments = $action->getArguments();
                 $appointmentId = (int) ($arguments['appointmentId'] ?? 0);
-                abort_unless($appointmentId > 0, 404);
+                if ($appointmentId <= 0) {
+                    return;
+                }
 
                 $appt = $this->findAccessibleAppointment($appointmentId);
+                if (! $appt) {
+                    return;
+                }
+
                 if (in_array($appt->status, ['completed', 'cancelled', 'no_show'], true)) {
                     return;
                 }
@@ -659,21 +736,36 @@ class DailySchedule extends Page
             });
     }
 
-    private function findAccessibleAppointment(int $appointmentId): Appointment
+    private function findAccessibleAppointment(int $appointmentId): ?Appointment
     {
         $tenant = filament()->getTenant();
         $user = auth()->user();
 
-        abort_unless(
-            $tenant instanceof Barbershop && $user?->canAccessTenant($tenant),
-            403,
-        );
+        if (! ($tenant instanceof Barbershop) || ! $user?->canAccessTenant($tenant)) {
+            Notification::make()
+                ->title('Acesso não autorizado para esta unidade.')
+                ->danger()
+                ->send();
 
-        return $tenant->appointments()
+            return null;
+        }
+
+        $appointment = $tenant->appointments()
             ->when(
                 $user->isRestrictedBarber(),
                 fn ($query) => $query->where('professional_id', $user->resolveProfessionalId($tenant->id) ?? 0),
             )
-            ->findOrFail($appointmentId);
+            ->find($appointmentId);
+
+        if (! $appointment) {
+            Notification::make()
+                ->title('Agendamento não encontrado ou não acessível.')
+                ->warning()
+                ->send();
+
+            return null;
+        }
+
+        return $appointment;
     }
 }
