@@ -225,7 +225,11 @@
                                             {{ number_format($a->commission_rate, 0) }}%
                                         </td>
                                         <td class="whitespace-nowrap px-4 py-3 font-bold text-primary-600 dark:text-primary-400">
-                                            R$ {{ number_format($a->commission_amount, 2, ',', '.') }}
+                                            @php
+                                                $rate = (float) ($a->commission_rate ?: ($a->professional?->commission_rate ?: 50.0));
+                                                $servComm = round(((float) $a->service_price * $rate) / 100, 2);
+                                            @endphp
+                                            R$ {{ number_format($servComm, 2, ',', '.') }}
                                         </td>
                                         <td class="whitespace-nowrap px-4 py-3">
                                             @if ($a->commission_status === 'paid')

@@ -7,20 +7,49 @@ use Filament\Actions\Action;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Pages\Tenancy\RegisterTenant;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Unique;
+use Illuminate\Validation\ValidationException;
 
 class RegisterBarbershop extends RegisterTenant
 {
     public static function getLabel(): string
     {
         return 'Nova Unidade / Filial';
+    }
+
+    public function mount(): void
+    {
+        parent::mount();
+
+        $user = auth()->user();
+        if (! $user) {
+            return;
+        }
+
+        $primaryShop = $user->barbershops()->whereNull('parent_id')->first()
+            ?? $user->barbershops()->first();
+
+        if ($primaryShop && ! $primaryShop->canAddBranch()) {
+            $allowed = $primaryShop->getAllowedUnits();
+
+            Notification::make()
+                ->title('Limite de Unidades Atingido')
+                ->body("Sua assinatura permite no máximo {$allowed} ".($allowed === 1 ? 'unidade' : 'unidades').'. Para cadastrar novas filiais, solicite a alteração do seu plano.')
+                ->danger()
+                ->persistent()
+                ->send();
+
+            $this->redirect(url("/admin/{$primaryShop->slug}/planos-de-licenciamento"));
+        }
     }
 
     public function getMaxWidth(): Width|string|null
@@ -117,23 +146,46 @@ class RegisterBarbershop extends RegisterTenant
     protected function handleRegistration(array $data): Model
     {
         $user = auth()->user();
-        $data['owner_id'] = $user->id;
-        $data['is_active'] = true;
-        $data['subscription_status'] = 'active';
-
-        // Se o usuário já tiver uma matriz/unidade cadastrada, herda como filial (parent_id)
-        $primaryBarbershop = $user->barbershops()->first();
-        if ($primaryBarbershop) {
-            $data['parent_id'] = $primaryBarbershop->id;
+        if (! $user) {
+            abort(403);
         }
 
-        $barbershop = Barbershop::create($data);
+        return DB::transaction(function () use ($user, $data): Model {
+            $primaryBarbershop = $user->barbershops()->whereNull('parent_id')->first()
+                ?? $user->barbershops()->first();
 
-        $user->barbershops()->attach($barbershop->id, [
-            'role' => 'owner',
-            'is_primary' => false,
-        ]);
+            if ($primaryBarbershop) {
+                // Bloqueio atômico para evitar condições de corrida (race conditions)
+                $lockedPrimary = Barbershop::query()->lockForUpdate()->findOrFail($primaryBarbershop->id);
 
-        return $barbershop;
+                if (! $lockedPrimary->canAddBranch()) {
+                    $allowed = $lockedPrimary->getAllowedUnits();
+
+                    throw ValidationException::withMessages([
+                        'name' => "O limite de {$allowed} ".($allowed === 1 ? 'unidade' : 'unidades').' da sua assinatura foi atingido. Solicite a alteração do plano para cadastrar novas filiais.',
+                    ]);
+                }
+
+                $data['parent_id'] = $lockedPrimary->id;
+                $data['saas_plan_id'] = $lockedPrimary->saas_plan_id;
+                $data['license_status'] = $lockedPrimary->license_status ?? 'active';
+                $data['license_expires_at'] = $lockedPrimary->license_expires_at;
+            }
+
+            $data['owner_id'] = $user->id;
+            $data['is_active'] = true;
+            $data['subscription_status'] = 'active';
+
+            $barbershop = Barbershop::create($data);
+
+            $user->barbershops()->syncWithoutDetaching([
+                $barbershop->id => [
+                    'role' => 'owner',
+                    'is_primary' => false,
+                ],
+            ]);
+
+            return $barbershop;
+        });
     }
 }

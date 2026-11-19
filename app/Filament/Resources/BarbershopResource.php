@@ -223,7 +223,7 @@ class BarbershopResource extends Resource
                                         ->orderBy('sort_order')
                                         ->get()
                                         ->mapWithKeys(fn (SaasPlan $plan): array => [
-                                            $plan->id => $plan->name.' — R$ '.number_format((float) $plan->monthly_price, 2, ',', '.').'/mês',
+                                            $plan->id => $plan->name.' — R$ '.number_format((float) $plan->monthly_price, 2, ',', '.').'/mês (até '.$plan->max_units.' un.)',
                                         ])
                                         ->all())
                                     ->searchable()
@@ -232,9 +232,38 @@ class BarbershopResource extends Resource
                                     ->afterStateUpdated(function ($state, callable $set): void {
                                         if ($state && ($plan = SaasPlan::query()->find($state))) {
                                             $set('monthly_price', (float) $plan->monthly_price);
+                                            $set('max_units', (int) $plan->max_units);
                                         }
                                     })
-                                    ->helperText('Selecione o plano contratado pela barbearia. O valor mensal é sugerido automaticamente e pode ser ajustado abaixo.')
+                                    ->helperText('Selecione o plano contratado pela barbearia. O valor mensal e cota de unidades são preenchidos automaticamente e podem ser personalizados abaixo.')
+                                    ->columnSpanFull(),
+
+                                Forms\Components\Toggle::make('has_unrestricted_access')
+                                    ->label('⭐ Cliente VIP / Acesso Irrestrito (Unidades e Recursos Ilimitados)')
+                                    ->helperText('Ative para clientes pioneiros (ex: Cliente 0 - Barbearia Marinho) ou grandes redes franqueadas. Ignora todas as travas de cotas e unidades.')
+                                    ->default(false)
+                                    ->live()
+                                    ->columnSpanFull(),
+
+                                Forms\Components\TextInput::make('max_units')
+                                    ->label('Limite Máximo de Barbearias / Unidades Permitidas')
+                                    ->numeric()
+                                    ->integer()
+                                    ->minValue(1)
+                                    ->placeholder('Ex: 1 (padrão) ou personalizado (ex: 3, 5, 10)')
+                                    ->disabled(fn (Get $get): bool => (bool) $get('has_unrestricted_access'))
+                                    ->helperText(fn (Get $get): string => (bool) $get('has_unrestricted_access')
+                                        ? 'Desabilitado porque o Cliente VIP possui unidades ilimitadas.'
+                                        : 'Quantidade de barbearias (matriz + filiais) que esta conta pode operar. Se vazio, herda o valor do plano contratado.')
+                                    ->columnSpanFull(),
+
+                                Forms\Components\TextInput::make('max_professionals')
+                                    ->label('Limite de Barbeiros / Profissionais por Unidade')
+                                    ->numeric()
+                                    ->integer()
+                                    ->minValue(1)
+                                    ->placeholder('Deixe vazio para ilimitado')
+                                    ->helperText('Deixe vazio para ilimitado (padrão do AuroBarber) ou defina um teto por filial se contratado sob medida.')
                                     ->columnSpanFull(),
 
                                 Forms\Components\Select::make('license_status')
@@ -361,6 +390,28 @@ class BarbershopResource extends Resource
                     ->color('primary')
                     ->placeholder('Personalizado')
                     ->sortable(),
+
+                Tables\Columns\TextColumn::make('units_quota')
+                    ->label('Unidades')
+                    ->badge()
+                    ->state(function (Barbershop $record): string {
+                        if ($record->hasUnrestrictedAccess()) {
+                            return 'VIP (Ilimitado)';
+                        }
+                        $allowed = $record->getAllowedUnits();
+                        $current = $record->getCurrentUnitsCount();
+
+                        return "{$current}/{$allowed} un.";
+                    })
+                    ->color(function (Barbershop $record): string {
+                        if ($record->hasUnrestrictedAccess()) {
+                            return 'success';
+                        }
+                        $allowed = $record->getAllowedUnits();
+                        $current = $record->getCurrentUnitsCount();
+
+                        return $current >= $allowed ? 'warning' : 'info';
+                    }),
 
                 Tables\Columns\TextColumn::make('monthly_price')
                     ->label('Mensalidade')

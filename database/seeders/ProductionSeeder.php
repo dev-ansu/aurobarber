@@ -57,5 +57,8 @@ class ProductionSeeder extends Seeder
             ]
         );
         $masterAdmin->assignRole('super_admin');
+
+        // Garante que a página inicial do CMS exista em produção
+        $this->call(CmsInitialContentSeeder::class);
     }
 }

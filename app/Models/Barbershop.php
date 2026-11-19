@@ -48,6 +48,9 @@ class Barbershop extends Model
         'loyalty_enabled',
         'loyalty_target_cuts',
         'return_reminder_days',
+        'max_units',
+        'has_unrestricted_access',
+        'max_professionals',
     ];
 
     protected $casts = [
@@ -60,6 +63,9 @@ class Barbershop extends Model
         'suspended_at' => 'datetime',
         'grace_period_days' => 'integer',
         'monthly_price' => 'decimal:2',
+        'max_units' => 'integer',
+        'has_unrestricted_access' => 'boolean',
+        'max_professionals' => 'integer',
     ];
 
     protected static function booted(): void
@@ -237,6 +243,130 @@ class Barbershop extends Model
         $days = (int) ($this->saasPlan?->renewal_days ?? 30);
 
         return $days > 0 ? $days : 30;
+    }
+
+    /**
+     * Retorna a barbearia matriz (ou ela mesma se já for a matriz).
+     */
+    public function getPrimaryShop(): self
+    {
+        if ($this->parent_id && $this->relationLoaded('parent') && $this->parent) {
+            return $this->parent;
+        }
+
+        if ($this->parent_id) {
+            return $this->parent()->first() ?? $this;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Informa se a barbearia possui acesso irrestrito (Cliente VIP / pioneiro, ex: Barbearia Marinho).
+     */
+    public function hasUnrestrictedAccess(): bool
+    {
+        if ((bool) $this->has_unrestricted_access) {
+            return true;
+        }
+
+        if ($this->parent_id) {
+            return $this->getPrimaryShop()->hasUnrestrictedAccess();
+        }
+
+        return false;
+    }
+
+    /**
+     * Retorna a quantidade máxima de unidades permitidas para esta barbearia.
+     * Retorna PHP_INT_MAX se possuir acesso irrestrito.
+     */
+    public function getAllowedUnits(): int
+    {
+        if ($this->hasUnrestrictedAccess()) {
+            return PHP_INT_MAX;
+        }
+
+        $primary = $this->getPrimaryShop();
+
+        // 1. Override manual definido diretamente na barbearia
+        if ($primary->max_units !== null && (int) $primary->max_units > 0) {
+            return (int) $primary->max_units;
+        }
+
+        // 2. Cota definida pelo plano contratado
+        if ($primary->saasPlan && $primary->saasPlan->max_units !== null && (int) $primary->saasPlan->max_units > 0) {
+            return (int) $primary->saasPlan->max_units;
+        }
+
+        return 1;
+    }
+
+    /**
+     * Retorna a quantidade atual de unidades vinculadas à matriz (matriz + filiais).
+     */
+    public function getCurrentUnitsCount(): int
+    {
+        $primary = $this->getPrimaryShop();
+
+        return 1 + $primary->branches()->count();
+    }
+
+    /**
+     * Informa se a barbearia pode adicionar uma nova filial/unidade.
+     */
+    public function canAddBranch(): bool
+    {
+        if ($this->hasUnrestrictedAccess()) {
+            return true;
+        }
+
+        $primary = $this->getPrimaryShop();
+
+        return $primary->getCurrentUnitsCount() < $primary->getAllowedUnits();
+    }
+
+    /**
+     * Retorna a quantidade restante de unidades que ainda podem ser cadastradas.
+     */
+    public function getRemainingUnits(): int
+    {
+        if ($this->hasUnrestrictedAccess()) {
+            return 9999;
+        }
+
+        $primary = $this->getPrimaryShop();
+
+        return max(0, $primary->getAllowedUnits() - $primary->getCurrentUnitsCount());
+    }
+
+    /**
+     * Quantidade máxima permitida de profissionais ativos (null = ilimitado).
+     */
+    public function getAllowedProfessionals(): ?int
+    {
+        if ($this->hasUnrestrictedAccess()) {
+            return null;
+        }
+
+        return $this->max_professionals !== null ? (int) $this->max_professionals : null;
+    }
+
+    /**
+     * Informa se a barbearia pode cadastrar mais um profissional.
+     */
+    public function canAddProfessional(): bool
+    {
+        if ($this->hasUnrestrictedAccess()) {
+            return true;
+        }
+
+        $allowed = $this->getAllowedProfessionals();
+        if ($allowed === null) {
+            return true;
+        }
+
+        return $this->professionals()->count() < $allowed;
     }
 
     public function owner(): BelongsTo

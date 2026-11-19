@@ -156,11 +156,31 @@
                             </p>
                         </div>
 
-                        <div class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
+                        <div class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
                             <div class="min-w-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
-                                <div class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Unidade</div>
+                                <div class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Unidade Atual</div>
                                 <div class="mt-1 truncate text-base font-bold text-gray-950 dark:text-white">{{ $shop->name }}</div>
                                 <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">/{{ $shop->slug }}</div>
+                            </div>
+
+                            <div class="min-w-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+                                <div class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Unidades / Filiais</div>
+                                <div class="mt-1 text-base font-bold text-gray-950 dark:text-white">
+                                    @if($shop->hasUnrestrictedAccess())
+                                        VIP (Ilimitadas)
+                                    @else
+                                        {{ $shop->getCurrentUnitsCount() }} / {{ $shop->getAllowedUnits() }} un.
+                                    @endif
+                                </div>
+                                <div class="mt-0.5 text-xs">
+                                    @if($shop->hasUnrestrictedAccess())
+                                        <span class="text-purple-600 dark:text-purple-400 font-semibold">Acesso Total Liberado</span>
+                                    @elseif($shop->canAddBranch())
+                                        <span class="text-emerald-600 dark:text-emerald-400">{{ $shop->getRemainingUnits() }} restante(s)</span>
+                                    @else
+                                        <span class="text-amber-600 dark:text-amber-400 font-semibold">Limite do plano atingido</span>
+                                    @endif
+                                </div>
                             </div>
 
                             <div class="min-w-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
@@ -383,6 +403,10 @@
                                         Ciclo {{ strtolower($plan->cycle_label) }}: R$ {{ number_format($plan->cycle_total, 2, ',', '.') }}
                                     </p>
                                 @endif
+                                <div class="mt-2 inline-flex items-center gap-1.5 rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                    <x-filament::icon icon="heroicon-m-building-storefront" class="h-3.5 w-3.5 text-primary-500" />
+                                    <span>Gestão de até {{ $plan->max_units }} {{ $plan->max_units === 1 ? 'unidade' : 'unidades' }}</span>
+                                </div>
                             </div>
 
                             @if(! empty($plan->features))

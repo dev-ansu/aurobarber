@@ -198,8 +198,8 @@ class CommissionsPage extends Page
         $servicesGross = (float) $appts->sum('service_price');
         $servicesCommission = 0.0;
         foreach ($appts as $a) {
-            $serviceComm = (float) $a->commission_amount - (float) $a->products_commission_amount;
-            $servicesCommission += max(0, $serviceComm);
+            $rate = (float) ($a->commission_rate ?: ($a->professional?->commission_rate ?: 50.0));
+            $servicesCommission += round(((float) $a->service_price * $rate) / 100, 2);
         }
 
         $productsGross = (float) $prodSales->sum('total_price');
@@ -263,8 +263,8 @@ class CommissionsPage extends Page
 
                         $servicesCommission = 0.0;
                         foreach ($appts as $a) {
-                            $serviceComm = (float) $a->commission_amount - (float) $a->products_commission_amount;
-                            $servicesCommission += max(0, $serviceComm);
+                            $rate = (float) ($a->commission_rate ?: ($a->professional?->commission_rate ?: 50.0));
+                            $servicesCommission += round(((float) $a->service_price * $rate) / 100, 2);
                         }
                         $productsCommission = (float) $prodSales->sum('commission_amount');
                         $totalCommission = $servicesCommission + $productsCommission;
@@ -321,8 +321,8 @@ class CommissionsPage extends Page
                     $servicesGross = (float) $pendingAppts->sum('service_price');
                     $servicesCommission = 0.0;
                     foreach ($pendingAppts as $a) {
-                        $serviceComm = (float) $a->commission_amount - (float) $a->products_commission_amount;
-                        $servicesCommission += max(0, $serviceComm);
+                        $rate = (float) ($a->commission_rate ?: ($a->professional?->commission_rate ?: 50.0));
+                        $servicesCommission += round(((float) $a->service_price * $rate) / 100, 2);
                     }
 
                     $productsGross = (float) $pendingProdSales->sum('total_price');
