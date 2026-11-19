@@ -526,7 +526,7 @@ class BarbershopResource extends Resource
 
                 Tables\Filters\SelectFilter::make('parent_id')
                     ->label('Filtrar por Matriz')
-                    ->relationship('parent', 'name', fn (Builder $q) => $q->whereNull('parent_id'))
+                    ->options(fn () => Barbershop::whereNull('parent_id')->orderBy('name')->pluck('name', 'id')->toArray())
                     ->searchable()
                     ->preload(),
 
