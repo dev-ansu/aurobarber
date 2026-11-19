@@ -91,7 +91,7 @@
                 <button
                     type="button"
                     @click="leadModalOpen = true"
-                    class="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-400 hover:to-emerald-300 text-slate-950 font-black text-xs transition shadow-lg shadow-emerald-500/20 active:scale-95 cursor-pointer"
+                    class="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-emerald-500 bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-400 hover:to-emerald-300 text-slate-950 font-black text-xs transition shadow-lg shadow-emerald-500/25 active:scale-95 cursor-pointer"
                 >
                     <span>🚀</span>
                     <span>Quero Aumentar Meu Faturamento</span>

@@ -27,7 +27,7 @@
             <button
                 type="button"
                 @click="leadModalOpen = true"
-                class="w-full sm:w-auto px-9 py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:brightness-110 text-slate-950 font-black text-sm tracking-wide transition shadow-xl shadow-amber-500/25 active:scale-95 cursor-pointer"
+                class="w-full sm:w-auto px-9 py-4 rounded-2xl bg-amber-500 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black text-sm tracking-wide transition shadow-xl shadow-amber-500/25 active:scale-95 cursor-pointer"
             >
                 <span>✂️</span>
                 <span>{{ $buttonText }}</span>
@@ -38,7 +38,7 @@
                     href="{{ $secondaryButtonUrl }}"
                     target="_blank"
                     rel="noopener"
-                    class="w-full sm:w-auto px-8 py-4 rounded-2xl border border-slate-700 bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm tracking-wide transition shadow-lg flex items-center justify-center gap-2 active:scale-95"
+                    class="w-full sm:w-auto px-8 py-4 rounded-2xl border border-slate-600 hover:border-amber-400/80 bg-slate-800/90 hover:bg-slate-700/90 text-white hover:text-amber-300 font-bold text-sm tracking-wide transition shadow-lg flex items-center justify-center gap-2 active:scale-95"
                 >
                     <span>💬</span>
                     <span>{{ $secondaryButtonText }}</span>
@@ -47,7 +47,7 @@
                 <button
                     type="button"
                     @click="leadModalOpen = true"
-                    class="w-full sm:w-auto px-8 py-4 rounded-2xl border border-slate-700 bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm tracking-wide transition shadow-lg flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
+                    class="w-full sm:w-auto px-8 py-4 rounded-2xl border border-slate-600 hover:border-amber-400/80 bg-slate-800/90 hover:bg-slate-700/90 text-white hover:text-amber-300 font-bold text-sm tracking-wide transition shadow-lg flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
                 >
                     <span>💬</span>
                     <span>{{ $secondaryButtonText }}</span>

@@ -46,7 +46,7 @@
                         'border border-slate-800 bg-slate-950/90' => !$isRecommended,
                     ])>
                         @if(!empty($badgeText))
-                            <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 font-black text-[10px] uppercase tracking-wider shadow whitespace-nowrap">
+                            <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-amber-500 bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 font-black text-[10px] uppercase tracking-wider shadow whitespace-nowrap">
                                 {{ $badgeText }}
                             </div>
                         @endif
@@ -133,9 +133,9 @@
                             type="button"
                             @click="selectedPlanName = '{{ $plan->name }} (R$ {{ number_format((float) $plan->monthly_price, 2, ',', '.') }}/mês)'; selectedPlanId = '{{ $plan->id }}'; leadModalOpen = true"
                             @class([
-                                'mt-8 w-full py-3.5 rounded-xl font-black text-xs transition cursor-pointer',
-                                'bg-gradient-to-r from-amber-500 to-amber-400 hover:brightness-110 text-slate-950 shadow-lg shadow-amber-500/20' => $isRecommended,
-                                'border border-slate-700 bg-slate-900 hover:bg-slate-800 text-white' => !$isRecommended,
+                                'mt-8 w-full py-3.5 rounded-xl font-black text-xs transition cursor-pointer active:scale-95',
+                                'bg-amber-500 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 shadow-lg shadow-amber-500/25' => $isRecommended,
+                                'border border-slate-700 hover:border-amber-400/60 bg-slate-800/90 hover:bg-slate-700/90 text-white hover:text-amber-300 font-bold shadow-md' => !$isRecommended,
                             ])
                         >
                             Contratar {{ $plan->name }} ➔

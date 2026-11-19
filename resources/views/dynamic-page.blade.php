@@ -31,30 +31,13 @@
         <meta property="og:locale" content="pt_BR">
         <meta property="og:site_name" content="AuroBarber">
 
-        <!-- Tailwind CDN & Alpine -->
-        <script src="https://cdn.tailwindcss.com"></script>
-        <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
-
-        <style>
-            [x-cloak] { display: none !important; }
-            .hero-glow {
-                background: radial-gradient(circle at 50% 0%, rgba(245, 158, 11, 0.20) 0%, rgba(16, 185, 129, 0.06) 45%, transparent 72%);
-            }
-            .text-gradient-gold {
-                background: linear-gradient(135deg, #fef08a 0%, #fbbf24 50%, #f59e0b 100%);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-            }
-            .metric-box-stable {
-                min-height: 68px;
-                contain: layout;
-            }
-        </style>
-    </x-slot:head>
-
     <div x-data="{
         leadModalOpen: false,
         tenantModalOpen: false,
+        activeShowcaseTab: 'agenda',
+        calcCutsPerDay: 18,
+        calcAvgTicket: 45,
+        faqOpen: 1,
         selectedPlanName: '',
         selectedPlanId: null
     }">

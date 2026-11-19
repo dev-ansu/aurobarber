@@ -38,7 +38,7 @@
             <button
                 type="button"
                 @click="tenantModalOpen = true"
-                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-700 bg-slate-900/80 hover:bg-slate-800 text-slate-200 text-xs font-bold transition shadow-sm whitespace-nowrap shrink-0 cursor-pointer"
+                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-600 hover:border-amber-400/80 bg-slate-800/90 hover:bg-slate-700/90 text-white hover:text-amber-300 text-xs font-bold transition shadow-sm hover:shadow-amber-500/10 whitespace-nowrap shrink-0 cursor-pointer"
             >
                 <span>💈</span>
                 <span>Acessar Barbearia</span>
@@ -46,7 +46,7 @@
 
             <a
                 href="{{ url('/admin') }}"
-                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-amber-500/40 bg-amber-950/30 hover:bg-amber-900/50 text-amber-300 text-xs font-bold transition shadow-sm whitespace-nowrap shrink-0"
+                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-amber-500/50 bg-amber-950/40 hover:bg-amber-900/60 text-amber-300 hover:text-amber-200 text-xs font-bold transition shadow-sm whitespace-nowrap shrink-0"
             >
                 <span>🔑</span>
                 <span>Login do Painel</span>
@@ -55,7 +55,7 @@
             <button
                 type="button"
                 @click="selectedPlanName = 'Demonstração Comercial'; selectedPlanId = null; leadModalOpen = true"
-                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:brightness-110 text-slate-950 text-xs font-black transition shadow-lg shadow-amber-500/25 active:scale-95 whitespace-nowrap shrink-0 cursor-pointer"
+                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 text-xs font-black transition shadow-lg shadow-amber-500/25 active:scale-95 whitespace-nowrap shrink-0 cursor-pointer"
             >
                 <span>🚀</span>
                 <span>Criar Minha Barbearia</span>

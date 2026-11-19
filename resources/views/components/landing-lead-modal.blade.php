@@ -10,6 +10,89 @@
     window.onLeadTurnstileExpired = function() {
         window.dispatchEvent(new CustomEvent('turnstile-lead-expired'));
     };
+
+    function landingLeadForm() {
+        return {
+            name: '',
+            barbershop_name: '',
+            phone: '',
+            email: '',
+            city: '',
+            chairs_count: '2 a 4 Barbeiros',
+            message: '',
+            websiteUrl: '',
+            turnstileToken: '{{ config('services.turnstile.site_key') ? '' : 'bypass' }}',
+            submitting: false,
+            success: false,
+            errorMessage: '',
+            init() {
+                window.addEventListener('turnstile-lead-success', (e) => {
+                    this.turnstileToken = e.detail;
+                });
+                window.addEventListener('turnstile-lead-expired', () => {
+                    this.turnstileToken = '';
+                });
+            },
+            async submitForm() {
+                this.errorMessage = '';
+
+                @if(config('services.turnstile.site_key'))
+                if (!this.turnstileToken) {
+                    const input = document.querySelector('[name="cf-turnstile-response"]');
+                    if (input && input.value) {
+                        this.turnstileToken = input.value;
+                    }
+                }
+                if (!this.turnstileToken) {
+                    this.errorMessage = 'Por favor, complete a verificação de segurança antes de prosseguir.';
+                    return;
+                }
+                @endif
+
+                this.submitting = true;
+
+                try {
+                    const res = await fetch('{{ route('landing.lead.store') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            name: this.name,
+                            barbershop_name: this.barbershop_name,
+                            phone: this.phone,
+                            email: this.email,
+                            city: this.city,
+                            chairs_count: this.chairs_count,
+                            selected_plan: (this.$data && this.$data.selectedPlanName) || (window.selectedPlanName || 'Demonstração Geral'),
+                            selected_plan_id: (this.$data && this.$data.selectedPlanId) || (window.selectedPlanId || null),
+                            message: this.message,
+                            website_url: this.websiteUrl,
+                            turnstile_token: this.turnstileToken
+                        })
+                    });
+
+                    const data = await res.json();
+                    this.submitting = false;
+
+                    if (data && data.success) {
+                        this.success = true;
+                    } else {
+                        this.errorMessage = (data && data.message) ? data.message : 'Erro ao enviar. Tente novamente ou chame no WhatsApp.';
+                        if (window.turnstile && typeof window.turnstile.reset === 'function') {
+                            try { window.turnstile.reset(); } catch(e){}
+                            this.turnstileToken = '';
+                        }
+                    }
+                } catch(err) {
+                    this.submitting = false;
+                    this.errorMessage = 'Erro ao conectar ao servidor. Chame no WhatsApp.';
+                }
+            }
+        };
+    }
 </script>
 
 <div
@@ -26,84 +109,7 @@
     <div
         @click.away="leadModalOpen = false"
         class="relative w-full max-w-lg rounded-3xl border border-slate-800 bg-slate-900 p-6 sm:p-8 shadow-2xl text-left"
-        x-data="{
-            name: '',
-            barbershop_name: '',
-            phone: '',
-            email: '',
-            city: '',
-            chairs_count: '2 a 4',
-            message: '',
-            websiteUrl: '',
-            turnstileToken: '{{ config('services.turnstile.site_key') ? '' : 'bypass' }}',
-            submitting: false,
-            success: false,
-            errorMessage: '',
-            init() {
-                window.addEventListener('turnstile-lead-success', (e) => {
-                    this.turnstileToken = e.detail;
-                });
-                window.addEventListener('turnstile-lead-expired', () => {
-                    this.turnstileToken = '';
-                });
-            },
-            submitForm() {
-                this.errorMessage = '';
-
-                @if(config('services.turnstile.site_key'))
-                if (!this.turnstileToken) {
-                    const input = document.querySelector('[name=\"cf-turnstile-response\"]');
-                    if (input && input.value) {
-                        this.turnstileToken = input.value;
-                    }
-                }
-                if (!this.turnstileToken) {
-                    this.errorMessage = 'Por favor, complete a verificação de segurança antes de prosseguir.';
-                    return;
-                }
-                @endif
-
-                this.submitting = true;
-                fetch('{{ route('landing.lead.store') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        name: this.name,
-                        barbershop_name: this.barbershop_name,
-                        phone: this.phone,
-                        email: this.email,
-                        city: this.city,
-                        chairs_count: this.chairs_count,
-                        selected_plan: selectedPlanName || 'Demonstração Geral',
-                        selected_plan_id: selectedPlanId || null,
-                        message: this.message,
-                        website_url: this.websiteUrl,
-                        turnstile_token: this.turnstileToken
-                    })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    this.submitting = false;
-                    if (data.success) {
-                        this.success = true;
-                    } else {
-                        this.errorMessage = data.message || 'Erro ao enviar. Tente novamente ou chame no WhatsApp.';
-                        if (window.turnstile && typeof window.turnstile.reset === 'function') {
-                            try { window.turnstile.reset(); } catch(e){}
-                            this.turnstileToken = '';
-                        }
-                    }
-                })
-                .catch(() => {
-                    this.submitting = false;
-                    this.errorMessage = 'Erro ao conectar ao servidor. Chame no WhatsApp.';
-                });
-            }
-        }"
+        x-data="landingLeadForm()"
     >
         <button
             type="button"
@@ -126,7 +132,7 @@
                 <button
                     type="button"
                     @click="leadModalOpen = false; success = false;"
-                    class="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:brightness-110 text-slate-950 font-black text-xs transition shadow-lg shadow-amber-500/25 cursor-pointer"
+                    class="w-full sm:w-auto px-6 py-3 rounded-xl bg-amber-500 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black text-xs transition shadow-lg shadow-amber-500/25 active:scale-95 cursor-pointer"
                 >
                     Concluir
                 </button>
@@ -244,7 +250,7 @@
                 <button
                     type="submit"
                     :disabled="submitting"
-                    class="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:brightness-110 text-slate-950 font-black text-xs transition shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                    class="w-full py-3.5 rounded-xl bg-amber-500 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black text-xs transition shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-95"
                 >
                     <span x-show="!submitting">🚀 Liberar Meu Acesso Grátis</span>
                     <span x-show="submitting">Processando...</span>

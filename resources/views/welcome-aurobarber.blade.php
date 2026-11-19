@@ -42,29 +42,6 @@
         <meta property="og:locale" content="pt_BR">
         <meta property="og:site_name" content="AuroBarber">
 
-        <!-- Tailwind CDN & Alpine -->
-        <script src="https://cdn.tailwindcss.com"></script>
-        <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
-
-        <style>
-            [x-cloak] { display: none !important; }
-            .hero-glow {
-                background: radial-gradient(circle at 50% 0%, rgba(245, 158, 11, 0.20) 0%, rgba(16, 185, 129, 0.06) 45%, transparent 72%);
-            }
-            .card-glass {
-                background: rgba(15, 23, 42, 0.78);
-                backdrop-filter: blur(16px);
-                -webkit-backdrop-filter: blur(16px);
-            }
-            .text-gradient-gold {
-                background: linear-gradient(135deg, #fef08a 0%, #fbbf24 50%, #d97706 100%);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-            }
-            .metric-box-stable {
-                min-height: 72px;
-            }
-        </style>
     </x-slot:head>
 
     <div x-data="{
@@ -114,7 +91,7 @@
                         <button
                             type="button"
                             @click="leadModalOpen = true"
-                            class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black text-sm tracking-wide transition shadow-xl shadow-amber-500/25 flex items-center justify-center gap-2.5 active:scale-95 group cursor-pointer"
+                            class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-amber-500 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black text-sm tracking-wide transition shadow-xl shadow-amber-500/25 flex items-center justify-center gap-2.5 active:scale-95 group cursor-pointer"
                         >
                             <span>✂️</span>
                             <span>Quero Implantar na Minha Barbearia</span>
@@ -123,7 +100,7 @@
 
                         <a
                             href="#recursos"
-                            class="w-full sm:w-auto px-8 py-4 rounded-2xl border border-slate-700 bg-slate-900/90 hover:bg-slate-800/90 text-white font-bold text-sm tracking-wide transition shadow-lg flex items-center justify-center gap-2.5 active:scale-95"
+                            class="w-full sm:w-auto px-8 py-4 rounded-2xl border border-slate-600 hover:border-amber-400/80 bg-slate-800/90 hover:bg-slate-700/90 text-white hover:text-amber-300 font-bold text-sm tracking-wide transition shadow-lg flex items-center justify-center gap-2.5 active:scale-95"
                         >
                             <span>🖥️</span>
                             <span>Ver Demonstração Interativa</span>
@@ -873,7 +850,7 @@
                         <button
                             type="button"
                             @click="leadModalOpen = true"
-                            class="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-400 hover:to-emerald-300 text-slate-950 font-black text-xs transition shadow-lg shadow-emerald-500/20 active:scale-95 cursor-pointer"
+                            class="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-emerald-500 bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-400 hover:to-emerald-300 text-slate-950 font-black text-xs transition shadow-lg shadow-emerald-500/25 active:scale-95 cursor-pointer"
                         >
                             <span>🚀</span>
                             <span>Quero Alcançar Esses Números na Minha Barbearia</span>
@@ -952,7 +929,7 @@
                     <button
                         type="button"
                         @click="leadModalOpen = true"
-                        class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 hover:brightness-110 text-slate-950 font-black text-sm transition shadow-xl shadow-amber-500/25 active:scale-95 cursor-pointer"
+                        class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-amber-500 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black text-sm transition shadow-xl shadow-amber-500/25 active:scale-95 cursor-pointer"
                     >
                         <span>🚀</span>
                         <span>Solicitar Liberação da Minha Barbearia</span>
@@ -961,7 +938,7 @@
                     <button
                         type="button"
                         @click="tenantModalOpen = true"
-                        class="w-full sm:w-auto px-8 py-4 rounded-2xl border border-slate-700 bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm transition shadow-xl active:scale-95 cursor-pointer"
+                        class="w-full sm:w-auto px-8 py-4 rounded-2xl border border-slate-600 hover:border-amber-400/80 bg-slate-800/90 hover:bg-slate-700/90 text-white hover:text-amber-300 font-bold text-sm transition shadow-xl active:scale-95 cursor-pointer"
                     >
                         <span>💈</span>
                         <span>Já Sou Cliente • Acessar Painel</span>
