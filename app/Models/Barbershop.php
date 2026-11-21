@@ -13,6 +13,11 @@ class Barbershop extends Model
 {
     use HasFactory, SoftDeletes;
 
+    public function getConnectionName(): ?string
+    {
+        return config('database.default') === 'pgsql' ? 'pgsql_public' : parent::getConnectionName();
+    }
+
     protected $fillable = [
         'owner_id',
         'parent_id',

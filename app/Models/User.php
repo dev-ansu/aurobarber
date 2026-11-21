@@ -29,6 +29,11 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     use InteractsWithAppAuthenticationRecovery;
     use InteractsWithEmailAuthentication;
 
+    public function getConnectionName(): ?string
+    {
+        return config('database.default') === 'pgsql' ? 'pgsql_public' : parent::getConnectionName();
+    }
+
     protected $fillable = [
         'barbershop_id',
         'name',
