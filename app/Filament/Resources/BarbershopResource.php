@@ -534,10 +534,14 @@ class BarbershopResource extends Resource
             ])
             ->actions([
                 Action::make('open_panel')
-                    ->label('Painel ↗')
+                    ->label('Acessar Painel ↗')
                     ->icon('heroicon-m-arrow-top-right-on-square')
                     ->color('info')
-                    ->url(fn (Barbershop $record): string => url("/admin/{$record->slug}"))
+                    ->url(fn (Barbershop $record): string => \Illuminate\Support\Facades\URL::temporarySignedRoute(
+                        'saas.impersonate.barbershop',
+                        now()->addMinutes(10),
+                        ['barbershop' => $record->id]
+                    ))
                     ->openUrlInNewTab(),
 
                 Action::make('change_due_date')

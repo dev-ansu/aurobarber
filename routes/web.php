@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\DynamicPageController;
+use App\Http\Controllers\ImpersonateBarbershopController;
 use App\Http\Controllers\LandingLeadController;
 use App\Http\Controllers\SaasPaymentProofController;
 use App\Http\Controllers\TenantSaasPaymentController;
@@ -23,6 +24,11 @@ Route::middleware('auth')->group(function () {
         ->middleware('signed')
         ->name('saas.billing.proofs.show');
 });
+
+// Acesso seguro com 1 clique (Impersonate / Suporte ao Cliente via URL assinada temporária)
+Route::get('/saas/impersonate/{barbershop}', ImpersonateBarbershopController::class)
+    ->middleware('signed')
+    ->name('saas.impersonate.barbershop');
 
 Route::get('/admin/force-password-change', function () {
     if (! auth()->check()) {
