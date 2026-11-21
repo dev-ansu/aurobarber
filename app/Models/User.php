@@ -87,9 +87,7 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         }
 
         if ($this->role === 'master_admin') {
-            return Barbershop::query()
-                ->where('is_active', true)
-                ->get();
+            return Barbershop::query()->get();
         }
 
         return Barbershop::query()
