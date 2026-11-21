@@ -11,3 +11,11 @@ Artisan::command('inspire', function () {
 Schedule::command('system:backup')
     ->twiceDaily(12, 23)
     ->withoutOverlapping();
+
+Schedule::command('aurobarber:backup')
+    ->dailyAt('03:00')
+    ->withoutOverlapping();
+
+Schedule::command('aurobarber:cleanup-restore-tests')
+    ->dailyAt('04:00')
+    ->withoutOverlapping();

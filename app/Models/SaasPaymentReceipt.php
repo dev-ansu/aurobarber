@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\UsesPublicSchema;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\DB;
 
 class SaasPaymentReceipt extends Model
 {
+    use UsesPublicSchema;
+
     protected $table = 'saas_payment_receipts';
 
     protected $fillable = [

@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\UsesPublicSchema;
 use Illuminate\Database\Eloquent\Model;
 
 class SaasBackupSetting extends Model
 {
+    use UsesPublicSchema;
+
     protected $table = 'saas_backup_settings';
 
     protected $fillable = [

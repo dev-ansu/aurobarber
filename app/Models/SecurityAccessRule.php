@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\UsesPublicSchema;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SecurityAccessRule extends Model
 {
+    use UsesPublicSchema;
+
     protected $table = 'security_access_rules';
 
     protected $fillable = [

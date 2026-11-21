@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\UsesPublicSchema;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 class SaasBillingSetting extends Model
 {
+    use UsesPublicSchema;
+
     protected $table = 'saas_billing_settings';
 
     protected $fillable = [
