@@ -82,8 +82,14 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
 
     public function getTenants(Panel $panel): array|Collection
     {
-        if ($panel->getId() !== 'admin' || $this->role === 'master_admin') {
+        if ($panel->getId() !== 'admin') {
             return [];
+        }
+
+        if ($this->role === 'master_admin') {
+            return Barbershop::query()
+                ->where('is_active', true)
+                ->get();
         }
 
         return Barbershop::query()
@@ -98,8 +104,12 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
 
     public function canAccessTenant(Model $tenant): bool
     {
-        if ($this->role === 'master_admin' || ! $tenant instanceof Barbershop) {
+        if (! $tenant instanceof Barbershop) {
             return false;
+        }
+
+        if ($this->role === 'master_admin') {
+            return true;
         }
 
         return $this->barbershops()->where('barbershops.id', $tenant->id)->exists()
@@ -114,7 +124,7 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         }
 
         if ($this->role === 'master_admin') {
-            return $panel->getId() === 'saas';
+            return true;
         }
 
         if ($panel->getId() === 'saas') {

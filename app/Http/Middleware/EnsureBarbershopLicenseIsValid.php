@@ -40,6 +40,11 @@ class EnsureBarbershopLicenseIsValid
 
         $user = auth()->user();
 
+        // Master Admin tem acesso irrestrito para prestar suporte, auditoria e manutenção técnica
+        if ($user && $user->role === 'master_admin') {
+            return $next($request);
+        }
+
         // Rotas liberadas dentro do tenant: tela de bloqueio, página de assinatura/pagamento e logout
         if ($request->routeIs('filament.admin.tenant.pages.tenant-license-blocked') ||
             $request->routeIs('filament.admin.pages.client-subscription-page') ||
